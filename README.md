@@ -1,10 +1,30 @@
-# 3065H通用生态板嵌入式应用
+# 3061M/3065H通用生态板嵌入式应用
 
-## 介绍
+## 3061M介绍
 
-3065HRPIRZ 通用生态板由 ECBMCU105H （核心板）和 ECBMOTORA （电机驱动板）组成。
+3061M系列 生态板由 ECBMCU201MPC（核心板）和 ECBMOTORA（电机驱动板组成。
 
-ECBMCU105H是针对 3065HRPIRZ （下文简称 3065H ）芯片开发的生态核心板，用于 3065H 芯片初始评估和设计参考，内嵌一块 USB 接口的调试板。
+ECBMCU201MPC是针对 3061M系列 MCU开发的生态核心板，用于 3061M初始评估和设计参考，内嵌一块 USB接口的调试板。
+
+ECBMOTORA是电机驱动扩展板，支持一个 BLDC或 PMSM电机控制。该单板支持24V/12V DCIN输入。
+
+核心板电机驱动扩展板的常用组装方式是电机驱动板通过两个40pin连接器扣接到核心板，如下图所示。
+
+![image-20240715162059747](./pic/image-20240715162059747.png)
+
+### 3061M硬件说明
+
+ 3061M通用生态板通过 ECBMCU201MPC核心板实现控制、 ECBMOTORA 扩展板实现接口扩展以及电源接口，同时提供USB TypeC线进行调试 / 供电、12V电源适配器和一个电机。
+
+![image-20240715162244103](./pic/image-20240715162244103.png)
+
+3061M通用生态板用户手册详细内容请查阅：https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/2.%203061/1.%203061%20%E7%94%9F%E6%80%81%E6%9D%BF%E5%8F%82%E8%80%83%E8%AE%BE%E8%AE%A1
+
+## 3065H介绍
+
+3065H 通用生态板由 ECBMCU105H （核心板）和 ECBMOTORA （电机驱动板）组成。
+
+ECBMCU105H是针对 3065H 芯片开发的生态核心板，用于 3065H 芯片初始评估和设计参考，内嵌一块 USB 接口的调试板。
 
 ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。该单板支持24V/12V DCIN 输入。
 
@@ -12,15 +32,13 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 <img src="./pic/image-20240530173305431.png" alt="image-20240530173305431" style="zoom:80%;" />
 
-## 硬件说明
+### 3065H硬件说明
 
-3065H通用生态板通过ECBMCU105H 核心板实现控制、 ECBMOTORA 扩展板实现接口扩展以及电源接口，同时提供USB TypeC线进行调试 / 供电、12V电源适配器和一个电机。
+ 3065H通用生态板通过ECBMCU105H 核心板实现控制、 ECBMOTORA 扩展板实现接口扩展以及电源接口，同时提供USB TypeC线进行调试 / 供电、12V电源适配器和一个电机。
 
 ![image-20240527103127826](./pic/image-20240527103127826.png)  
 
-详细内容请查阅3065H通用生态板用户手册：https://gitee.com/HiSpark/mcu_applications/tree/master/general_3065/doc
-
-开发板购买链接：https://search.ickey.cn/?keyword=%E6%B7%87%E8%AF%BA&bom_ab=null
+3065H通用生态板用户手册详细内容请查阅：https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/1.%203065
 
 ## 快速上手
 
@@ -53,21 +71,31 @@ https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip
 
 2.打开 HiSpark Studio IDE，进入欢迎页面，单击“新建工程”，进入新建工程页面。
 
-3.后续弹窗中"芯片"选择"3065HRPIRZ", 工程名由用户自定义，工程路径选择”用户自定义“，软件包路径为 \\open_mcu-master\src。
+![img](./pic/clip_image002.png)
+
+3.后续弹窗中，根据所使用的开发板，"芯片"选择"3061MNPICA"或"3065HRPIRZ", 工程名由用户自定义，工程路径选择”用户自定义“，软件包选择工程使用的软件开发驱动包（SDK）文件夹根目录。
+
+<img src="./pic/image-20240711142216428.png" alt="image-20240711142216428" style="zoom:67%;" />
+
+![img](./pic/clip_image002-1719217272703-2.png)
+
+4.查看工程创建结果。HiSpark-Studio会自动打开新创建的工程，并进入芯片配置器界面（Chip Config界面），自动生成工程代码。
+
+![image-20240711145131065](./pic/image-20240711145131065.png)
 
 #### 导入工程
 
 1.打开HiSpark Studio，进入到欢迎页面，单击“导入工程”，进入导入工程页面。
 
-![img](./pic/clip_image002.png)
+![image-20240711142554419](./pic/image-20240711142554419.png)
 
 2.选择导入的路径，即可查找该路径下所有的工程，勾选需要导入的工程，单击“完成”。
 
-![img](./pic/clip_image002-1719217272703-2.png)
+![image-20240711145327804](./pic/image-20240711145327804.png)
 
 3.导入工程完成后，会在工程区展示出工程的文件夹，并在欢迎界面的工程列表中记录所导入的工程。
 
-![img](./pic/clip_image002-1719217289279-4.png)
+![image-20240711145349624](./pic/image-20240711145349624.png)
 
 #### 打开工程
 
@@ -89,7 +117,7 @@ https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip
 
 ![image-20240624163650613](./pic/image-20240624163650613.png)
 
-4.工程编译，以I2C 驱动模块为例：
+4.工程编译，以3061M与3065H在IDE中的操作步骤相同。下列步骤以3065H使用I2C 驱动模块为例：
 
 ①：打开工程后，单击工具栏中的“芯片配置器”选项，如下图所示。
 
@@ -111,7 +139,7 @@ https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip
 
 #### 工程烧录
 
-1.连接好调试器与开发板，目前支持的调试器有两种：HiSpark-Trace和HiSpark-Link。下图使用HiSpark-Trace调试器烧录。
+1.将调试器连接主机端，将开发板接上电源线，连接好调试器与开发板，目前支持的调试器有两种：HiSpark-Trace和HiSpark-Link。下图使用HiSpark-Trace调试器烧录。
 
 > 注：HiSpark-Trace调试器有多个连接口，连接错误会导致烧录失败，注意检查。
 
@@ -127,9 +155,7 @@ https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip
 
 ## Demo
 
-### 3065H
-
-3065H提供了以下Demo供开发参考，存放路径：https://gitee.com/HiSpark/open_mcu/tree/master/src/application
+3061M/3065H提供了以下Demo供开发参考，sample存放路径：https://gitee.com/HiSpark/open_mcu/tree/master/src/application
 
 **主目录结构说明**
 
