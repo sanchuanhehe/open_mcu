@@ -2,7 +2,7 @@
 
 ## 3061M介绍
 
-3061M系列 生态板由 ECBMCU201MPC（核心板）和 ECBMOTORA（电机驱动板组成。
+3061M系列 生态板由 ECBMCU201MPC（核心板）和 ECBMOTORA（电机驱动板组成）。
 
 ECBMCU201MPC是针对 3061M系列 MCU开发的生态核心板，用于 3061M初始评估和设计参考，内嵌一块 USB接口的调试板。
 
@@ -18,7 +18,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC或 PMSM电机控制。该�
 
 ![image-20240715162244103](./pic/image-20240715162244103.png)
 
-3061M通用生态板用户手册详细内容请查阅：https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/2.%203061/1.%203061%20%E7%94%9F%E6%80%81%E6%9D%BF%E5%8F%82%E8%80%83%E8%AE%BE%E8%AE%A1
+3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/2.%203061/1.%203061%20%E7%94%9F%E6%80%81%E6%9D%BF%E5%8F%82%E8%80%83%E8%AE%BE%E8%AE%A1" title="超链接title">Hi3061M系列 通用生态板用户手册 00B01</a>
 
 ## 3065H介绍
 
@@ -38,7 +38,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ![image-20240527103127826](./pic/image-20240527103127826.png)  
 
-3065H通用生态板用户手册详细内容请查阅：https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/1.%203065
+3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/1.%203065" title="超链接title">Hi3065H通用生态板用户手册 V03</a>
 
 ## 快速上手
 
@@ -52,13 +52,9 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 1.下载 Hispark Studio IDE及独立工具：
 
-Hispark Studio IDE 版本下载链接（推荐使用）：
-https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio.exe
+Hispark Studio IDE 版本下载链接（推荐使用）：<a href="https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio.exe" title="超链接title">HisparkStudio</a>
 
-Hispark Studio 独立工具下载链接：
-https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/SolarA2IDE.zip
-
-具体包括如下独立工具：
+Hispark Studio 独立工具下载链接：<a href="https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/SolarA2IDE.zip" title="超链接title">SolarA2IDE</a>，具体包括如下独立工具：
 
 | 文件名                               | 描述               |
 | ------------------------------------ | ------------------ |
@@ -66,8 +62,7 @@ https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/SolarA2IDE.zip
 | Programmer-1.0.0.1.tar.gz            | 烧录工具。         |
 | MotorControlWorkbench-1.0.0.0.tar.gz | 电机工具。         |
 
-Hispark Studio IDE 版本下载链接（历史归档版本）：
-https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip
+Hispark Studio IDE 版本下载链接（历史归档版本）：<a href="https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip" title="超链接title">HiSparkStudio_beta</a>
 
 2.打开 HiSpark Studio IDE，进入欢迎页面，单击“新建工程”，进入新建工程页面。
 
@@ -155,7 +150,7 @@ https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip
 
 ## Demo
 
-3061M/3065H提供了以下Demo供开发参考，sample存放路径：https://gitee.com/HiSpark/open_mcu/tree/master/src/application
+3061M/3065H提供了以下Demo供开发参考，sample存放路径：[application_sample](https://gitee.com/HiSpark/open_mcu/tree/master/src/application)
 
 **主目录结构说明**
 
