@@ -4,13 +4,24 @@
 
   open_mcu代码仓为支持3061M和3065M解决方案SDK。
 
+## 购买渠道
+
+|    名称    | 硬件资料                                                     | 介绍              |
+| :--------: | ------------------------------------------------------------ | ----------------- |
+| 3061MNPIKA | [购买链接](https://www.ickey.cn/detail/1003001013207471/3061MNPIKA.html#00d92d22-8a7b-43f5-a338-c16634462049) | 3061M系列解决方案 |
+| 3061MNPICA | [购买链接](https://www.ickey.cn/detail/1003001013207477/3061MNPICA.html#8b9f1c65-2326-40b5-91be-f7ac10bb890a) | 3061M系列解决方案 |
+| 3061MNNICA | [购买链接](https://www.ickey.cn/detail/1003001013207473/3061MNNICA.html#909633a3-1823-41f3-aec5-2baf839e8582) | 3061M系列解决方案 |
+| 3061MNNIKA | [购买链接](https://www.ickey.cn/detail/1003001013207477/3061MNPICA.html#8b9f1c65-2326-40b5-91be-f7ac10bb890a) | 3061M系列解决方案 |
+| 3065HRPIRZ | [购买链接](https://www.ickey.cn/detail/1003001013207476/3065HRPIRZ.html#84b508e7-3eac-4f2b-943a-4aea2f0cc901) | 3065H系列解决方案 |
+
+<img src="docs/pic/readme/3061M_buy.jpg" style="zoom: 25%;" /><img src="docs/pic/readme/3065H_buy.jpg" style="zoom: 25%;" />
+
 ## 支持的开发板
 
-| 开发板名称 | 硬件资料                                                     | 软件资料     | 购买链接                                                     | 开发板介绍    |
-| :--------: | ------------------------------------------------------------ | :----------- | :----------------------------------------------------------- | :------------ |
-|   3061M    | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3061M) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 参考3061M介绍 |
-|   3065H    | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 参考3065H介绍 |
-
+|                 开发板名称                 | 硬件资料                                                     | 软件资料     | 购买链接                                                     | 开发板介绍                                                   |
+| :----------------------------------------: | ------------------------------------------------------------ | :----------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| ECBMCU201MPC![](docs/pic/readme/3061M.png) | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3061M) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | Hi3061M是针对家电、工业等领域设计的高性价比MCU，使用海思自有RISC-V内核，支持150MHz主频，支持AI场景扩展；支持32KB SRAM和128KB 内置Flash，可支持客户产品功能持续迭代和算法升级；可应用于冰洗空、电动自行车、高速风机、电动工具、按摩椅等比较广泛的应用场景。 |
+|  ECBMCU105H![](docs/pic/readme/3061M.png)  | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | Hi3065H是基于海思自研RISC-V内核的高性能实时控制专用MCU， 具有高性能、高集成度、高可靠性、易开发的特点，同时配合海思强大的算法团队和嵌入式AI能力，使得Hi3065H上市后快速获得家电、能源、工业等行业内多个客户的认可和好评。 |
 ## 目录介绍
 
 | 目录   | 介绍                   |
