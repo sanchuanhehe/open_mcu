@@ -11,7 +11,7 @@
 | 3061MNPIKA | [购买链接](https://www.ickey.cn/detail/1003001013207471/3061MNPIKA.html#00d92d22-8a7b-43f5-a338-c16634462049) | 3061M系列解决方案 |
 | 3061MNPICA | [购买链接](https://www.ickey.cn/detail/1003001013207477/3061MNPICA.html#8b9f1c65-2326-40b5-91be-f7ac10bb890a) | 3061M系列解决方案 |
 | 3061MNNICA | [购买链接](https://www.ickey.cn/detail/1003001013207473/3061MNNICA.html#909633a3-1823-41f3-aec5-2baf839e8582) | 3061M系列解决方案 |
-| 3061MNNIKA | [购买链接](https://www.ickey.cn/detail/1003001013207477/3061MNPICA.html#8b9f1c65-2326-40b5-91be-f7ac10bb890a) | 3061M系列解决方案 |
+| 3061MNNIKA | [购买链接](https://www.ickey.cn/detail/1003001013207474/3061MNNIKA.html#878faa99-3c91-4673-acdf-328557b0dbdb) | 3061M系列解决方案 |
 | 3065HRPIRZ | [购买链接](https://www.ickey.cn/detail/1003001013207476/3065HRPIRZ.html#84b508e7-3eac-4f2b-943a-4aea2f0cc901) | 3065H系列解决方案 |
 
 <img src="docs/pic/readme/1732937293142.png" alt="1732937293142" style="zoom:50%;" /><img src="docs/pic/readme/1732937308965.png" alt="1732937308965" style="zoom: 50%;" />
