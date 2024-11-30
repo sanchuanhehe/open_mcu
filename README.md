@@ -14,7 +14,7 @@
 | 3061MNNIKA | [购买链接](https://www.ickey.cn/detail/1003001013207477/3061MNPICA.html#8b9f1c65-2326-40b5-91be-f7ac10bb890a) | 3061M系列解决方案 |
 | 3065HRPIRZ | [购买链接](https://www.ickey.cn/detail/1003001013207476/3065HRPIRZ.html#84b508e7-3eac-4f2b-943a-4aea2f0cc901) | 3065H系列解决方案 |
 
-<img src="docs/pic/readme/3061M_buy.jpg" style="zoom: 25%;" /><img src="docs/pic/readme/3065H_buy.jpg" style="zoom: 25%;" />
+<img src="docs/pic/readme/3061M_buy.png" style="zoom: 25%;" /><img src="docs/pic/readme/3065H_buy.png" style="zoom: 25%;" />
 
 ## 支持的开发板
 
