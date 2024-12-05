@@ -14,14 +14,218 @@
 | 3061MNNIKA | [购买链接](https://www.ickey.cn/detail/1003001013207474/3061MNNIKA.html#878faa99-3c91-4673-acdf-328557b0dbdb) | 3061M系列解决方案 |
 | 3065HRPIRZ | [购买链接](https://www.ickey.cn/detail/1003001013207476/3065HRPIRZ.html#84b508e7-3eac-4f2b-943a-4aea2f0cc901) | 3065H系列解决方案 |
 
-<img src="docs/pic/readme/1732937293142.png" alt="1732937293142" style="zoom:50%;" /><img src="docs/pic/readme/1732937308965.png" alt="1732937308965" style="zoom: 50%;" />
+
+
+  ![3061M_buy](./docs/pic/readme/3061M_buy.png)  ![3065H_buy](./docs/pic/readme/3065H_buy.png)
 
 ## 支持的开发板
 
 |                 开发板名称                 | 硬件资料                                                     | 软件资料     | 购买链接                                                     | 开发板介绍                                                   |
 | :----------------------------------------: | ------------------------------------------------------------ | :----------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| ECBMCU201MPC![](docs/pic/readme/3061M.png) | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3061M) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | Hi3061M是针对家电、工业等领域设计的高性价比MCU，使用海思自有RISC-V内核，支持150MHz主频，支持AI场景扩展；支持32KB SRAM和128KB 内置Flash，可支持客户产品功能持续迭代和算法升级；可应用于冰洗空、电动自行车、高速风机、电动工具、按摩椅等比较广泛的应用场景。 |
-|  ECBMCU105H![](docs/pic/readme/3061M.png)  | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | Hi3065H是基于海思自研RISC-V内核的高性能实时控制专用MCU， 具有高性能、高集成度、高可靠性、易开发的特点，同时配合海思强大的算法团队和嵌入式AI能力，使得Hi3065H上市后快速获得家电、能源、工业等行业内多个客户的认可和好评。 |
+| ECBMCU201MPC![](docs/pic/readme/3061M.png) | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3061M) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 3061M是针对家电、工业等领域设计的高性价比MCU，使用RISC-V内核，支持150MHz主频，支持AI场景扩展；支持32KB SRAM和128KB 内置Flash，可支持客户产品功能持续迭代和算法升级；可应用于冰洗空、电动自行车、高速风机、电动工具、按摩椅等比较广泛的应用场景。 |
+|  ECBMCU105H![](docs/pic/readme/3061M.png)  | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 3065H是RISC-V内核的高性能实时控制专用MCU， 具有高性能、高集成度、高可靠性、易开发的特点，同时配合强大的算法团队和嵌入式AI能力，使得3065H上市后快速获得家电、能源、工业等行业内多个客户的认可和好评。 |
+## 快速上手
+
+[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+
+## 示例教程
+
+ECBMCU201MPC、ECBMCU105H提供了以下Demo供开发参考：
+
+<table  width="990" border="0" cellpadding="0" cellspacing="0" style='border-collapse:collapse;table-layout:fixed;'>
+ <tr height="18" style='height:13.50pt;'>
+  <td width="140" x:str><strong>一级分类</strong></td>
+  <td width="170" x:str><strong>子分类</strong></td>
+  <td width="680" colspan="6" align="center" x:str><strong>应用示例</strong></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td width="140" align="center" rowspan="3" style='height:27.00pt' x:str>
+<strong>系统核心模块</strong></td>
+  <td x:str><strong>GPIO</strong></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/gpio/sample_gpio_led">GPIO管脚控制LED灯的亮灭端案例</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/gpio/sample_gpio_key">GPIO对按键检测案例</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/gpio/sample_gpio_interrupt">GPIO中断功能测试案例”</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/gpio/sample_gpio_circle">GPIO两个管脚的环回测试</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td width="170" x:str><a href=""></a></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>WDG</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/wdg/sample_iwdg_refresh">独立看门狗测试案例</a></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/wdg/sample_wwdg_refresh">窗口看门狗测试案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>PMC</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/pmc/sample_pmc_wakeup">PMC模块的定时唤醒案例</a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+  <tr height="18" style='height:13.50pt;'>
+  <td width="140" align="center" rowspan="3" style='height:27.00pt' x:str>
+<strong>模拟模块</strong></td>
+  <td x:str><strong>ACMP_DAC</strong></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/acmp/sample_acmp_interrupt">模拟比较器中断使用案例</a></td>
+  <td width="170" x:str><a                       href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/acmp/sample_acmp_out_result">模拟比较器与DAC基本使用案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>ADC</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/adc/sample_adc_single_trigger_it">ADC的单次采样案例</a></td>
+  <td width="170" x:str><a 
+href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/adc/sample_adc_continue_trigger">单次触发ADC实现连续采样案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+  <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>PGA</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/pga/sample_pga_result_sampling">ADC采样PGA的输出电压案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+  <tr height="18" style='height:13.50pt;'>
+  <td width="140" align="center" rowspan="7" style='height:27.00pt' x:str>
+<strong>定时器/事件模块</strong></td>
+  <td x:str><strong>GPT</strong></td> 
+   <td width="170" x:str><a  href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/gpt/sample_gpt_pwm_output">PWM波使用案例</a></td>
+  <td width="170" x:str><a 
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+  <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>APT</strong></td>
+  <td width="170" x:str><a 
+href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/apt/sample_apt_single_resistor">高级定时器输出三相互补PWM波案例</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/adc/sample_adc_associative_trigger_of_apt">使用APT对ADC进行周期采样案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>TIMER</strong></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/timer/sample_timer_interrupt">定时器中断使用案例 </td>
+  <td width="170" x:str><a 
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+  <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>CFD</strong></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/cfd/sample_cfd_check_error">CFD的时钟失效保护使用案例
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td> 
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>CMM</strong></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/cmm/sample_cmm_check_error">CMM时钟频率监测和频率中断的使用案例 </td>
+  <td width="170" x:str><a 
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>QDM</strong></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/qdm/sample_qdm_m">M法测量电机实时转速使用案例 </td>
+  <td width="170" x:str><a 
+  href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/middleware_sample/pmsm_encode_qdm_2shunt_foc">单电机双电阻采样的有感Foc应用案例 </td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>CAPM</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/capm/capm_hall_sample">CAPM读取电机HALL位置传感器案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ <tr height="18" style='height:13.50pt;'>
+  <td width="140" align="center" rowspan="4" style='height:27.00pt' x:str>
+<strong>通信模块</strong></td>
+  <td x:str><strong>UART</strong></td> 
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/uart/sample_uart_interrupt_tx_after_rx">中断模式下环回发送数据案例</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/uart/sample_uart_dma_tx_int_rx_simultaneously">Tx_DMA_Rx_INT收发数据案例</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/uart/sample_uart_character_match">UART检测特定字符案例</a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+<tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>IIC</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/i2c/sample_i2c_master_blocking_at24c64">用IIC通信AT24C64使用案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+<tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>SPI</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/spi/sample_spi_master">两开发板通信主机使用案例</a></td>
+  <td width="170" x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/spi/sample_spi_slave">两开发板通信从机使用案例</a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+<tr height="18" style='height:13.50pt;'>
+  <td x:str><strong>CAN</strong></td>
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/can/sample_can_send_receive">CAN总线使用案例</a></td>
+<td width="170" x:str><a href=""></a></td>
+  <td width="170" x:str><a href=""></a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+ </tr>
+<tr height="18" style='height:13.50pt;'>
+  <td width="140" align="center" rowspan="1" style='height:27.00pt' x:str>
+<strong>计算模块</strong></td>
+  <td x:str><strong>CRC</strong></td> 
+  <td x:str><a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sample/crc/sample_crc_gen_algo">CRC16_XMODEM算法使用案例</a></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+  <td ></td>
+ </tr>
+<![if supportMisalignedColumns]>
+   <tr height="18" style="display:none;">
+   </tr>
+  <![endif]>
+</table>
+
+
+
 ## 目录介绍
 
 | 目录   | 介绍                   |
@@ -51,13 +255,13 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC或 PMSM电机控制。该�
 
 ![image-20240715162244103](docs/pic/tools/image-20240715162244103.png)
 
-3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/2.%203061/1.%203061%20%E7%94%9F%E6%80%81%E6%9D%BF%E5%8F%82%E8%80%83%E8%AE%BE%E8%AE%A1" title="超链接title">Hi3061M系列 通用生态板用户手册 00B01</a>
+3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/2.%203061/1.%203061%20%E7%94%9F%E6%80%81%E6%9D%BF%E5%8F%82%E8%80%83%E8%AE%BE%E8%AE%A1" title="超链接title">3061M系列 通用生态板用户手册 00B01</a>
 
 ### 3065H介绍
 
 3065H 通用生态板由 ECBMCU105H （核心板）和 ECBMOTORA （电机驱动板）组成。
 
-ECBMCU105H是针对 3065H 芯片开发的生态核心板，用于 3065H 芯片初始评估和设计参考，内嵌一块 USB 接口的调试板。
+ECBMCU105H是针对 3065H 生态核心板，用于 3065H 初始评估和设计参考，内嵌一块 USB 接口的调试板。
 
 ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。该单板支持24V/12V DCIN 输入。
 
@@ -71,7 +275,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ![image-20240527103127826](docs/pic/tools/image-20240527103127826.png)  
 
-3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/1.%203065" title="超链接title">Hi3065H通用生态板用户手册 V03</a>
+3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/1.%203065" title="超链接title">3065H通用生态板用户手册 V03</a>
 
 ## 开发环境搭建
 
@@ -296,14 +500,59 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ## **参与贡献**
 
-我们非常欢迎你能对这个项目提出代码上的改进或扩展, 方法是:
+- 在windows/linux下安装git，并配置git账号、密码、邮箱等
 
-1. Fork 本仓库
-2. 下载到本地, 修改, 提交
-3. 推送代码
-4. 在页面点击 Pull Request
+  git config --global user.name "Your Name" // 配置用户名
 
-这样我们就能接到你的推送申请。
+  git config --global user.email "your.email@example.com" // 配置邮箱
+
+  git config –local user.password “xxxxx密码”  // 配置密码
+
+  git config –list    // 查看配置信息
+
+- fork仓库，就是把官方仓库当前时间点内容搬迁到自己账号下面，直接在网页上操作即可完成。如我们活动仓库Fork到自己账号下面。
+
+  ![步骤1](./docs/pic/readme/步骤1.png)
+
+  ![步骤2](./docs/pic/readme/步骤2.png)
+
+- 将个人仓库克隆到本地仓库，在windows/linux下打开git，点击网页上的“克隆/下载”，在本地文件夹中鼠标“右键”，选择"Open Git Bash here"，在打开的bash窗口，执行复制的指令
+
+  ![步骤3](./docs/pic/readme/步骤3-1733119001993-1.png)
+
+  ![步骤4](./docs/pic/readme/步骤4-1733119013197-3.png)
+
+  ```
+  git clone https://gitee.com/xxx/open_mcu.git   // xxx代表gitee账号
+  ```
+
+  
+
+  - 克隆完成后，在本地vendor目录下创建others/demo/xxxx(demo名称)文件夹，并将demo使用指南、代码提交到代码仓中，如下
+
+    ![QQ截图20241101175754](./docs/pic/readme/20241101175754.png)
+
+  - 修改完成后，在本地仓库上传修改后的内容，依次执行以下命令。
+
+    ![QQ截图20241104091910](./docs/pic/readme/20241104091910.png)
+
+    ![QQ截图20241104094245](./docs/pic/readme/20241104094245.png)
+
+  - 上传完成后可以看见自己gitee仓库文件已经更新。
+
+    ![QQ截图20241104092210](./docs/pic/readme/20241104092210.png)
+
+  - [创建ISSUE](https://gitee.com/HiSpark/open_mcu/issues) 根据提示填写对应信息。
+
+    ![QQ截图20241104095708](./docs/pic/readme/20241104095708.png)
+
+    ![20241202141801](./docs/pic/readme/20241202141801.png)
+
+  - 访问您在码云上的fork仓页面，点击创建Pull Request按钮选择对应分支生成PR，详细操作请参考码云帮助中心的开发协作指导：https://gitee.com/help/articles/4128
+  
+    ![20241104092301](./docs/pic/readme/QQ截图20241104092301.png)
+  
+    ![20241202142432](./docs/pic/readme/20241202142432.png)
 
 ## **最后的话**
 
