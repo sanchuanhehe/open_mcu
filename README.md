@@ -30,7 +30,11 @@
 |  ECBMCU105H![](docs/pic/readme/3061M.png)  | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 3065H是RISC-V内核的高性能实时控制专用MCU， 具有高性能、高集成度、高可靠性、易开发的特点，同时配合强大的算法团队和嵌入式AI能力，使得3065H上市后快速获得家电、能源、工业等行业内多个客户的认可和好评。 |
 ## 快速上手
 
-[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+环境搭建：[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+
+手册资料：[参考src/document](https://gitee.com/HiSpark/open_mcu/tree/master/src/document)
+
+实验指导：[参考3061M实验指导手册](https://gitee.com/HiSpark/open_mcu/tree/master/docs)
 
 ## 示例教程
 
@@ -228,16 +232,14 @@ href="https://gitee.com/HiSpark/open_mcu/tree/master/src/application/drivers_sam
   <![endif]>
 </table>
 
-
-
 ## 目录介绍
 
-| 目录   | 介绍                   |
-| ------ | ---------------------- |
-| docs   | 硬件原理图             |
-| src    | SDK源码目录            |
-| tools  | 开发工具及环境搭建指南 |
-| vendor | 存放对应开发板案例     |
+| 目录   | 介绍                         |
+| ------ | ---------------------------- |
+| docs   | 存放硬件原理图、实验指导手册 |
+| src    | SDK源码目录                  |
+| tools  | 开发工具及环境搭建指南       |
+| vendor | 存放对应开发板案例           |
 
 ## 硬件介绍
 
