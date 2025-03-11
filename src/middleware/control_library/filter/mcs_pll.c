@@ -47,9 +47,8 @@ void PLL_Init(PLL_Handle *pllHandle, float ts, float bdw)
     pllHandle->freq = 0.0f;
     pllHandle->angle = 0.0f;
     pllHandle->ratio = DOUBLE_PI * ts;
-    pllHandle->pllBdw = bdw;
     pllHandle->pi.ts = pllHandle->ts;
-    PLL_ParamUpdate(pllHandle, pllHandle->pllBdw);
+    PLL_ParamUpdate(pllHandle, bdw);
 }
 
 /**

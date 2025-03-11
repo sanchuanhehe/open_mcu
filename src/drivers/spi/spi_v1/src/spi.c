@@ -30,10 +30,13 @@
 #include "spi.h"
 /* Macro definitions ---------------------------------------------------------*/
 #define SPI_WAIT_TIMEOUT   0x400
+#define SPI_FIFO_DEPTH     16
 
 #define SPI_DATA_WIDTH_SHIFT_8BIT    1
 #define SPI_DATA_WIDTH_SHIFT_16BIT   2
 #define SPI_WRITE_FIFO_SIZE 2
+
+#define SPI_DATA_SHIFT_8BIT    8
 
 #define SPI_INTERRUPT_SET_ALL 0xF
 #define SPI_DMA_FIFO_ENABLE   0x3
@@ -90,7 +93,7 @@ static BASE_StatusType ConfigThreeTransferParam(SPI_Handle *handle)
     if (handle->xFerMode == HAL_XFER_MODE_BLOCKING) {
         handle->baseAddress->SPIIMSC.reg = 0x0;
     } else if (handle->xFerMode == HAL_XFER_MODE_INTERRUPTS) {
-        handle->baseAddress->SPIIMSC.reg = SPI_INTERRUPT_SET_ALL;
+        handle->baseAddress->SPIIMSC.reg = 0x0;
         /* Setting the rx and tx interrupt transfer size */
         handle->baseAddress->SPITXFIFOCR.BIT.txintsize = handle->txIntSize;
         handle->baseAddress->SPIRXFIFOCR.BIT.rxintsize = handle->rxIntSize;
@@ -145,16 +148,45 @@ static void SpiCsControl(SPI_Handle *handle, unsigned int control)
   * @param handle SPI handle.
   * @retval None.
   */
-static void SpiRxTxCallack(void *handle)
+static void SpiRxTxCallbackFunc(void *handle)
+{
+    SPI_Handle *spiHandle = (SPI_Handle *) handle;
+    switch (spiHandle->state) {
+        case HAL_SPI_STATE_BUSY_TX :
+            /* Invoke tx callback function. */
+            if (spiHandle->txCount == spiHandle->transferSize && spiHandle->userCallBack.TxCpltCallback != NULL) {
+                spiHandle->userCallBack.TxCpltCallback(spiHandle);
+            }
+            break;
+        case HAL_SPI_STATE_BUSY_RX :
+            /* Invoke rx callback function. */
+            if (spiHandle->userCallBack.RxCpltCallback != NULL) {
+                spiHandle->userCallBack.RxCpltCallback(spiHandle);
+            }
+            break;
+        case HAL_SPI_STATE_BUSY_TX_RX :
+            /* Invoke tx rx callback function. */
+            if (spiHandle->userCallBack.TxRxCpltCallback != NULL) {
+                spiHandle->userCallBack.TxRxCpltCallback(spiHandle);
+            }
+            break;
+        default :
+            break;
+    }
+}
+
+/**
+  * @brief Tx and Rx complete processing.
+  * @param handle SPI handle.
+  * @retval None.
+  */
+static void SpiRxTxCallback(void *handle)
 {
     SPI_Handle *spiHandle = (SPI_Handle *) handle;
     SPI_ASSERT_PARAM(spiHandle != NULL);
     SPI_ASSERT_PARAM(IsSPIInstance(spiHandle->baseAddress));
-    if (spiHandle->txCount == spiHandle->transferSize) {
-        /* Invoke tx callback function. */
-        if (spiHandle->userCallBack.TxCpltCallback != NULL) {
-            spiHandle->userCallBack.TxCpltCallback(spiHandle);
-        }
+    if (spiHandle->txCount == spiHandle->transferSize  && spiHandle->baseAddress->SPIIMSC.BIT.txim != 0x0) {
+        /* Masks the TX interrupt. */
         spiHandle->baseAddress->SPIIMSC.BIT.txim = 0x0;
     }
 
@@ -167,14 +199,8 @@ static void SpiRxTxCallack(void *handle)
 
         SpiCsControl(spiHandle, SPI_CHIP_DESELECT);
 
-        /* Invoke rx callback function. */
-        if (spiHandle->userCallBack.RxCpltCallback != NULL) {
-            spiHandle->userCallBack.RxCpltCallback(spiHandle);
-        }
-        /* Invoke tx rx callback function. */
-        if (spiHandle->userCallBack.TxRxCpltCallback != NULL) {
-            spiHandle->userCallBack.TxRxCpltCallback(spiHandle);
-        }
+        /* RX or TX callback after cs desselect. */
+        SpiRxTxCallbackFunc(spiHandle);
         spiHandle->state = HAL_SPI_STATE_READY;
     }
 }
@@ -186,8 +212,7 @@ static void SpiRxTxCallack(void *handle)
   */
 static void WriteData(SPI_Handle *handle)
 {
-    unsigned int size = 0;
-    while ((size < SPI_WRITE_FIFO_SIZE) && (handle->baseAddress->SPISR.BIT.tnf) &&
+    while (handle->baseAddress->SPISR.BIT.tnf && (handle->txCount - handle->rxCount) < SPI_FIFO_DEPTH &&
            (handle->transferSize > handle->txCount)) {
         if (handle->dataWidth > SPI_DATA_WIDTH_8BIT) {
             /* Only data needs to be read. Due to SPI characteristics,
@@ -196,9 +221,13 @@ static void WriteData(SPI_Handle *handle)
                 handle->baseAddress->SPIDR.reg = 0x0;
                 handle->txCount += SPI_DATA_WIDTH_SHIFT_16BIT;
             } else {
-                handle->baseAddress->SPIDR.reg = *(unsigned short *)handle->txBuff;
-                handle->txCount += SPI_DATA_WIDTH_SHIFT_16BIT; /* txCount is number of bytes transferred */
-                handle->txBuff += SPI_DATA_WIDTH_SHIFT_16BIT;
+                unsigned short txData = *handle->txBuff;
+                handle->txBuff += SPI_DATA_WIDTH_SHIFT_8BIT;
+                unsigned short temp = *handle->txBuff;
+                handle->txBuff += SPI_DATA_WIDTH_SHIFT_8BIT;
+                txData += (temp << SPI_DATA_SHIFT_8BIT);
+                handle->baseAddress->SPIDR.reg = txData; /* Write data to register. */
+                handle->txCount += SPI_DATA_WIDTH_SHIFT_16BIT; /* txCount is number of bytes transferred. */
             }
         } else { /* datawidth is 8bit */
             if (handle->txBuff == NULL) {
@@ -210,7 +239,6 @@ static void WriteData(SPI_Handle *handle)
                 handle->txBuff += SPI_DATA_WIDTH_SHIFT_8BIT;
             }
         }
-        size++;
     }
 }
 
@@ -231,9 +259,12 @@ static void ReadData(SPI_Handle *handle)
                 BASE_FUNC_UNUSED(val);
                 handle->rxCount += SPI_DATA_WIDTH_SHIFT_16BIT;
             } else {
-                *(unsigned short *)handle->rxBuff = handle->baseAddress->SPIDR.reg;
-                handle->rxCount += SPI_DATA_WIDTH_SHIFT_16BIT;
-                handle->rxBuff += SPI_DATA_WIDTH_SHIFT_16BIT;
+                unsigned short rxData = handle->baseAddress->SPIDR.reg;  /* Read data from register. */
+                *handle->rxBuff = rxData;
+                handle->rxBuff += SPI_DATA_WIDTH_SHIFT_8BIT;
+                *handle->rxBuff = (rxData >> SPI_DATA_SHIFT_8BIT);
+                handle->rxBuff += SPI_DATA_WIDTH_SHIFT_8BIT;
+                handle->rxCount += SPI_DATA_WIDTH_SHIFT_16BIT; /* rxCount is number of bytes received. */
             }
         } else { /* datawidth is 8bit */
             if (handle->rxBuff == NULL) {
@@ -242,7 +273,7 @@ static void ReadData(SPI_Handle *handle)
                 handle->rxCount += SPI_DATA_WIDTH_SHIFT_8BIT;
             } else {
                 *(unsigned char *)handle->rxBuff = handle->baseAddress->SPIDR.reg & 0xff;
-                handle->rxCount += SPI_DATA_WIDTH_SHIFT_8BIT;
+                handle->rxCount += SPI_DATA_WIDTH_SHIFT_8BIT; /* rxCount is number of bytes received. */
                 handle->rxBuff += SPI_DATA_WIDTH_SHIFT_8BIT;
             }
         }
@@ -1167,5 +1198,5 @@ void HAL_SPI_IrqHandler(void *handle)
     }
     /* Reads and writes data based on the interrupt flag. */
     ReadWriteInt(spiHandle);
-    SpiRxTxCallack(spiHandle);
+    SpiRxTxCallback(spiHandle);
 }

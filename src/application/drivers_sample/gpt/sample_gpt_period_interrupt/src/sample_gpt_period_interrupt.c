@@ -29,12 +29,12 @@
   * @param None.
   * @retval None.
   */
-void GPT2PWMPeriodOutputFinishCallBack(void *handle)
+void GPTPWMPeriodOutputFinishCallBack(void *handle)
 {
     BASE_FUNC_UNUSED(handle);
-    /* USER CODE BEGIN IRQ_GPT2_PRD_INT */
+    /* USER CODE BEGIN IRQ_GPT_PRD_INT */
     DBG_PRINTF("GPT period interrupt\n");
-    /* USER CODE END IRQ_GPT2_PRD_INT */
+    /* USER CODE END IRQ_GPT_PRD_INT */
 }
 
 /**

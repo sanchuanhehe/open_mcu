@@ -103,7 +103,7 @@ static void FOSMO_InitWrapper(FOSMO_Handle *fosmo, float ts)
         .pllBdw = SPECIAL_SMO4TH_PLL_BDW,
     };
     /* Init smo param. */
-    FOSMO_Init(fosmo, fosmoParam, g_motorParam, ts);
+    FOSMO_Init(fosmo, fosmoParam, &g_motorParam, ts);
 }
 
 /* Smo4th param. */
@@ -117,7 +117,7 @@ static void SMO4TH_InitWrapper(SMO4TH_Handle *smo4TH)
         .fcLpf = SPECIAL_SMO4TH_SPD_FILTER_CUTOFF_FREQ,
     };
     /* Init smo param. */
-    SMO4TH_Init(smo4TH, smo4thParam, g_motorParam, CTRL_CURR_PERIOD);
+    SMO4TH_Init(smo4TH, smo4thParam, &g_motorParam, CTRL_CURR_PERIOD);
 }
 
 
@@ -514,6 +514,9 @@ static void TrimInitAdcShiftValue(MTRCTRL_Handle *mtrCtrl)
             adc1TempSum += adc1SampleTemp;
         }
     }
+    if (adcSampleTimes < 1.0f) {
+        adcSampleTimes = 1.0f; /* Prevent divide-by-zero errors */
+    }
     adc0SampleTemp = adc0TempSum / adcSampleTimes;
     adc1SampleTemp = adc1TempSum / adcSampleTimes;
     /* Force convert to float */
@@ -656,47 +659,6 @@ static void InitSoftware(void)
 }
 
 /**
-  * @brief Config the master APT.
-  * @param aptx The master APT handle.
-  * @retval None.
-  */
-static void AptMasterSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    /* Config the master APT. */
-    HAL_APT_MasterSyncInit(aptx, APT_SYNC_OUT_ON_CNTR_ZERO);
-}
-
-/**
-  * @brief Config the slave APT.
-  * @param aptx The slave APT handle.
-  * @retval None.
-  */
-static void AptSalveSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    APT_SlaveSyncIn slave;
-    /* Config the slave APT. */
-    slave.divPhase = 0;
-    slave.cntPhase = 0;
-    slave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
-    slave.syncInSrc = APT_SYNC_IN_SRC;
-    slave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
-    HAL_APT_SlaveSyncInit(aptx, &slave);
-}
-/**
-  * @brief Configuring Master and Slave APTs.
-  * @retval None.
-  */
-static void AptMasterSalveSet(void)
-{
-    /* motor APT master/slave synchronization */
-    AptMasterSet(&g_apt0);
-    AptSalveSet(&g_apt1);
-    AptSalveSet(&g_apt2);
-}
-
-/**
   * @brief Config the KEY func.
   * @param handle The GPIO handle.
   * @retval None.
@@ -746,7 +708,6 @@ int MotorMainProcess(void)
     SystemInit();
     HAL_TIMER_Start(&g_timer1);
 
-    AptMasterSalveSet();
     /* Disable PWM output before startup. */
     MotorPwmOutputDisable(g_apt);
     /* Software initialization. */

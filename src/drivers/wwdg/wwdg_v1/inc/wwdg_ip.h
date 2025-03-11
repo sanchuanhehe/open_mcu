@@ -349,7 +349,7 @@ static inline void DCL_WWDG_SetFreqDivValue(WWDG_RegStruct *wwdgx, WWDG_FreqDivT
     WWDG_PARAM_CHECK_NO_RET(freqDiv < WWDG_FREQ_DIV_MAX);
     wwdgx->WWDOG_KEY.BIT.wwdg_key = WWDG_UNLOCK_REG_CMD;
     wwdgx->WWDOG_PRE_DIV.BIT.wwdg_pre_div = freqDiv; /* freqDiv parameters set */
-    wwdgx->WWDOG_KEY.BIT.wwdg_key = WWDG_UNLOCK_REG_CMD;
+    wwdgx->WWDOG_KEY.BIT.wwdg_key = WWDG_LOCK_REG_CMD;
 }
 
 /**
@@ -487,24 +487,6 @@ static inline bool IsWwdgTimeType(WWDG_TimeType timeType)
             timeType == WWDG_TIME_UNIT_MS ||
             timeType == WWDG_TIME_UNIT_US);
 }
-
-/**
-  * @brief check wdg time value parameter.
-  * @param baseAddress Value of @ref WDG_RegStruct
-  * @param timeValue time value
-  * @param timeType Value of @ref WDG_TimeType.
-  * @retval Bool.
-  */
-static inline bool IsWwdgTimeValue(WWDG_RegStruct *baseAddress, float timeValue, WWDG_TimeType timeType)
-{
-    float clockFreq = (float)HAL_CRG_GetIpFreq((void *)baseAddress);
-    float maxSecond = (float)(0xFFFFFFFF / clockFreq); /* 0xFFFFFFFF  max input value */
-    return ((timeType == WWDG_TIME_UNIT_TICK && timeValue <= 0xFFFFFFFF) ||
-            (timeType == WWDG_TIME_UNIT_S && maxSecond >= timeValue) ||
-            (timeType == WWDG_TIME_UNIT_MS && maxSecond >= timeValue / FREQ_CONVERT_MS_UNIT) ||
-            (timeType == WWDG_TIME_UNIT_US && maxSecond >= timeValue / FREQ_CONVERT_US_UNIT));
-}
-
 /**
   * @}
   */

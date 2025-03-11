@@ -111,7 +111,7 @@ BASE_StatusType HAL_CAN_Init(CAN_Handle *canHandle)
     /* Step2: configuration command mask register, set 0xF3 to write into packet objects */
     canHandle->baseAddress->IF1_COMMAND_MASK.reg = 0xF3;
     /* Step3 ~ 4: init packet object 1 ~ 32 */
-    for (int i = 1; i <= CAN_OBJ_MAXNUM; i++) {
+    for (unsigned int i = 1; i <= CAN_OBJ_MAXNUM; i++) {
         canHandle->baseAddress->IF1_COMMAND_REQUEST.reg = i;
         do {
             busy = canHandle->baseAddress->IF1_COMMAND_REQUEST.BIT.BUSY;
@@ -158,7 +158,8 @@ BASE_StatusType HAL_CAN_DeInit(CAN_Handle *canHandle)
 {
     CAN_ASSERT_PARAM(canHandle != NULL);
     CAN_ASSERT_PARAM(IsCANInstance(canHandle->baseAddress));
-    canHandle->baseAddress->CAN_CONTROL.reg = BASE_CFG_DISABLE; /* Disables the control register. */
+    /* Configuration 1: CAN enters the initialization state and cannot transmit or receive data. */
+    canHandle->baseAddress->CAN_CONTROL.reg = BASE_CFG_ENABLE;
     canHandle->baseAddress->CAN_STATUS.reg = BASE_CFG_DISABLE;  /* Clear the status of the CAN. */
     canHandle->userCallBack.ReadFinishCallBack = NULL;         /* Clear all user call back function. */
     canHandle->userCallBack.TransmitErrorCallBack = NULL;
@@ -314,7 +315,7 @@ BASE_StatusType HAL_CAN_Write(CAN_Handle *canHandle, CANFrame *data)
     canHandle->state = CAN_STATE_BUSY_TX;
     unsigned int objId = 0;
     unsigned int id;
-    for (int i = BOUND_ID + 1; i <= CAN_OBJ_MAXNUM; i++) {
+    for (unsigned int i = BOUND_ID + 1; i <= CAN_OBJ_MAXNUM; i++) {
         if (g_msgObj[i - 1] == 0) {
             g_msgObj[i - 1] = 1;
             objId = i;
@@ -378,7 +379,7 @@ static BASE_StatusType CAN_ReadCallback(CAN_Handle *canHandle, unsigned int objI
     CAN_ASSERT_PARAM(canHandle != NULL);
     CAN_ASSERT_PARAM(IsCANInstance(canHandle->baseAddress));
     CAN_PARAM_CHECK_WITH_RET(canHandle->rxFrame != NULL, BASE_STATUS_ERROR);
-    CAN_PARAM_CHECK_WITH_RET((objID >= MESSAGE_NUMBER_MIN) && (objID <= MESSAGE_NUMBER_MAX), BASE_STATUS_ERROR);
+    CAN_PARAM_CHECK_WITH_RET((objId >= MESSAGE_NUMBER_MIN) && (objId <= MESSAGE_NUMBER_MAX), BASE_STATUS_ERROR);
     unsigned int busy, id, idLow, idHigh,  extendedFrame, remoteFrame;
     /* Step1: setting request transfer to packet object */
     canHandle->baseAddress->IF2_COMMAND_MASK.reg = 0x7F;  /* 0x7F indicates reading data from the packet object */

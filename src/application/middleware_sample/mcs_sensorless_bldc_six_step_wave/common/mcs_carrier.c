@@ -29,42 +29,7 @@
 #define S_TO_SYSTICK    100000000
 
 /**
-  * @brief Set the count compare points along the left and right edges of PWM waveform.
-  * @param aptHandle APT module handle.
-  * @param duty PWM duty. Range: 1 ~ 99.
-  * @retval BASE_StatusType: OK, ERROR, BUSY, TIMEOUT.
-  */
-static BASE_StatusType APT_SetPWMDutyByNumber(APT_Handle *aptHandle, float duty)
-{
-    APT_ASSERT_PARAM(aptHandle != NULL);
-    APT_ASSERT_PARAM(IsAPTInstance(aptHandle->baseAddress));
-    APT_PARAM_CHECK_WITH_RET(duty < 100.0, BASE_STATUS_ERROR); /* 100.0 % */
-    APT_PARAM_CHECK_WITH_RET(duty > 0.0, BASE_STATUS_ERROR);   /* 0.0 % */
-
-    unsigned int cntCmpLeftEdge;
-    unsigned int cntCmpRightEdge;
-    TC_REFC_REG tmpC;
-    TC_REFD_REG tmpD;
-
-    if (aptHandle->waveform.cntMode == APT_COUNT_MODE_UP_DOWN) {
-        cntCmpLeftEdge = aptHandle->waveform.timerPeriod - \
-                         (int)(((float)aptHandle->waveform.timerPeriod / 100.0) * duty); /* 100.0 % */
-        cntCmpRightEdge = cntCmpLeftEdge;
-    } else {
-        cntCmpLeftEdge = 1;
-        cntCmpRightEdge = (int)(((float)aptHandle->waveform.timerPeriod / 100.0) * duty + cntCmpLeftEdge); /* 100.0 % */
-    }
-    tmpC = aptHandle->baseAddress->TC_REFC;
-    tmpC.BIT.rg_cnt_refc = cntCmpLeftEdge;
-    aptHandle->baseAddress->TC_REFC = tmpC;
-    tmpD = aptHandle->baseAddress->TC_REFD;
-    tmpD.BIT.rg_cnt_refd = cntCmpRightEdge;
-    aptHandle->baseAddress->TC_REFD = tmpD;
-    return BASE_STATUS_OK;
-}
-
-/**
-  * @brief Sets the duty cycle of the H-bridge APT..
+  * @brief Sets the duty cycle of the H-bridge APT.
   * @param aptHandle APT module handle.
   * @param duty PWM duty. Range: 0.1 ~ 99.9.
   * @retval None.
@@ -74,13 +39,13 @@ void MCS_SetCtrAptDuty(MtrCtrlHandle *mtrCtrl, unsigned int duty)
     MCS_ASSERT_PARAM(mtrCtrl != NULL);
     MCS_ASSERT_PARAM(duty > 0);
     /* Set pwm duty of uvw pahse */
-    APT_SetPWMDutyByNumber(mtrCtrl->stepCtrl.controlApt.u, duty);
-    APT_SetPWMDutyByNumber(mtrCtrl->stepCtrl.controlApt.v, duty);
-    APT_SetPWMDutyByNumber(mtrCtrl->stepCtrl.controlApt.w, duty);
+    HAL_APT_SetPWMDutyByNumber(mtrCtrl->stepCtrl.controlApt.u, duty);
+    HAL_APT_SetPWMDutyByNumber(mtrCtrl->stepCtrl.controlApt.v, duty);
+    HAL_APT_SetPWMDutyByNumber(mtrCtrl->stepCtrl.controlApt.w, duty);
 }
 
 /**
-    if (mtrCtrl->sysVar.accTimeCnt >= mtrCtrl->sysVar.dragChangePhaseTime) {
+  * @brief Strong drag start.
   * @param mtrCtrl The motor control handle.
   * @retval None.
   */
@@ -92,6 +57,7 @@ static void ForceDragAcc(MtrCtrlHandle *mtrCtrl)
     unsigned int dragChangeFreq;
     unsigned int timerperiod;
     unsigned int freqLast;
+    unsigned int aptCountsOneUs;
 
     mtrCtrl->sysVar.accTimeCnt++;
     if (mtrCtrl->sysVar.accTimeCnt < mtrCtrl->sysVar.dragChangePhaseTime) {
@@ -102,10 +68,10 @@ static void ForceDragAcc(MtrCtrlHandle *mtrCtrl)
     /* Step 1: Calculate the voltage difference. */
     voltageDValue = IN_VOLTAGE_BUS * RAMP_DUTY_PWM;
     /* Step 2: Calculate the commutation frequency. */
-    freqLast = S_TO_US / (mtrCtrl->sysVar.dragChangePhaseTime * 83); /* The counting period is 83 us. */
+    freqLast = S_TO_US / (mtrCtrl->sysVar.dragChangePhaseTime * CTRL_CURE_PERIOD_US);
     dragChangeFreq = voltageDValue * STEP_MAX_NUM * POLES / (MOTOR_K * 2 * MATH_PI) + freqLast; /* 2*PI = 360° */
     /* Step 3: Convert the commutation frequency to the commutation count value. */
-    timerperiod = mtrCtrl->stepCtrl.controlApt.u->waveform.timerPeriod * 83; /* The counting period is 83 us. */
+    timerperiod = mtrCtrl->stepCtrl.controlApt.u->waveform.timerPeriod * CTRL_CURE_PERIOD_US;
     mtrCtrl->sysVar.dragChangePhaseTime = S_TO_US / (timerperiod * dragChangeFreq);
 
     /* Determine whether the change phase speed has reached the speed of stopping forced drag. */
@@ -120,9 +86,9 @@ static void ForceDragAcc(MtrCtrlHandle *mtrCtrl)
 
     /* Shorten the time interval of forced drag change phase. */
     mtrCtrl->pwmDuty += RAMP_DUTY_PWM;
-    /* 150 : 1us = 150 systick */
-    mtrCtrl->sysVar.waitTime = (mtrCtrl->sysVar.dragChangePhaseTime * 83 * 150) >> 1; /* The count period is 83us. */
-    /* 2 : Change phase time is 2 the waiting time. */
+    aptCountsOneUs = HAL_CRG_GetIpFreq(APT0_BASE) / S_TO_US;
+    mtrCtrl->sysVar.waitTime = (mtrCtrl->sysVar.dragChangePhaseTime * CTRL_CURE_PERIOD_US * aptCountsOneUs) >> 1;
+    /* Change phase time is 2 the waiting time. */
     mtrCtrl->spdRefHz = (float)(HAL_CRG_GetIpFreq(SYSTICK_BASE) / (mtrCtrl->sysVar.waitTime * 2)) / STEP_MAX_NUM;
     mtrCtrl->spdEstHz = mtrCtrl->spdRefHz;
     mtrCtrl->spdRmg.yLast = mtrCtrl->spdRefHz;
@@ -225,26 +191,34 @@ static void ChangePhase(MtrCtrlHandle *mtrCtrl)
 }
 
 /**
-  * @brief Zero-crossing detection and change phase
-  * @param mtrCtrl The motor control handle.
-  * @retval None.
-  */
+ * @brief Zero-crossing detection and change phase
+ * @param mtrCtrl The motor control handle.
+ * @retval None.
+ */
 void MCS_CarrierProcess(MtrCtrlHandle *mtrCtrl)
 {
     MCS_ASSERT_PARAM(mtrCtrl != NULL);
+    /* Offset value of the calibration value of the three-phase current */
 
-    if (mtrCtrl->stateMachine == FSM_STARTUP) {
-        /* Forced drag. */
-        ForceDragAcc(mtrCtrl);
-    } else if (mtrCtrl->stateMachine == FSM_RUN) {
-        mtrCtrl->readBemfUVW(&mtrCtrl->bemf);
-        MCS_SetCtrAptDuty(mtrCtrl, mtrCtrl->pwmDuty);
-        if (mtrCtrl->sysVar.changePhaseFlag) {
-            /* Change phase process. */
-            ChangePhase(mtrCtrl);
-        } else {
-            /* Zero-crossing detection procedure. */
-            BemfZeroCheck(mtrCtrl);
-        }
+    switch (mtrCtrl->stateMachine) {
+        case FSM_STARTUP:
+            ForceDragAcc(mtrCtrl); /* Forced drag. */
+            break;
+
+        case FSM_RUN:
+        case FSM_WAIT_STOP:
+            mtrCtrl->readBemfUVW(&mtrCtrl->bemf);
+            MCS_SetCtrAptDuty(mtrCtrl, mtrCtrl->pwmDuty);
+            if (mtrCtrl->sysVar.changePhaseFlag) {
+                /* Change phase process. */
+                ChangePhase(mtrCtrl);
+            } else {
+                /* Zero-crossing detection procedure. */
+                BemfZeroCheck(mtrCtrl);
+            }
+            break;
+
+        default:
+            break;
     }
 }

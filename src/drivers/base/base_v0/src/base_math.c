@@ -99,13 +99,13 @@
 #define BASE_MATH_ANGLED90_180          0x0300u /**< Mask value of sincos ranging from 90 to 180 degrees */
 #define BASE_MATH_ANGLED180_270         0x0000u /**< Mask value of sincos ranging from 180 to 270 degrees */
 #define BASE_MATH_ANGLED270_360         0x0100u /**< Mask value of sincos ranging from 270 to 360 degrees */
-#define BASE_MATH_PAI                   3.141592653
-#define BASE_MATH_FACTORIAL3_RECIPROCAL 0.166666667  /**< 1/6. */
-#define BASE_MATH_FACTORIAL5_RECIPROCAL 0.008333333  /**< 1/120. */
-#define BASE_MATH_FACTORIAL7_RECIPROCAL 0.000198413  /**< 1/5040. */
+#define BASE_MATH_PAI                   3.141592653f
+#define BASE_MATH_FACTORIAL3_RECIPROCAL 0.166666667f  /**< 1/6. */
+#define BASE_MATH_FACTORIAL5_RECIPROCAL 0.008333333f  /**< 1/120. */
+#define BASE_MATH_FACTORIAL7_RECIPROCAL 0.000198413f  /**< 1/5040. */
 #define BASE_MATH_ANGLE90               90
 #define BASE_MATH_ANGLE180              180
-#define BASE_MATH_ANGLE180_RECIPROCAL   0.005555556  /**< 1/180. */
+#define BASE_MATH_ANGLE180_RECIPROCAL   0.005555556f  /**< 1/180. */
 #define BASE_MATH_ANGLE270              270
 #define BASE_MATH_ANGLE360              360
 
@@ -203,9 +203,9 @@ float BASE_MATH_GetSin(float angle)
 }
 
 /**
-  * @brief Using Taylor Expansion to Calculate Sin Values for Any Angle.
+  * @brief Using Taylor Expansion to Calculate Cos Values for Any Angle.
   * @param angle Angle value to be calculated.
-  * @retval float Calculated sin value.
+  * @retval float Calculated Cos value.
   */
 float BASE_MATH_GetCos(float angle)
 {

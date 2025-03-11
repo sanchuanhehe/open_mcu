@@ -92,3 +92,19 @@ void FOLPF_SetTs(FOFLT_Handle *lpfHandle, float ts)
     lpfHandle->a1 = 1.0f / (1.0f + wcTs); /* wcTs > 0 */
     lpfHandle->b1 = 1.0f - lpfHandle->a1;
 }
+
+/**
+  * @brief Set Cut-off frequency of first-order filter.
+  * @param lpfHandle First-order filter handle.
+  * @param fc Cut-off frequency (Hz).
+  * @retval None.
+  */
+void FOLPF_SetFc(FOFLT_Handle *lpfHandle, float fc)
+{
+    MCS_ASSERT_PARAM(lpfHandle != NULL);
+    MCS_ASSERT_PARAM(fc > 0.0f);
+    lpfHandle->fc = fc;
+    float wcTs = DOUBLE_PI * lpfHandle->fc * lpfHandle->ts;
+    lpfHandle->a1 = 1.0f / (1.0f + wcTs); /* wcTs > 0 */
+    lpfHandle->b1 = 1.0f - lpfHandle->a1;
+}

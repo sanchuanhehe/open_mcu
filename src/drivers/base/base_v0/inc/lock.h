@@ -67,8 +67,8 @@ typedef enum {
 /* Exported global functions ------------------------------------------------- */
 bool BASE_FUNC_SoftwareLock(unsigned int * const addr);
 void BASE_FUNC_SoftwareUnLock(unsigned int * const addr);
-bool BASE_FUNC_HardwareLock(CHIP_LockType const hwIndex);
-void BASE_FUNC_HardwareUnLock(CHIP_LockType const hwIndex);
+bool BASE_FUNC_HardwareLock(const CHIP_LockType hwIndex);
+void BASE_FUNC_HardwareUnLock(const CHIP_LockType hwIndex);
 /**
   * @}
   */

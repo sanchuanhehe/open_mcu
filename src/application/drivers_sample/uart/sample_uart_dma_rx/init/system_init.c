@@ -22,7 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
-#include "iocmg_ip.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -32,11 +32,9 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.baseAddress     = CRG;
     crg.pllRefClkSelect = CRG_PLL_REF_CLK_SELECT_HOSC;
     crg.pllPreDiv       = CRG_PLL_PREDIV_4;
-    crg.pllFbDiv        = 48; /* PLL Multiplier 48 */
-    crg.pllPostDiv      = CRG_PLL_POSTDIV_2;
-    crg.coreClkSelect   = CRG_CORE_CLK_SELECT_HOSC;
-    crg.handleEx.clk1MSelect   = CRG_1M_CLK_SELECT_HOSC;
-    crg.handleEx.pllPostDiv2   = CRG_PLL_POSTDIV2_3;
+    crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
+    crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
+    crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
 
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
@@ -65,20 +63,15 @@ static void DMA_Init(void)
 {
     HAL_CRG_IpEnableSet(DMA_BASE, IP_CLK_ENABLE);
     g_dmac.baseAddress = DMA;
+    g_dmac.handleEx.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
+    g_dmac.handleEx.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
     IRQ_Register(IRQ_DMA_TC, HAL_DMA_IrqHandlerTc, &g_dmac);
     IRQ_Register(IRQ_DMA_ERR, HAL_DMA_IrqHandlerError, &g_dmac);
     IRQ_EnableN(IRQ_DMA_TC);
     IRQ_EnableN(IRQ_DMA_ERR);
     HAL_DMA_Init(&g_dmac);
-    DMA_Channel2Init((void *)(&g_uart));
-    HAL_DMA_SetChannelPriorityEx(&g_dmac, DMA_CHANNEL_TWO, DMA_PRIORITY_MEDIUM);
-}
 
-__weak void UART0InterruptErrorCallback(void *handle)
-{
-    BASE_FUNC_UNUSED(handle);
-    /* USER CODE BEGIN UART0_TRNS_IT_ERROR */
-    /* USER CODE END UART0_TRNS_IT_ERROR */
+    DMA_Channel2Init((void *)(&g_uart));
 }
 
 __weak void DMA_Channel2CallBack(void *handle)
@@ -91,6 +84,7 @@ __weak void DMA_Channel2CallBack(void *handle)
 static void UART0_Init(void)
 {
     HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
+    HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart.baseAddress = UART0;
 
@@ -101,35 +95,29 @@ static void UART0_Init(void)
     g_uart.txMode = UART_MODE_BLOCKING;
     g_uart.rxMode = UART_MODE_DMA;
     g_uart.fifoMode = BASE_CFG_ENABLE;
-    g_uart.fifoTxThr = UART_FIFODEPTH_SIZE8;
-    g_uart.fifoRxThr = UART_FIFODEPTH_SIZE8;
+    g_uart.fifoTxThr = UART_FIFOFULL_ONE_TWO;
+    g_uart.fifoRxThr = UART_FIFOFULL_ONE_TWO;
     g_uart.hwFlowCtr = BASE_CFG_DISABLE;
-    g_uart.handleEx.overSampleMultiple = UART_OVERSAMPLING_16X;
-    g_uart.handleEx.msbFirst = BASE_CFG_DISABLE;
     HAL_UART_Init(&g_uart);
-    HAL_UART_RegisterCallBack(&g_uart, UART_TRNS_IT_ERROR, UART0InterruptErrorCallback);
-
-    IRQ_Register(IRQ_UART0, HAL_UART_IrqHandler, &g_uart);
-    IRQ_SetPriority(IRQ_UART0, 1);
-    IRQ_EnableN(IRQ_UART0);
     g_uart.dmaHandle = &g_dmac;
-    g_uart.uartDmaRxChn = 2;        /* DMA channel is 2. */
+    g_uart.uartDmaRxChn = 2; /* 2 is UART_DMA rx channel */
     HAL_UART_RegisterCallBack(&g_uart, UART_READ_DMA_FINISH, DMA_Channel2CallBack);
 }
 
 static void IOConfig(void)
 {
-    HAL_IOCMG_SetPinAltFuncMode(GPIO2_2_AS_UART0_TXD);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_2_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO2_2_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO2_2_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO2_2_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    HAL_IOCMG_SetPinAltFuncMode(GPIO2_3_AS_UART0_RXD);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_3_AS_UART0_RXD, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO2_3_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO2_3_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO2_3_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)
@@ -137,6 +125,7 @@ void SystemInit(void)
     IOConfig();
     DMA_Init();
     UART0_Init();
+
     /* USER CODE BEGIN system_init */
     /* USER CODE END system_init */
 }

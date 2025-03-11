@@ -38,18 +38,19 @@ void ISR_OverCurrProt(void *aptHandle);
 /* Motor parameters */
 /* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift */
 static MOTOR_Param g_motorParam = {
-    MOTOR_PARAM_NP,
-    MOTOR_PARAM_RS,
-    MOTOR_PARAM_LD,
-    MOTOR_PARAM_LQ,
-    MOTOR_PARAM_LS,
-    MOTOR_PARAM_PSIF,
-    MOTOR_PARAM_JS,
-    MOTOR_PARAM_MAX_SPD,
-    MOTOR_PARAM_MAX_CURR,
-    MOTOR_PARAM_MAX_TRQ,
-    MOTOR_PARAM_ENCODER_PPMR,
-    MOTOR_PARAM_ENCODER_ZSHIFT
+    .mtrNp      = MOTOR_PARAM_NP,
+    .mtrRs      = MOTOR_PARAM_RS,
+    .mtrLd      = MOTOR_PARAM_LD,
+    .mtrLq      = MOTOR_PARAM_LQ,
+    .mtrLs      = MOTOR_PARAM_LS,
+    .mtrPsif    = MOTOR_PARAM_PSIF,
+    .mtrJ       = MOTOR_PARAM_JS,
+    .maxElecSpd = MOTOR_PARAM_MAX_SPD,
+    .maxCurr    = MOTOR_PARAM_MAX_CURR,
+    .maxTrq     = MOTOR_PARAM_MAX_TRQ,
+    .mtrPPMR    = MOTOR_PARAM_ENCODER_PPMR,
+    .zShift     = MOTOR_PARAM_ENCODER_ZSHIFT,
+    .busVolt    = INV_VOLTAGE_BUS
 };
 
 static APT_RegStruct *g_aptCp[PHASE_MAX_NUM] = {APT_U_CP, APT_V_CP, APT_W_CP};
@@ -88,7 +89,7 @@ static void FOSMO_InitWrapper(FOSMO_Handle *fosmo, float ts)
         .fcLpf = FOSMO_SPD_CUTOFF_FREQ,
         .pllBdw = FOSMO_PLL_BDW,
     };
-    FOSMO_Init(fosmo, fosmoParam, g_motorParam, ts);
+    FOSMO_Init(fosmo, fosmoParam, &g_motorParam, ts);
 }
 
 /**

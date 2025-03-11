@@ -38,10 +38,8 @@
 #define PGA_PARAM_CHECK_WITH_RET(para, ret) ((void)0U)
 #endif
 
-#define PGA_PGA_MAX_GAIN 7
-#define PGA_MAX_GAIN_VALUE 3
-#define PGA_MAX_EXT_CAP_COMP 7
-#define PGA_EXT_VLAUE 3
+#define PGA_EXT_VALUE  3
+
 /**
   * @addtogroup PGA
   * @{
@@ -81,6 +79,10 @@ typedef enum {
     PGA_EXT_COMPENSATION_7X =  0x00000005U,
     PGA_EXT_COMPENSATION_8X =  0x00000006U,
     PGA_EXT_COMPENSATION_9X =  0x00000007U,
+
+    PGA_EXT_COMPENSATION_10X_12X =  0x00000008U,
+    PGA_EXT_COMPENSATION_13X_15X =  0x00000009U,
+    PGA_EXT_COMPENSATION_16X_20X =  0x0000000AU,
 } PGA_ExtCapCompValue;
 
 /**
@@ -97,7 +99,7 @@ typedef union {
     unsigned int reg;
     struct {
         unsigned int da_pga_enh   : 1;  /**< Overall enable of the PGA. */
-        unsigned int reserved_0   : 31;
+        unsigned int reserved0    : 31;
     } BIT;
 } volatile PGA_CTRL0_REG;
 
@@ -108,12 +110,12 @@ typedef union {
     unsigned int reg;
     struct {
         unsigned int da_pga_cf_ctrl    : 3; /**< Feedforward capacitor compensation config in PGA external gain mode. */
-        unsigned int reserved_0        : 5;
+        unsigned int reserved0         : 5;
         unsigned int da_pga_gain_ctrl  : 3; /**< Gain configuration of the internal resistor of the PGA. */
-        unsigned int reserved_1        : 5;
+        unsigned int reserved1         : 5;
         unsigned int da_pga_mode_ctrl  : 2; /**< PGA mode configuration. 0: internal resistor gain mode;
                                                                          1: external resistor gain mode; */
-        unsigned int reserved_2        : 14;
+        unsigned int reserved2         : 14;
     } BIT;
 } volatile PGA_CTRL1_REG;
 
@@ -124,7 +126,7 @@ typedef union {
     unsigned int reg;
     struct {
         unsigned int da_pga_ibias_sel  : 4;  /**< PGA bias current configuration level select. */
-        unsigned int reserved_0        : 28;
+        unsigned int reserved0         : 28;
     } BIT;
 } volatile PGA_CTRL2_REG;
 
@@ -135,7 +137,7 @@ typedef union {
     unsigned int reg;
     struct {
         unsigned int da_pga_vos_trim  : 9;  /**< Offset trim information of the PGA. */
-        unsigned int reserved_0       : 23;
+        unsigned int reserved0        : 23;
     } BIT;
 } volatile PGA_TRIM_REG;
 
@@ -147,7 +149,7 @@ typedef union {
     struct {
         unsigned int da_pga_test_enh    : 1;  /**< PGA test enable.  */
         unsigned int da_pga_test_sel    : 2;  /**< PGA test select. */
-        unsigned int reserved_0         : 29;
+        unsigned int reserved0          : 29;
     } BIT;
 } volatile PGA_TEST_REG;
 
@@ -158,7 +160,7 @@ typedef union {
     unsigned int reg;
     struct {
         unsigned int da_pga_cf_ctrl1    : 2; /**< Feedforward capacitor compensation config in external gain mode. */
-        unsigned int reserved_0         : 30;
+        unsigned int reserved0          : 30;
     } BIT;
 } volatile PGA_RSV_REG;
 
@@ -187,7 +189,7 @@ typedef struct _PGA_RegStruct {
   */
 static inline bool IsPgaGain(PGA_GainValue pgaGainValue)
 {
-    return (pgaGainValue <= PGA_MAX_GAIN_VALUE);
+    return (pgaGainValue <= PGA_GAIN_16X);
 }
 
 /**
@@ -198,7 +200,7 @@ static inline bool IsPgaGain(PGA_GainValue pgaGainValue)
   */
 static inline bool IsPgaExtCapCompensation(PGA_ExtCapCompValue pgaExtCapCompValue)
 {
-    return (pgaExtCapCompValue <= PGA_MAX_EXT_CAP_COMP);
+    return (pgaExtCapCompValue <= PGA_EXT_COMPENSATION_16X_20X);
 }
 
 /* DCL layer -----------------------------------------------------------*/
@@ -233,7 +235,7 @@ static inline void DCL_PGA_DisableOut(PGA_RegStruct *pgax)
 static inline void  DCL_PGA_SetGain(PGA_RegStruct *pgax, unsigned int value)
 {
     PGA_ASSERT_PARAM(IsPGAInstance(pgax));
-    PGA_PARAM_CHECK_NO_RET(value <= PGA_PGA_MAX_GAIN);
+    PGA_PARAM_CHECK_NO_RET(value <= PGA_GAIN_16X);
     pgax->PGA_CTRL1.BIT.da_pga_gain_ctrl = value;
 }
 
@@ -271,7 +273,7 @@ static inline void DCL_PGA_DisableExtGainMode(PGA_RegStruct *pgax)
 }
 
 /**
-  * @brief Fedforward capacitor compensation configuration in PGA external gain mode
+  * @brief Set feedforward capacitance compensation in PGA external gain mode
   * @param pgax: amplifier register base address.
   * @param extValue: Configured value of the capacitor compensation.
   * @retval None.
@@ -279,8 +281,16 @@ static inline void DCL_PGA_DisableExtGainMode(PGA_RegStruct *pgax)
 static inline void DCL_PGA_SetExtCompensation(PGA_RegStruct *pgax, unsigned short extValue)
 {
     PGA_ASSERT_PARAM(IsPGAInstance(pgax));
-    PGA_PARAM_CHECK_NO_RET(extValue <= PGA_PGA_MAX_GAIN);
-    pgax->PGA_CTRL1.BIT.da_pga_cf_ctrl = extValue;
+    PGA_PARAM_CHECK_NO_RET(extValue <= PGA_EXT_COMPENSATION_16X_20X);
+    if (extValue <= PGA_EXT_COMPENSATION_9X) {
+        pgax->PGA_CTRL1.BIT.da_pga_cf_ctrl = extValue;
+    } else {
+        /* If external gain is larger than PGA_EXT_COMPENSATION_9X. */
+        /* da_pga_cf_ctrl of PGA_CTRL1 is set to 0x7 (111). */
+        pgax->PGA_CTRL1.BIT.da_pga_cf_ctrl = 0x7;
+        /* da_pga_cf_ctrl1 of PGA_RSV is set to extValue - 0x7. */
+        pgax->PGA_RSV.BIT.da_pga_cf_ctrl1 = extValue - 0x7;
+    }
 }
 
 /**
@@ -315,7 +325,9 @@ static inline void DCL_PGA_DisableTestMode(PGA_RegStruct *pgax)
 static inline void DCL_PGA_SetExtCapCompValue(PGA_RegStruct *pgax, unsigned short extBigvalue)
 {
     PGA_ASSERT_PARAM(IsPGAInstance(pgax));
-    PGA_PARAM_CHECK_NO_RET(extBigvalue <= PGA_EXT_VLAUE);
+    PGA_PARAM_CHECK_NO_RET(extBigvalue >= 0x1 && extBigvalue <= PGA_EXT_VALUE);
+    /* Precondition: must be set da_pga_cf_ctrl to 0x7(111). */
+    pgax->PGA_CTRL1.BIT.da_pga_cf_ctrl = 0x7;
     pgax->PGA_RSV.BIT.da_pga_cf_ctrl1 = extBigvalue;
 }
 

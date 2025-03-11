@@ -25,6 +25,7 @@
 #define McuMagicTag_SYSTEM_INIT_H
 
 #include "dac.h"
+#include "dac_ex.h"
 #include "crg.h"
 
 #define    IO_SPEED_FAST     0x00U
@@ -34,6 +35,11 @@
 #define    IO_DRV_LEVEL3     0x01U
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
+
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
 
 extern DAC_Handle g_dac;
 

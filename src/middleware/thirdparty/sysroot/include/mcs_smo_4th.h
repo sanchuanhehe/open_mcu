@@ -30,9 +30,6 @@
 
 typedef struct {
     /* Model parameters */
-    float ld;
-    float lq;
-    float rs;
     float ts;
     float kd;
     float kq;
@@ -40,6 +37,7 @@ typedef struct {
     float fcLpf;     /**< The cut-off frequency of First-order LPF for speed (Hz). */
     float elecAngle;
     float spdEst;
+    MOTOR_Param *mtrParam;
     /* Internal variable */
     AlbeAxis ialbeEst;
     AlbeAxis ealbeEst;
@@ -58,7 +56,7 @@ typedef struct {
 } SMO4TH_Param;
 
 
-void SMO4TH_Init(SMO4TH_Handle *smo4th, const SMO4TH_Param smo4thParam, const MOTOR_Param mtrParam, float ts);
+void SMO4TH_Init(SMO4TH_Handle *smo4th, SMO4TH_Param smo4thParam, MOTOR_Param *mtrParam, float ts);
 
 void SMO4TH_Exec(SMO4TH_Handle *smo4th, const AlbeAxis *ialbeFbk, const AlbeAxis *valbeRef);
 

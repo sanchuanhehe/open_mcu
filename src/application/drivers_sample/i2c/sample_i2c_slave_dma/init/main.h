@@ -25,10 +25,13 @@
 #define McuMagicTag_SYSTEM_INIT_H
 
 #include "uart.h"
+#include "uart_ex.h"
 #include "i2c.h"
 #include "i2c_ex.h"
 #include "crg.h"
 #include "dma.h"
+#include "dma_ex.h"
+#include "iocmg.h"
 
 #define    IO_SPEED_FAST     0x00U
 #define    IO_SPEED_SLOW     0x01U
@@ -50,5 +53,13 @@ extern DMA_Handle g_dmac;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
+
+void I2C0TxCallback(void *handle);
+void I2C0RxCallback(void *handle);
+void I2C0ErrorCallback(void *handle);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

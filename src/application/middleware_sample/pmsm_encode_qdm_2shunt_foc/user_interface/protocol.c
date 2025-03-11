@@ -132,7 +132,7 @@ void CUST_AckCode(unsigned char *txBuf, unsigned char ackCode, float varParams)
     /* End of Message */
     txBuf[FRAME_ONE_CHAR_LENTH + i++] = FRAME_END;
     txLen = FRAME_ONE_CHAR_LENTH + i++;
-    HAL_UART_WriteIT(&g_uart0, txBuf, txLen);
+    HAL_UART_WriteDMA(&g_uart0, txBuf, txLen);
 }
 
 /**

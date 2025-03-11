@@ -279,7 +279,7 @@ unsigned int HAL_ADC_GetPPBxDelayCntEx(ADC_Handle *adcHandle, ADC_PPBNumber ppb)
 }
 
 /**
-  * @brief Initialize the ADC for VDDA/3.
+  * @brief Initialize the ADC for VDDA/3 or VDDA/9/7.
   * Note:
   * (1) Ensure that the ADC clock is turned on and the ADC has been initialized using before use.
   * (2) The soc parameter must be set to an SOC that is not occupied in the ADC.
@@ -294,7 +294,15 @@ BASE_StatusType HAL_ADC_InitForVddaEx(ADC_RegStruct *adcx, ADC_SOCNumber soc)
     ADC_Handle adc = {0};
     adc.baseAddress = adcx;
     SOC_Param socParam = {0};
-    socParam.adcInput = ADC_CH_ADCINA18;             /* VDD/3 input */
+
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+        socParam.adcInput = ADC_CH_ADCINA17;             /* 7*VDD/9 input */
+        *(unsigned int *)ANA_RSV_REG0_ADDR = 0x0E;        /* Config VDDA channel voltage 0x0E:7/9VDDA */
+    #else
+        socParam.adcInput = ADC_CH_ADCINA18;             /* VDD/3 input */
+        DCL_ADC_EnableAvddChannel(adcx);
+    #endif
     socParam.sampleTotalTime = ADC_SOCSAMPLE_500CLK;   /* adc sample total time set as 500 cycle */
     socParam.trigSource = ADC_TRIGSOC_SOFT;
     socParam.continueMode = BASE_CFG_DISABLE;
@@ -332,7 +340,13 @@ float HAL_ADC_GetVddaEx(ADC_RegStruct *adcx, ADC_SOCNumber soc)
         return 0.0f;   /* convert fail */
     }
     float ori = (float)ret / (float)count;
-    /* 3.0, 3.33333 and 4096.0 are used to convert the voltage, VDD/3 */
-    voltage = 3.0 *3.33333f * ori / 4096.0f;
+    #if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+        /*  3.33333 and 4096.0 are used to convert the voltage, 7*VDD/9 */
+        voltage = 9.0f * 3.33333f * ori / 4096.0f / 7.0f;
+    #else
+        /* 3.0, 3.33333 and 4096.0 are used to convert the voltage, VDD/3 */
+        voltage = 3.0f * 3.33333f * ori / 4096.0f;
+    #endif
     return voltage;
 }

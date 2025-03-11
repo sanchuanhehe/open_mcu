@@ -26,6 +26,8 @@
 #include "dac.h"
 #include "assert.h"
 
+#define DAC_PIN_OUTPUT_CONFIG_ADDR    (0x18600008)
+#define DAC_PIN_OUTPUT_CONFIG_VALUE   (0x2)
 /**
   * @brief Set DAC value
   * @param dacHandle: DAC handle.
@@ -57,6 +59,15 @@ BASE_StatusType HAL_DAC_Init(DAC_Handle *dacHandle)
     dacHandle->baseAddress->DAC_VALUE.BIT.cfg_dac_vset = dacHandle->dacValue;
     /* Turn on the DAC. */
     dacHandle->baseAddress->DAC_CTRL.BIT.da_dac_enh = BASE_CFG_ENABLE;
+    /* Dac pin output mode config */
+    if (dacHandle->handleEx.pinOutputEn) {
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+        DCL_DAC_SetPinOutputConfig(dacHandle->baseAddress, BASE_CFG_ENABLE);
+#else
+        *(unsigned int*)DAC_PIN_OUTPUT_CONFIG_ADDR = DAC_PIN_OUTPUT_CONFIG_VALUE;
+#endif
+    }
     /* Wait output stable */
     BASE_FUNC_DELAY_US(60);  /* delay 60us */
     return BASE_STATUS_OK;
@@ -73,5 +84,6 @@ BASE_StatusType HAL_DAC_DeInit(DAC_Handle *dacHandle)
     DAC_ASSERT_PARAM(IsDACInstance(dacHandle->baseAddress));
     dacHandle->baseAddress->DAC_CTRL.reg = BASE_CFG_DISABLE;   /* Disable DAC, clears the count value. */
     dacHandle->baseAddress->DAC_VALUE.reg = BASE_CFG_DISABLE;  /* Clear DAC value. */
+    *(unsigned int*)DAC_PIN_OUTPUT_CONFIG_ADDR = 0;  /* disable dac pin output */
     return BASE_STATUS_OK;
 }

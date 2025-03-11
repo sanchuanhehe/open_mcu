@@ -104,7 +104,7 @@ BASE_StatusType HAL_GPT_Config(GPT_Handle *handle)
     GPT_PARAM_CHECK_WITH_RET(IsGptDiv(handle->clockDiv), BASE_STATUS_ERROR);
     GPT_PARAM_CHECK_WITH_RET(IsGptRefDot(handle->refA0.refdot), BASE_STATUS_ERROR);
     GPT_PARAM_CHECK_WITH_RET(IsGptRefDot(handle->refB0.refdot), BASE_STATUS_ERROR);
-    GPT_PARAM_CHECK_WITH_RET(handle->refA0.refdot <= handle->refB0.refdot, BASE_STATUS_ERROR);
+    GPT_PARAM_CHECK_WITH_RET(handle->refA0.refdot <= handle->period, BASE_STATUS_ERROR);
     GPT_PARAM_CHECK_WITH_RET(handle->refB0.refdot <= handle->period, BASE_STATUS_ERROR);
     GPT_PARAM_CHECK_WITH_RET(IsGptAction(handle->refA0.refAction), BASE_STATUS_ERROR);
     GPT_PARAM_CHECK_WITH_RET(IsGptAction(handle->refB0.refAction), BASE_STATUS_ERROR);

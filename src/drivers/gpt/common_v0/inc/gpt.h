@@ -63,11 +63,10 @@ typedef struct {
 
 /**
   * @defgroup GPT_API_Declaration GPT HAL API
+  * @brief GPT Extended Control functions.
   * @{
   */
-/**
- * GPT Extended Control functions
- */
+
 BASE_StatusType HAL_GPT_Init(GPT_Handle *handle);
 
 void HAL_GPT_Start(GPT_Handle *handle);

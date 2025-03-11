@@ -25,8 +25,10 @@
 #define McuMagicTag_SYSTEM_INIT_H
 
 #include "uart.h"
+#include "uart_ex.h"
 #include "pmc.h"
 #include "crg.h"
+#include "iocmg.h"
 
 #define    IO_SPEED_FAST     0x00U
 #define    IO_SPEED_SLOW     0x01U
@@ -35,6 +37,11 @@
 #define    IO_DRV_LEVEL3     0x01U
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
+
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
 
 extern PMC_Handle g_pmc;
 

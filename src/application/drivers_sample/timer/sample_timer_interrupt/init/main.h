@@ -29,6 +29,7 @@
 #include "timer.h"
 #include "timer_ex.h"
 #include "crg.h"
+#include "iocmg.h"
 
 #define    IO_SPEED_FAST     0x00U
 #define    IO_SPEED_SLOW     0x01U

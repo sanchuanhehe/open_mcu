@@ -287,6 +287,18 @@ static inline void DCL_PMC_EnterSleep(void)
 }
 
 /**
+  * @brief Check PMC active mode.
+  * @param mode value of active mode.
+  * @retval true
+  * @retval false
+  */
+static inline bool IsActiveMode(PMC_ActMode mode)
+{
+    return (mode == PMC_WAKEUP_ACT_UP_EDGE || mode == PMC_WAKEUP_ACT_DOWN_EDGE || \
+            mode == PMC_WAKEUP_ACT_HIGH_LEVEL || mode == PMC_WAKEUP_ACT_LOW_LEVEL);
+}
+
+/**
   * @brief Enter deepsleep mode interface.
   * @param pmcx PMC register base address.
   * @retval None.

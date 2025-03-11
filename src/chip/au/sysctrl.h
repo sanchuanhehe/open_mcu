@@ -662,6 +662,15 @@ static inline void DCL_SYSCTRL_GenerateSoftInterrupt(void)
 {
     SYSCTRL0->SC_SOFT_INT.BIT.software_int = 1;
 }
+/**
+  * @brief Clear software interrupt register, writing 0 clear software interrupt.
+  * @param None.
+  * @retval None.
+  */
+static inline void DCL_SYSCTRL_ClearSoftInterrupt(void)
+{
+    SYSCTRL0->SC_SOFT_INT.BIT.software_int = 0;
+}
 
 /**
   * @brief Set Software interrupt event ID.

@@ -75,25 +75,31 @@
 #define ADC_TRIMVALUE_MIN              1820.0
 #define ADC_TRIMVALUE_MAX              2280.0
 
-#define HALL_PHASESHIFT                3.1415926f
+#define HALL_DIR                       1
 #define HALL_ANGLE_PLL_BDW             50.0f
 #define HALL_SPD_FILTER_FC             5.0f
 
-/* Motor protection */
-#define OVER_CURR_AMP_THRESHOLD        4.0f
-#define OVER_CURR_TIME_THRESHOLD       0.5f
+/* Protection */
+#define OVD_MAX_VOLT_V              (28.0f)
+#define OVD_REC_VOLT_V              (26.0f)
+#define LVD_MIN_VOLT_V              (20.0f)
+#define LVD_REC_VOLT_V              (22.0f)
+#define VOLT_DET_WINDOW_S           (0.5f)    /* 0.5s */
+#define VOLT_REC_WINDOW_S           (1.0f)    /* 1.0s */
 
-#define OVER_TEMP_AMP_THRESHOLD        40.0f
-#define OVER_TEMP_TIME_THRESHOLD       2.0f
+#define OTD_MAX_TEMP_MTR            (120.0f)  /* 120 degrees Celsius */
+#define OTD_MAX_TEMP_BRD            (40.0f)   /* 80 degrees Celsius */
+#define OTD_MTR_WINDOW_S            (1.0f)    /* 1.0s */
+#define OTD_BRD_WINDOW_S            (1.0f)    /* 1.0s */
 
-#define OVER_VOLT_AMP_THRESHOLD        26.0f
-#define OVER_VOLT_TIME_THRESHOLD       2.0f
+#define OCD_MAX_CURR_A              (4.0f)
+#define OCD_WINDOW_S                (0.001f)
 
-#define LOWER_VOLT_AMP_THRESHOLD       22.0f
-#define LOWER_VOLT_TIME_THRESHOLD      2.0f
+#define STD_LOSESPD_LOWER_HZ        (10.0f)   /**/
+#define STD_LOSESPD_UPPER_HZ        (2.0f * USER_MAX_SPD_HZ)  /* 2 * maxSpeed */
+#define STD_DET_WINDOW_S            (1.0f)
 
-#define STALL_CURR_THRESHOLD           2.0f
-#define STALL_SPEED_THRESHOLD          10.0f
-#define STALL_TIME_THRESHOLD           1.0f
+#define OPD_MIN_CURR_A              (0.02f)
+#define OPD_WINDOW_S                (1.0f)
 
 #endif

@@ -194,14 +194,14 @@ static void SetObserverSmo1thPLLParams(FOSMO_Handle *smoHandle, CUSTDATATYPE_DEF
 {
     /* Get command code. */
     int cmdCode =  (int)(rxData->data[DATA_SEGMENT_TWO].typeF);
-
+    float pllBdw = 0.0f;
     switch (cmdCode) {
         case SET_SMO1TH_PLL_BDW:        /* Set the bandwidth. */
-            smoHandle->pll.pllBdw = rxData->data[DATA_SEGMENT_THREE].typeF;
-            smoHandle->pll.pi.kp =  2.0f * smoHandle->pll.pllBdw;     /* kp = 2.0f * pllBdw */
-            smoHandle->pll.pi.ki = smoHandle->pll.pllBdw * smoHandle->pll.pllBdw;   /* ki = pllBdw * pllBdw */
+            pllBdw = rxData->data[DATA_SEGMENT_THREE].typeF;
+            smoHandle->pll.pi.kp =  2.0f * pllBdw;     /* kp = 2.0f * pllBdw */
+            smoHandle->pll.pi.ki = pllBdw * pllBdw;   /* ki = pllBdw * pllBdw */
             ackCode = 0X0A;
-            CUST_AckCode(g_uartTxBuf, ackCode, smoHandle->pll.pllBdw);
+            CUST_AckCode(g_uartTxBuf, ackCode, pllBdw);
             break;
         case SET_SMO1TH_SPDFLITER_FC:   /* Set the cutoff frequency. */
             smoHandle->spdFilter.fc = rxData->data[DATA_SEGMENT_THREE].typeF;
@@ -255,11 +255,11 @@ static void SetObserverSmo4thParams(SMO4TH_Handle *smo4thHandle, CUSTDATATYPE_DE
   */
 static void SetObserverSmo4thPLLParams(SMO4TH_Handle *smo4thHandle, CUSTDATATYPE_DEF *rxData)
 {
-    smo4thHandle->pll.pllBdw = rxData->data[DATA_SEGMENT_TWO].typeF;
-    smo4thHandle->pll.pi.kp = (2.0f) * smo4thHandle->pll.pllBdw;         /* kp = 2.0f * pllBdw */
-    smo4thHandle->pll.pi.ki = smo4thHandle->pll.pllBdw * smo4thHandle->pll.pllBdw;
+    float pllBdw = rxData->data[DATA_SEGMENT_TWO].typeF;
+    smo4thHandle->pll.pi.kp = (2.0f) * pllBdw;         /* kp = 2.0f * pllBdw */
+    smo4thHandle->pll.pi.ki = pllBdw * pllBdw;
     ackCode = 0X11;
-    CUST_AckCode(g_uartTxBuf, ackCode, smo4thHandle->pll.pllBdw);
+    CUST_AckCode(g_uartTxBuf, ackCode, pllBdw);
 }
 
 /**
@@ -296,7 +296,7 @@ static void CMDCODE_SetMotorSpdAndSlope(MTRCTRL_Handle *mtrCtrl, CUSTDATATYPE_DE
     switch (cmdCode) {
         case SET_SPD_COMMAND_HZ:    /* Set target speed(hz). */
             mtrCtrl->spdCmdHz  = rxData->data[DATA_SEGMENT_THREE].typeF * mtrCtrl->mtrParam.mtrNp / CONST_VALUE_60;
-            /* Judgement the value > 0.00001, make sure denominator != 0 */
+            /* Judgement the value > 0.00001, make sure denominator != 0. */
             if (rxData->data[DATA_SEGMENT_FOUR].typeF > 0.00001f) {
                 mtrCtrl->spdRmg.delta = mtrCtrl->spdCmdHz / rxData->data[DATA_SEGMENT_FOUR].typeF * CTRL_SYSTICK_PERIOD;
             }

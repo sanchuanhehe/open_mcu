@@ -119,7 +119,9 @@ BOARD_DIM_Ret BOARD_DIM_SetDuty(int index, int targetLevel)
 #if defined (CHIP_3065HRPICZ) || defined(CHIP_3065HRPIRZ) || defined(CHIP_3061HRPIKZ) || defined (CHIP_3065ARPIRZ)
     currentDutyVal= g_dimInfo[index].gptHandle->duty;
 #endif
-#if defined (CHIP_3061MNPICA) || defined(CHIP_3061MNPIKA)
+#if defined (CHIP_3061MNPICA) || defined(CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA) || defined (CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8) || \
+    defined (CHIP_3061MNPIK8) || defined (CHIP_3061MNNIK8)
     currentDutyVal = g_dimInfo[index].gptHandle->refB0.refdot;
 #endif
     if (currentDutyVal == BOARD_DIM_TABLE_MAX_VALUE) { /* Maximum Limit Processing. */
@@ -159,7 +161,9 @@ void BOARD_DIM_TimerCallBack(void *param)
 #if defined (CHIP_3065HRPICZ) || defined(CHIP_3065HRPIRZ) || defined(CHIP_3061HRPIKZ) || defined (CHIP_3065ARPIRZ)
         g_dimInfo[i].gptHandle->duty = g_dimTables[g_dimInfo[i].nowIndex];
 #endif
-#if defined (CHIP_3061MNPICA) || defined(CHIP_3061MNPIKA)
+#if defined (CHIP_3061MNPICA) || defined(CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA) || defined (CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8) || \
+    defined (CHIP_3061MNPIK8) || defined (CHIP_3061MNNIK8)
         g_dimInfo[i].gptHandle->refB0.refdot = g_dimTables[g_dimInfo[i].nowIndex];
 #endif
         HAL_GPT_Config(g_dimInfo[i].gptHandle);

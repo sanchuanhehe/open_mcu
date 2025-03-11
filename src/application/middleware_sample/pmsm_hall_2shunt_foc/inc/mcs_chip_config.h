@@ -25,7 +25,9 @@
 
 #include "feature.h"
 
-#ifdef CHIP_3061MNPICA
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA) || defined (CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8) || \
+    defined (CHIP_3061MNPIK8) || defined (CHIP_3061MNNIK8)
 
     #define ADCPTT_HANDLE       g_adc0
     #define ADCRESIS_HANDLE     g_adc0
@@ -45,13 +47,10 @@
     #define ADC0COMPENSATE      2037.0f
     #define ADC1COMPENSATE      2027.0f
 
-    #define QDMNUM              QDM1
-    #define QDMIRQNUM           IRQ_QDM1
-    #define QDMBASEADDR         QDM1_BASE
-
 #endif
 
-#if defined (CHIP_3065HRPIRZ) || defined (CHIP_3065ARPIRZ)
+#if defined (CHIP_3065HRPIRZ) || defined (CHIP_3065ARPIRZ) || defined (CHIP_3066MNPIRH) || \
+    defined (CHIP_3065PNPIRH) || defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
 
     #define ADCU_HANDLE         g_adc0
     #define ADCW_HANDLE         g_adc1
@@ -71,11 +70,6 @@
     #define ADC0COMPENSATE      2033.0f
     #define ADC1COMPENSATE      2070.0f
 
-    #define QDMNUM              QDM0
-    #define QDMIRQNUM           IRQ_QDM0
-    #define QDMBASEADDR         QDM0_BASE
-
 #endif
-
 
 #endif

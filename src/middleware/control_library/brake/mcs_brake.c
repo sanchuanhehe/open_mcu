@@ -17,34 +17,51 @@
   * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   * @file      mcs_brake.c
   * @author    MCU Algorithm Team
-  * @brief     This file provides functions of brake module.
+  * @brief     Math library.
+  *            This file provides functions declaration of brake module.
   */
+
 #include "mcs_brake.h"
 #include "mcs_math.h"
 #include "mcs_assert.h"
 
+#define PHASE_MAX_NUM  3
 
 /**
   * @brief Initialize brake handle.
-  * @param brake: Pointer of Brake Handle.
-  * @param brkParam: Brake parameters.
+  * @param brake Pointer of brake handle.
+  * @param brkParam Brake parameters.
+  * @param ts Brake cycle.
   * @retval None.
   */
-void BRAKE_Init(BRAKE_Handle *brake, BRAKE_Param *brkParam)
+void BRAKE_Init(BRAKE_Handle *brake, BRAKE_Param brkParam, float ts)
 {
     MCS_ASSERT_PARAM(brake != NULL);
-    MCS_ASSERT_PARAM(brkParam != NULL);
-    MCS_ASSERT_PARAM(brkParam->ts > 0.0f);
+    MCS_ASSERT_PARAM(ts > 0.0f);
     /* Set brake parameter. */
-    brake->brkParam = brkParam;
-    brake->sampleShiftDuty = brkParam->sampleWinTime / brkParam->ts;
+    brake->ts = ts;
+    brake->brkFinished = 0;
+
+    brake->brkParam.brkTime = brkParam.brkTime;
+    brake->brkParam.maxBrkCurr = brkParam.maxBrkCurr;
+
+    brake->brkParam.blindDutyThr = brkParam.blindDutyThr;
+    brake->brkParam.blindBrkDutyStep = brkParam.blindBrkDutyStep;
+
+    brake->brkParam.fastBrkCurrCoeff = brkParam.fastBrkCurrCoeff;
+    brake->brkParam.fastBrkDutyStep = brkParam.fastBrkDutyStep;
+
+    brake->brkParam.slowBrkDutyStep = brkParam.slowBrkDutyStep;
+
+    brake->brkParam.aptMaxCmp = brkParam.aptMaxCmp;
+
     /* Brake count. */
-    brake->tickNum = (unsigned int)(brkParam->brkTime / brkParam->ts);
+    brake->tickNum = (unsigned int)(brkParam.brkTime / ts);
 }
 
 /**
   * @brief Clear historical values of brake handle.
-  * @param brake: Pointer of Brake Handle.
+  * @param brake Pointer of brake handle.
   * @retval None.
   */
 void BRAKE_Clear(BRAKE_Handle *brake)
@@ -53,53 +70,92 @@ void BRAKE_Clear(BRAKE_Handle *brake)
     brake->brkDuty = 0.0f; /* brake duty */
     /* counter for calculating brake time */
     brake->tickCnt = 0;
+    brake->brkCurr = 0.0f;
+    brake->brkFinished = 0;
     /* brake status */
-    brake->brkFlg = 0;
+    brake->status = BRAKE_CLOSED_LOOP;
+    brake->stage = BRAKE_INIT;
+}
 
-    brake->brkFlg = BRAKE_WAIT;
+/**
+  * @brief Set brake duty.
+  * @param aptAddr APT address pointer.
+  * @param maxCmp  Maximum count of APT.
+  * @param brkDuty Braje duty.
+  * @retval None.
+  */
+static void BRAKE_SetPwmDuty(APT_RegStruct **aptAddr, unsigned short maxCmp, float brkDuty)
+{
+    /* Calc brake compare point according to the duty. */
+    unsigned short comparePoint = (unsigned short)Clamp((brkDuty * maxCmp), (float)(maxCmp - 1), 1.0f);
+    /* Set pwm waveform according C D point. */
+    for (int i = 0; i < PHASE_MAX_NUM; i++) {
+        APT_RegStruct *aptAddrx = aptAddr[i];
+        DCL_APT_SetCounterCompare(aptAddrx, APT_COMPARE_REFERENCE_C, comparePoint);
+        DCL_APT_SetCounterCompare(aptAddrx, APT_COMPARE_REFERENCE_D, comparePoint);
+    }
 }
 
 /**
   * @brief Brake execution.
-  * @param brake: Pointer of Brake Handle.
-  * @param brkCurr: Sampling result of current during brake condition (A).
+  * @param BRAKE_Handle Pointer of brake handle.
+  * @param aptAddr APT address pointer.
+  * @param brkCurr Sampling result of current during brake condition (A).
   * @retval None.
   */
-void BRAKE_Exec(BRAKE_Handle *brake, float brkCurr)
+void BRAKE_Exec(BRAKE_Handle *brake, APT_RegStruct **aptAddr, float brkCurr)
 {
     MCS_ASSERT_PARAM(brake != NULL);
-    MCS_ASSERT_PARAM(brkCurr > 0.0f);
-    float dutyMax = 1.0f;
     float curr = Abs(brkCurr);
-    float maxCurr = brake->brkParam->maxBrkCurr;
-    float sampleShiftDuty = brake->sampleShiftDuty;
+    float maxCurr = brake->brkParam.maxBrkCurr;
+    float dutyMax = 1.0f;
     unsigned int tickNum = brake->tickNum;
 
-    if (brake->brkFlg == BRAKE_FINISHED) {
+    if (brake->stage != BRAKE_EXEC) {
         return;
     }
-
     /* Collect statistics on the total braking duration */
     brake->tickCnt++;
     if (brake->tickCnt >= tickNum) {
-        /* Time to push out the brakes  */
-        brake->brkFlg = BRAKE_FINISHED;
+        /* Time to push out the brakes.  */
+        brake->brkFinished = 1;
+        return;
     }
 
-    if (curr < (maxCurr * brake->brkParam->fastBrkCurrCoeff)) {
-        brake->brkDuty += brake->brkParam->maxBrkDutyStep;
-    } else if (curr < maxCurr) {
-        brake->brkDuty += brake->brkParam->minBrkDutyStep;
-    } else {
-        brake->brkDuty -= brake->brkParam->maxBrkDutyStep;
+    /**
+     * Brake process:
+     * (1) when brake current is more than maxCurr, brake duty decrease BRAKE_DUTY_FAST every period.
+     * (2) when brake current is less than maxCurr, brake duty increase BRAKE_DUTY_SLOW every period.
+     * (3) when brake current is less than (coeff * maxCurr), brake duty increase BRAKE_DUTY_FAST every period.
+     * (4) when brake current is less than (maxCurr - 0.1) and brake duty is more than dutyThr,
+     *     brake duty increase BRAKE_DUTY_BLIND every period.
+     * Attention: The max brake duty is 1.0.
+    */
+    switch (brake->status) {
+        case BRAKE_CLOSED_LOOP:
+            if (curr < brake->brkParam.fastBrkCurrCoeff * maxCurr) {
+                brake->brkDuty += brake->brkParam.fastBrkDutyStep; /* (3) */
+            } else if (curr < maxCurr) {
+                brake->brkDuty += brake->brkParam.slowBrkDutyStep; /* (2) */
+                brake->brkDuty = Clamp(brake->brkDuty, brake->brkParam.blindDutyThr, 0.0f);
+            } else {
+                brake->brkDuty -= brake->brkParam.fastBrkDutyStep; /* (1) */
+            }
+
+            brake->status = (brake->brkDuty >= brake->brkParam.blindDutyThr && curr <= (maxCurr - 0.1f))?
+                            BRAKE_OPEN_LOOP : BRAKE_CLOSED_LOOP; /* (4) */
+            break;
+
+        case BRAKE_OPEN_LOOP:
+            brake->brkDuty += brake->brkParam.blindBrkDutyStep;  /* (4) */
+            break;
+ 
+        default:
+              brake->brkDuty = dutyMax;
+            break;
     }
 
-    /* Reserved sampling window */
-    brake->brkDuty = Clamp(brake->brkDuty, dutyMax - 2.0f * sampleShiftDuty, 0.0f);
-    if (curr <= (maxCurr * brake->brkParam->openLoopBrkCurrCoeff) &&
-        brake->brkDuty >= dutyMax - 3.0f * sampleShiftDuty) {
-        /* Because the duty cycle is too large to collect the current, the brake open loop control */
-        brake->brkDuty += brake->brkParam->openLoopBrkDutyStep;
-        brake->brkDuty = Clamp(brake->brkDuty, dutyMax, 0.0f);
-    }
+    brake->brkDuty = Clamp(brake->brkDuty, dutyMax, 0.0f);
+    /* Set brake duty. */
+    BRAKE_SetPwmDuty(aptAddr, brake->brkParam.aptMaxCmp, brake->brkDuty);
 }

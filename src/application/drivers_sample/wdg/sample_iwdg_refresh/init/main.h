@@ -50,8 +50,6 @@ extern UART_Handle g_uart0;
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
-void IWDGCallbackFunction(void *handle);
-
 /* USER CODE BEGIN 0 */
 /* USER CODE */
 /* USER CODE END 0 */

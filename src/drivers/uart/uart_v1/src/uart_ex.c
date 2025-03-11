@@ -102,7 +102,7 @@ BASE_StatusType HAL_UART_DisableBaudDetectionEx(UART_Handle *uartHandle)
   * @param cntOfBit timeout is defined as the time spent in transmitting N bits, numer of N is cntOfBit.
   * @retval BASE status type: OK, ERROR.
   */
-BASE_StatusType HAL_UART_SetRxWaiteTimeEx(UART_Handle *uartHandle, unsigned int cntOfBit)
+BASE_StatusType HAL_UART_SetRxWaitTimeEx(UART_Handle *uartHandle, unsigned int cntOfBit)
 {
     UART_ASSERT_PARAM(uartHandle != NULL);
     UART_ASSERT_PARAM(IsUARTInstance(uartHandle->baseAddress));

@@ -21,9 +21,26 @@
   * @details This file provides sample to get temperature of mcu by using tsensor.
   */
 #include "sample_tsensor.h"
+#include "main.h"
 
 #define SAMPLE_COUNT 16
 
+/**
+  * @brief Tsensor module initial.
+  * @param None.
+  * @retval None.
+  */
+void TSENSOR_Init(void)
+{
+    SystemInit();
+    HAL_TSENSOR_Init();
+    while (1) {
+        TSENSOR_GetAveTemp();
+    }
+}
+
+
+float g_aveTemp;
 /**
   * @brief Tsensor samples 16 times, takes the average value, and converts the average value to degrees Celsius.
   * @param None.
@@ -31,18 +48,15 @@
   */
 void TSENSOR_GetAveTemp(void)
 {
-    DBG_UartPrintInit(BAUDRATE);
     float total = 0;
     float ret;
-    float aveTemp;
-    HAL_TSENSOR_Init();
     /* Tsensor cyclic sampling */
     for (int i = 0; i < SAMPLE_COUNT; ++i) {
         ret = HAL_TSENSOR_GetTemperature();
         total += ret;
     }
     /* Converting the sampled average value of the test sensor to temperature */
-    aveTemp = total / SAMPLE_COUNT;
-    DBG_PRINTF("Tsensor Average temperature: %f\r\n", aveTemp);
-    return;
+    g_aveTemp = total / SAMPLE_COUNT;
+    DBG_PRINTF("Tsensor Average temperature: %f\r\n", g_aveTemp);
+    BASE_FUNC_DELAY_S(1);
 }

@@ -146,7 +146,7 @@ static void UNBAL_Calc(UNBAL_Handle *unbal, UvwAxis *iuvwFbk, float unbalFltCoef
     /* Current cycle sampling completed */
     if (unbal->startFlagLast != unbal->startFlag) {
         unbal->calFlag = true;
-        if (Abs(unbal->ia) <= 1e-6) { /* Whether there is current */
+        if (Abs(unbal->ia) <= FLT_EPSILON) { /* Whether there is current */
             unbal->unbalDegree = 0.0f;
             return;
         }

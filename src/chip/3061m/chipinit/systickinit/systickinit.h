@@ -24,6 +24,12 @@
 #ifndef McuMagicTag_SYSTICKINIT_H
 #define McuMagicTag_SYSTICKINIT_H
 
+#include "feature.h"
+
 void SYSTICK_Init(void);
 unsigned int SYSTICK_GetCRGHZ(void);
+#ifdef NOS_TASK_SUPPORT
+void SYSTICK_IRQ_Enable(void);
+#endif
+
 #endif

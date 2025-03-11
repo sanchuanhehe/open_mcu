@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -34,6 +35,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -47,9 +49,9 @@ static void GPT1_Init(void)
     HAL_CRG_IpClkSelectSet(GPT1_BASE, CRG_PLL_NO_PREDV);
 
     g_gptHandle.baseAddress = GPT1;
-    g_gptHandle.period      = 10000 * 1000;  /* Period counter, Period = 10000us, 1000ns in 1us */
-    g_gptHandle.duty        = 10000 * 10 * 10; /* Duty counter, duty = 10000 / 10 us */
-    g_gptHandle.pwmPolarity = BASE_CFG_ENABLE; /* Continuous output */
+    g_gptHandle.period      = 10000 * 1000; /* Period counter is 10000 * 1000 */
+    g_gptHandle.duty        = 10000 * 10 * 10; /* Duty counter is 10000 * 10 *10 */
+    g_gptHandle.pwmPolarity = BASE_CFG_ENABLE; /* Set Polarity Reversal */
     g_gptHandle.pwmKeep     = BASE_CFG_ENABLE; /* Continuous output */
     HAL_GPT_Init(&g_gptHandle);
 }
@@ -60,7 +62,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0Handle.baseAddress = UART0;
-    g_uart0Handle.irqNum = IRQ_UART0;
 
     g_uart0Handle.baudRate = UART0_BAND_RATE;
     g_uart0Handle.dataLength = UART_DATALENGTH_8BIT;
@@ -77,28 +78,26 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    SYSCTRL0->SC_SYS_STAT.BIT.update_mode = 0;
+    SYSCTRL0->SC_SYS_STAT.BIT.update_mode_clear = 1;
+    HAL_IOCMG_SetPinAltFuncMode(IO60_AS_GPT1_PWM);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO60_AS_GPT1_PWM, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO60_AS_GPT1_PWM, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO60_AS_GPT1_PWM, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO60_AS_GPT1_PWM, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_14.BIT.func = 0x2; /* 0x2 is GPT1_PWM */
-    iconfig->iocmg_14.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_14.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_14.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_14.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_14.BIT.se = BASE_CFG_DISABLE;
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

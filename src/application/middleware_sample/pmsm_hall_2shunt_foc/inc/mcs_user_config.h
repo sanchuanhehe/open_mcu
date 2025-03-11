@@ -65,10 +65,10 @@
 #define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
 
 #define SPD_KP                            0.01f
-#define SPD_KI                            0.1f
+#define SPD_KI                            0.03f
 #define SPD_LOWERLIM                      -1.0f
 #define SPD_UPPERLIM                      1.0f
-#define SIXSTEPTOFOC                      20.0f
+#define SIXSTEPTOFOC                      3.0f
 
 /* Hall  paramater config. */
 #define HALL_PHASESHIFT                   ONE_PI

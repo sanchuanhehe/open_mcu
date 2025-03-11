@@ -22,10 +22,26 @@
 #ifndef McuMagicTag_MCS_CONFIG_H
 #define McuMagicTag_MCS_CONFIG_H
 
-/* APT synchronization */
-#define APT_SYNC_IN_SRC     APT_SYNCIN_SRC_APT0_SYNCOUT
-/* Overcurrent protection flag */
-#define APT_EVT_IRQ_CP      IRQ_APT0_EVT
+#if defined(CHIP_3061MNPICA) || defined(CHIP_3061MNNICA) || defined(CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8)
+#define ADC_U_SOC_NUM ADC_SOC_NUM2
+#define ADC_V_SOC_NUM ADC_SOC_NUM5
+#define ADC_W_SOC_NUM ADC_SOC_NUM6
+#define ADC_SPD_ADJ_SOC_NUM ADC_SOC_NUM9
+#define ADC_HANDLE g_adc0
+#endif
+
+#if defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+#define ADC_U_SOC_NUM ADC_SOC_NUM3
+#define ADC_V_SOC_NUM ADC_SOC_NUM5
+#define ADC_W_SOC_NUM ADC_SOC_NUM7
+#define ADC_SPD_ADJ_SOC_NUM ADC_SOC_NUM9
+
+#define ADC_HANDLE g_adc2
+#endif
+
+#define APT_PWM_FREQ        12000      /* PWM frequency 12K Hz. */
+#define CTRL_CURR_PERIOD    (1.0f / APT_PWM_FREQ) /* carrier ISR period (S) */
+#define CTRL_CURE_PERIOD_US  83
 
 #define SYSTICK_PERIOD_US   500u        /* systick period. unit : us */
 
@@ -40,16 +56,14 @@
 #define MATH_PI             3.14        /* Pi */
 #define MOTOR_K             0.013       /* Torque Coefficient */
 
-#define BOOST_FACTOR        0.1         /* Boosting factor */
-
 #define RAMP_STP            60          /* Slope of forced draging acceleration */
 #define RAMP_DUTY_PWM       0.5         /* 1.0% */
 
 #define FORCE_DRAG_MINDUTY  10          /* APT minimum duty cycle during forced drag */
-#define FORCE_DRAG_MAXDUTY  10          /* APT maximum duty cycle during forced drag */
+#define FORCE_DRAG_MAXDUTY  15          /* APT maximum duty cycle during forced drag */
 
-#define DRAG_START_INTERVAL 1000        /* Force drag change phase every 48 ms.(1000 * 60us = 60ms) */
-#define DRAG_STOP_INTERVAL  400         /* Force drag change phase every 24 ms.(200 * 60us = 12ms) */
+#define DRAG_START_INTERVAL 1000        /* Force drag change phase time */
+#define DRAG_STOP_INTERVAL  400         /* Force drag change phase time */
 
 /* Parameters of the motor in the RUN */
 #define FILTER_COUNT        3           /* Filter Times */

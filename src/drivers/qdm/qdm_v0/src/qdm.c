@@ -289,13 +289,13 @@ static void CalculateSpeed(QDM_Handle *qdmHandle)
     lastPoslockValue = qdmHandle->baseAddress->QPOSLOCK;
     if (qdmHandle->baseAddress->QDMSTS.BIT.qdir_sts == 1) { /* forward */
         tmp = deltaValue >> qdmHandle->baseAddress->QCTRL.BIT.qdu_xclk;
-        speed = ((tmp * SECONDS_PER_MINUTES) / qdmHandle->motorLineNum) \
-                * (BASE_FUNC_GetCpuFreqHz() / qdmHandle->period);
+        speed = (int)(((tmp * SECONDS_PER_MINUTES) / qdmHandle->motorLineNum) \
+                * (BASE_FUNC_GetCpuFreqHz() / qdmHandle->period));
         qdmHandle->speedRpm = speed;
     } else { /* reverse */
         tmp = (qdmHandle->posMax - deltaValue) >> qdmHandle->baseAddress->QCTRL.BIT.qdu_xclk;
-        speed = ((tmp * SECONDS_PER_MINUTES) / qdmHandle->motorLineNum) \
-                * (BASE_FUNC_GetCpuFreqHz() / qdmHandle->period);
+        speed = (int)(((tmp * SECONDS_PER_MINUTES) / qdmHandle->motorLineNum) \
+                * (BASE_FUNC_GetCpuFreqHz() / qdmHandle->period));
         qdmHandle->speedRpm = -speed;
     }
 }
@@ -538,7 +538,7 @@ int HAL_QDM_GetSpeedRpmMT(QDM_Handle *qdmHandle)
     utime = BASE_FUNC_GetCpuFreqHz() / qdmHandle->motorLineNum;
     tmp = utime << qdmHandle->baseAddress->QTSUCTRL.BIT.cevt_prescaler \
             >> qdmHandle->baseAddress->QTSUCTRL.BIT.tsu_prescaler >> qdmHandle->baseAddress->QCTRL.BIT.qdu_xclk;
-    rpm = tmp * SECONDS_PER_MINUTES / qdmHandle->baseAddress->QCPRD;
+    rpm = (int)(tmp * SECONDS_PER_MINUTES / qdmHandle->baseAddress->QCPRD);
 
     if (qdmHandle->baseAddress->QDMSTS.BIT.qdir_sts == BASE_CFG_SET) {
         qdmHandle->speedRpm = rpm;

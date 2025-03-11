@@ -34,7 +34,7 @@ class CreateCfg():
             errors='replace') as file:
             for line in file:
                 mod = re.search(\
-                    "^#define[\s]+THIS_FILE_ID[\s]+(FILE_ID_[\w]*)",\
+                    "^#define[\s]+THIS_FILE_ID[\s]+(FILE_ID_[\w]*)", \
                     line.strip())
                 if mod is None:
                     continue
@@ -121,7 +121,7 @@ class CreateCfg():
             file_id_str = self.file_id_dic.get(file_id_str)
             if file_id_str is None:
                 raise Exception(self.file_id_dic)
-            cmd_line = ['riscv32-linux-musl-gcc', '-E', src_full_file_name] + \
+            cmd_line = [self.params.get('cc'), '-E', src_full_file_name] + \
                     cflag + include + ["-DMAKE_PRIM_XML_PROCESS_IN", 
                                         '-D__FILE_NAME__ = %s' % src_file_name, 
                                         '-D__FILE_IDX__ = %s' % file_id_str, 
@@ -140,8 +140,6 @@ class CreateCfg():
         full_file_name_list = self.params.get('sources')
         self.dst_full_file_name_list = CreateCfg.conver_c_2_i(self,
             full_file_name_list)
-        if self.dst_full_file_name_list is None:
-            return -1
  
  
     def get_necessary_information(self):

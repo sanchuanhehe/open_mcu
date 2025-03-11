@@ -44,6 +44,12 @@ extern "C" {
 
 typedef enum {
     FILE_ID_LOG_C = 2001, /* this is a test sample */
+    FILE_ID_DFX_CRASH_C = 2002,
+    FILE_ID_INTERRUPT_C = 2003,
+    FILE_ID_SAMPLE_C = 2004,
+    FILE_ID_DRV_INTERRUPT_C = 2005,
+    FILE_ID_DRV_ASM_C = 3001,
+    FILE_ID_DRV_XFE_C = 3002,
 } file_id_enum;
 
 #ifdef __cplusplus

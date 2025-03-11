@@ -301,7 +301,7 @@ BASE_StatusType HAL_UART_WriteBlocking(UART_Handle *uartHandle, unsigned char *s
                 continue;
             }
             /* Blocking write to DR when register is empty */
-            uartHandle->baseAddress->UART_DR.BIT.data = *(src);
+            uartHandle->baseAddress->UART_DR.reg = *(src);
             src++;
             txCount--;
         }
@@ -359,7 +359,7 @@ static void WriteITCallBack(UART_Handle *uartHandle)
             if (uartHandle->baseAddress->UART_FR.BIT.txff == 1) {  /* True when the TX FIFO is full */
                 break;
             }
-            uartHandle->baseAddress->UART_DR.BIT.data = *(uartHandle->txbuff);
+            uartHandle->baseAddress->UART_DR.reg = *(uartHandle->txbuff);
             (uartHandle->txbuff)++;
             uartHandle->txBuffSize -= 1;
         }
@@ -794,7 +794,7 @@ BASE_StatusType HAL_UART_RegisterCallBack(UART_Handle *uartHandle, UART_Callback
 }
 
 /**
-  * @brief UART DAM(rx to memory), cyclically stores data to specified memory(saveData).
+  * @brief UART DMA(rx to memory), cyclically stores data to specified memory(saveData).
   * @param uartHandle UART handle.
   * @param saveData Address of the data buff to be sent.
   * @param tempNode DMA Link List, @ref DMA_LinkList
@@ -821,7 +821,7 @@ BASE_StatusType HAL_UART_ReadDMAAndCyclicallyStored(UART_Handle *uartHandle, uns
         uartHandle->rxbuff = saveData;
         uartHandle->rxBuffSize = dataLength;
 
-        /* Init DAM Channel Params */
+        /* Init DMA Channel Params */
         DMA_ChannelParam dmaParams;
         dmaParams.direction   =  uartHandle->dmaHandle->DMA_Channels[channel].direction;
         dmaParams.srcAddrInc  =  uartHandle->dmaHandle->DMA_Channels[channel].srcAddrInc;

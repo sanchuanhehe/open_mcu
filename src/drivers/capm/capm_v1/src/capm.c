@@ -95,6 +95,19 @@ static BASE_StatusType CAPM_SetDeburrNum(CAPM_Handle *handle)
 }
 
 /**
+  * @brief Clear EAR when interrupt is CAPM_INTEARCMPMATCH or CAPM_INTEAROVF.
+  * @param handle: CAPM handle.
+  * @param intBit: Specific interrupt.
+  * @retval None
+  */
+static void CAPM_ClearEar(CAPM_Handle *handle, unsigned int intBit)
+{
+    if (intBit == (0x1 << CAPM_INTEARCMPMATCH) || intBit == (0x1 << CAPM_INTEAROVF)) {
+        handle->baseAddress->EAR.BIT.ear = 0;
+    }
+}
+
+/**
   * @brief IRQ Handler
   * @param handle: CAPM handle.
   * @retval None
@@ -109,8 +122,14 @@ void HAL_CAPM_IrqHandler(void *handle)
         unsigned int intMask = DCL_CAPM_GetInterFlag(useHandle->baseAddress);
         unsigned int intBit;
         for (unsigned int i = 0; i <= CAPM_INTDMAREQOVF; i++) {
+            /* 5：skip the capture interrupt overflow flag. */
+            if (i == 5) {
+                continue;
+            }
             if (((intMask >> i) & 0x1) == 0x1) {
                 intBit = (intMask & (0x1 << i));
+                /* Clear ear when interrupt is CAPM_INTEARCMPMATCH or CAPM_INTEAROVF. */
+                CAPM_ClearEar(useHandle, intBit);
                 /* Clear interrupt. */
                 DCL_CAPM_ClearInter(useHandle->baseAddress, intBit);
                 useHandle->userCallBack.EvtFinishCallback(useHandle, i);
@@ -303,7 +322,7 @@ BASE_StatusType HAL_CAPM_Init(CAPM_Handle *handle)
     CAPM_SetDeburrNum(handle);
     /* Init CAPM prescale. */
     DCL_CAPM_SetPreScale(handle->baseAddress, handle->preScale);
-    DCL_CAPM_SetDMATriggleReg(handle->baseAddress, handle->useCapNum - 1);
+    DCL_CAPM_SetDMATriggleReg(handle->baseAddress, handle->triggleDmaReg);
     CAPM_SetRegCaptureEvent(handle);
     CAPM_SyncInit(handle);
     if (CAPM_InputSel(handle) == BASE_STATUS_ERROR) {
@@ -346,7 +365,7 @@ BASE_StatusType HAL_CAPM_DeInit(CAPM_Handle *handle)
 unsigned int HAL_CAPM_GetECRValue(CAPM_Handle *handle, CAPM_ECRNum ecrNum)
 {
     CAPM_ASSERT_PARAM(handle != NULL);
-    CAPM_PARAM_CHECK_WITH_RET(ecrNum > 0, BASE_STATUS_ERROR);
+    CAPM_PARAM_CHECK_WITH_RET(ecrNum >= 0, BASE_STATUS_ERROR);
     CAPM_PARAM_CHECK_WITH_RET(ecrNum < CAPM_MAX_CAP_REG_NUM, BASE_STATUS_ERROR);
     switch (ecrNum) {
         case CAPM_ECR_NUM1:
@@ -411,16 +430,16 @@ unsigned int HAL_CAPM_GetSyncPhs(CAPM_Handle *handle)
 /**
   * @brief Get ECR register value by DMA.
   * @param handle: CAPM handle.
-  * @param distAddr: Distance address.
+  * @param saveData: Destination address.
   * @param dataLength: CAPM handle.
   * @retval BASE status type: BASE_STATUS_OK, BASE_STATUS_ERROR.
   */
-BASE_StatusType HAL_CAPM_GetECRValueDMA(CAPM_Handle *handle, unsigned int *distAddr,
+BASE_StatusType HAL_CAPM_GetECRValueDMA(CAPM_Handle *handle, unsigned int *saveData,
                                         unsigned int dataLength)
 {
     CAPM_ASSERT_PARAM(handle != NULL);
     CAPM_ASSERT_PARAM(handle->dmaHandle != NULL);
-    CAPM_ASSERT_PARAM(distAddr != NULL);
+    CAPM_ASSERT_PARAM(saveData != NULL);
     CAPM_PARAM_CHECK_WITH_RET(dataLength > 0, BASE_STATUS_ERROR);
     unsigned int channel;
     channel = handle->dmaChannel;
@@ -432,7 +451,7 @@ BASE_StatusType HAL_CAPM_GetECRValueDMA(CAPM_Handle *handle, unsigned int *distA
     handle->dmaHandle->userCallBack.DMA_CallbackFuns[channel].ChannelErrorCallBack = CAPM_DmaErrorIRQService;
     /* Get ECR value by DMA. */
     if (HAL_DMA_StartIT(handle->dmaHandle, (unsigned int)(uintptr_t)(void *)&(handle->baseAddress->ECR0),
-        (unsigned int)(uintptr_t)(void *)distAddr, dataLength, channel) != BASE_STATUS_OK) {
+        (unsigned int)(uintptr_t)(void *)saveData, dataLength, channel) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
     return BASE_STATUS_OK;

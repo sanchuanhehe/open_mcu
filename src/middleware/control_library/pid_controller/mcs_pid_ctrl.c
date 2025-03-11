@@ -123,6 +123,46 @@ float PID_Exec(PID_Handle *pidHandle)
 }
 
 /**
+  * @brief Execute PID controller calculation. dynamic clamping, feedforward compensataion,
+  *        differential anti-feedback disturbance
+  * @param pidHandle PID controller struct handle.
+  * @param fbError Current feedback error.
+  * @param fbErrorLast Last feedback error.
+  * @retval PID control output.
+  */
+float PID_ExecDiffWithFbk(PID_Handle *pidHandle)
+{
+    MCS_ASSERT_PARAM(pidHandle != NULL);
+    /* Proportional Item */
+    float error = pidHandle->error;
+    float fbkVal = pidHandle->fbkVal;
+    float fbkValLast = pidHandle->fbkValLast;
+    float ts = pidHandle->ts;
+
+    float p = pidHandle->kp * error;
+
+    /* Integral Item */
+    float i = pidHandle->ki * ts * (error - pidHandle->ka * pidHandle->saturation) + pidHandle->integral;
+    i = Clamp(i, Max(0.0f, pidHandle->upperLimit), Min(0.0f, pidHandle->lowerLimit));
+    pidHandle->integral = i;
+
+    /* Differential Item */
+    float kd = pidHandle->kd;
+    float ns = pidHandle->ns;
+    float d = 1.0f / (1.0f + ts * ns) * (kd * ns * fbkVal - kd * ns * fbkValLast + pidHandle->differ);
+
+    pidHandle->fbkValLast = pidHandle->fbkVal;
+    pidHandle->differ = d;
+
+    /* Output value update and saturation value calculation */
+    float val = p + i + d + pidHandle->feedforward;
+    float out = Clamp(val, pidHandle->upperLimit, pidHandle->lowerLimit);
+    pidHandle->saturation = val - out;
+
+    return out;
+}
+
+/**
   * @brief Set the proportional parameter kp of PID controller.
   * @param pidHandle PID controller struct handle.
   * @param kp The proportional parameter.

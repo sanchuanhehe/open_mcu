@@ -24,15 +24,35 @@
 
 
 /**
-  * @brief Clear historical values of power factor correction(PFC) current controller.
-  * @param currCtrl PFC current control structure
+  * @brief Init PFC voltage control structure.
+  * @param currCtrl PFC voltage control Handle.
+  * @param piParam PI controller parameter table.
+  * @param startCurr Current threshold for starting the current loop.
+  * @param stopCurr Current threshold for stopping the current loop.
+  * @param vacAmp Amplitude of input voltage.
+  * @param ts Control period.
   * @retval None.
   */
-void PFC_CurrCtrlClear(PFC_CURRCTRL_Handle *currCtrl)
+void PFC_CurrCtrlInit(PFC_CURRCTRL_Handle *currCtrl, PI_Param *piParam, float startCurr, \
+                      float stopCurr, float vacAmp, float ts)
 {
     MCS_ASSERT_PARAM(currCtrl != NULL);
-    currCtrl->currPiCtrl.differ = 0.0f;
-    currCtrl->currPiCtrl.integral = 0.0f;
+    MCS_ASSERT_PARAM(piParam != NULL);
+    MCS_ASSERT_PARAM(startCurr > 0.0f);
+    MCS_ASSERT_PARAM(stopCurr > 0.0f);
+    /* Reset pi parameters. */
+    PID_Reset(&currCtrl->currPi);
+    /* Init pi parameters. */
+    currCtrl->currPi.kp = piParam->kp;
+    currCtrl->currPi.ki = piParam->ki;
+    currCtrl->currPi.upperLimit = piParam->upperLim;
+    currCtrl->currPi.lowerLimit = piParam->lowerLim;
+    currCtrl->currPi.ts = ts;
+    /* Init user parameter and control parameter. */
+    currCtrl->maxCurr = 0.0f;
+    currCtrl->startCurr = startCurr;
+    currCtrl->stopCurr = stopCurr;
+    currCtrl->unitCoeff = 1.0f / vacAmp;
 }
 
 /**
@@ -40,11 +60,30 @@ void PFC_CurrCtrlClear(PFC_CURRCTRL_Handle *currCtrl)
   * @param currCtrl PFC current control structure
   * @retval None.
   */
-void PFC_CurrCtrlExec(PFC_CURRCTRL_Handle *currCtrl)
+void PFC_CurrCtrlExec(PFC_CURRCTRL_Handle *currCtrl, float iacFbk)
 {
     MCS_ASSERT_PARAM(currCtrl != NULL);
+
+    currCtrl->iacFbk = iacFbk;
     /* Calculate the current error of power factor correction(PFC). */
-    currCtrl->currPiCtrl.error = currCtrl->currRef - currCtrl->unitCurrFdbk;
-    /* Calculation the output pwm duty of power factor correction(PFC) current. */
-    currCtrl->pwmDuty = PI_Exec(&currCtrl->currPiCtrl);
+    currCtrl->currPi.error = currCtrl->iacRef - currCtrl->iacFbk;
+    /* Calculate the output pwm duty of power factor correction(PFC) current. */
+    currCtrl->pwmDuty = PI_Exec(&currCtrl->currPi);
+}
+
+/**
+  * @brief Clear historical values of power factor correction(PFC) current controller.
+  * @param currCtrl PFC current control structure
+  * @retval None.
+  */
+void PFC_CurrCtrlClear(PFC_CURRCTRL_Handle *currCtrl)
+{
+    MCS_ASSERT_PARAM(currCtrl != NULL);
+    /* Clear history value */
+    currCtrl->pwmDuty = 0.0f;
+    currCtrl->iacFbk = 0.0f;
+    currCtrl->vacFbk = 0.0f;
+    currCtrl->unitVacFbk = 0.0f;
+    /* Clear pid */
+    PID_Clear(&currCtrl->currPi);
 }

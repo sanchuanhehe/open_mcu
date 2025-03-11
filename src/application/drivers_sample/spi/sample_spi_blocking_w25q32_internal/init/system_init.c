@@ -39,7 +39,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
 
-    if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) { /* CRG init */
+    if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
     *coreClkSelect = crg.coreClkSelect;
@@ -53,29 +53,30 @@ static void SPI_Init(void)
 
     g_spiSampleHandle.baseAddress = SPI;
 
-    g_spiSampleHandle.mode = HAL_SPI_MASTER; /* spi master */
+    g_spiSampleHandle.mode = HAL_SPI_MASTER;
     g_spiSampleHandle.csMode = SPI_CHIP_SELECT_MODE_INTERNAL;
     g_spiSampleHandle.xFerMode = HAL_XFER_MODE_BLOCKING;
-    g_spiSampleHandle.clkPolarity = HAL_SPI_CLKPOL_0; /* spi ploarity is 0 */
+    g_spiSampleHandle.clkPolarity = HAL_SPI_CLKPOL_0;
     g_spiSampleHandle.clkPhase =  HAL_SPI_CLKPHA_1;
     g_spiSampleHandle.endian = HAL_SPI_BIG_ENDIAN;
-    g_spiSampleHandle.frameFormat = HAL_SPI_MODE_MOTOROLA; /* motorola frame format */
+    g_spiSampleHandle.frameFormat = HAL_SPI_MODE_MOTOROLA;
     g_spiSampleHandle.dataWidth = SPI_DATA_WIDTH_8BIT;
     g_spiSampleHandle.freqScr = SPI_FREQ_SCR;
     g_spiSampleHandle.freqCpsdvsr = SPI_FREQ_CPSDVSR;
     g_spiSampleHandle.waitEn = BASE_CFG_DISABLE;
-    g_spiSampleHandle.waitVal = 127; /* microwire wait time 127 */
+    g_spiSampleHandle.waitVal = 127; /* 127 is microwire wait time */
     g_spiSampleHandle.rxBuff = NULL;
     g_spiSampleHandle.txBuff = NULL;
     g_spiSampleHandle.transferSize = 0;
-    g_spiSampleHandle.txCount = 0; /* transfer count */
+    g_spiSampleHandle.txCount = 0;
     g_spiSampleHandle.rxCount = 0;
     g_spiSampleHandle.state = HAL_SPI_STATE_RESET;
     g_spiSampleHandle.rxIntSize =  SPI_RX_INTERRUPT_SIZE_1;
-    g_spiSampleHandle.txIntSize =  SPI_TX_INTERRUPT_SIZE_1; /* tx interrupt size */
+    g_spiSampleHandle.txIntSize =  SPI_TX_INTERRUPT_SIZE_1;
     g_spiSampleHandle.rxDMABurstSize =  SPI_RX_DMA_BURST_SIZE_1;
     g_spiSampleHandle.txDMABurstSize =  SPI_TX_DMA_BURST_SIZE_1;
     HAL_SPI_Init(&g_spiSampleHandle);
+    HAL_SPI_ChipSelectChannelSet(&g_spiSampleHandle, SPI_CHIP_SELECT_CHANNEL_0);
 }
 
 static void UART0_Init(void)
@@ -83,13 +84,13 @@ static void UART0_Init(void)
     HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
-    g_uart0.baseAddress = UART0; /* uart0 baseaaddress */
+    g_uart0.baseAddress = UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
-    g_uart0.dataLength = UART_DATALENGTH_8BIT;  /* data length 8 */
+    g_uart0.dataLength = UART_DATALENGTH_8BIT;
     g_uart0.stopBits = UART_STOPBITS_ONE;
     g_uart0.parity = UART_PARITY_NONE;
-    g_uart0.txMode = UART_MODE_BLOCKING;  /* blocking mode */
+    g_uart0.txMode = UART_MODE_BLOCKING;
     g_uart0.rxMode = UART_MODE_BLOCKING;
     g_uart0.fifoMode = BASE_CFG_ENABLE;
     g_uart0.fifoTxThr = UART_FIFOFULL_ONE_TWO;

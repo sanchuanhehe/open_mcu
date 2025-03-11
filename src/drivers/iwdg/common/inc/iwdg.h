@@ -71,7 +71,6 @@ typedef struct _IWDG_Handle {
   * @defgroup IWDG_API_Declaration IWDG HAL API
   * @{
   */
-
 BASE_StatusType HAL_IWDG_Init(IWDG_Handle *handle);
 void HAL_IWDG_SetTimeValue(IWDG_Handle *handle, unsigned int timeValue, IWDG_TimeType timeType);
 unsigned int HAL_IWDG_GetLoadValue(IWDG_Handle *handle);
@@ -81,7 +80,6 @@ void HAL_IWDG_Start(IWDG_Handle *handle);
 void HAL_IWDG_Stop(IWDG_Handle *handle);
 void HAL_IWDG_RegisterCallback(IWDG_Handle *handle, IWDG_CallbackType callBackFunc);
 void HAL_IWDG_IrqHandler(void *handle);
-
 /**
   * @}
   */

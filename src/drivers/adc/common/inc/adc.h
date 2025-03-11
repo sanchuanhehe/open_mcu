@@ -102,7 +102,11 @@ void HAL_ADC_RegisterCallBack(ADC_Handle *adcHandle, ADC_CallbackFunType typeID,
 BASE_StatusType HAL_ADC_InitForVdda(ADC_RegStruct *adcx, ADC_SOCNumber soc, DAC_RegStruct *dacx, bool useDac);
 float HAL_ADC_GetVddaByDac(ADC_RegStruct *adcx, ADC_SOCNumber soc, DAC_RegStruct *dacx, bool useDac);
 unsigned int HAL_ADC_GetTransResultByVdda(ADC_RegStruct *adcx, ADC_SOCNumber soc, float vdda);
-#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNPIK8)
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA) || defined (CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8) || \
+    defined (CHIP_3061MNPIK8) || defined (CHIP_3061MNNIK8) || \
+    defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
 void HAL_ADC_IrqHandlerInt0(void *handle);
 #endif
 void HAL_ADC_IrqHandlerInt1(void *handle);

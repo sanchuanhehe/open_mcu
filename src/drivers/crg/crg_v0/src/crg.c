@@ -323,8 +323,8 @@ static inline unsigned int CRG_GetVcoFreq(void)
 
     CRG_ASSERT_PARAM(IsCRGInstance(crg));
     freq = CRG_GetPllRefIni(crg->PERI_CRG0.pll_ref_cksel);
-    freq /= CRG_GetPreDivValue(crg->PERI_CRG1.pll_prediv);
     freq *= CRG_GetPllFbDivValue(crg->PERI_CRG2.pll_fbdiv);
+    freq /= CRG_GetPreDivValue(crg->PERI_CRG1.pll_prediv);
     return freq;
 }
 
@@ -506,14 +506,14 @@ BASE_StatusType HAL_CRG_IpClkSelectSet(const void *baseAddress, unsigned int sel
 /**
   * @brief Get clock select of ip
   * @param baseAddress Ip base address
-  * @param clkSel Get clkSet value
+  * @param select Get clkSet value
   * @retval BASE_STATUS_OK
   * @retval BASE_STATUS_ERROR  Match Fail or Not support
   */
-BASE_StatusType HAL_CRG_IpClkSelectGet(const void *baseAddress, unsigned int *clkSel)
+BASE_StatusType HAL_CRG_IpClkSelectGet(const void *baseAddress, unsigned int *select)
 {
     CRG_ASSERT_PARAM(baseAddress != NULL);
-    CRG_ASSERT_PARAM(clkSel != NULL);
+    CRG_ASSERT_PARAM(select != NULL);
     CRG_ASSERT_PARAM(IsCRGInstance(g_crgBaseAddr));
 
     CHIP_CrgIpMatchInfo *p = GetCrgIpMatchInfo(baseAddress);
@@ -527,7 +527,7 @@ BASE_StatusType HAL_CRG_IpClkSelectGet(const void *baseAddress, unsigned int *cl
     if (g_ipClkProc[p->type].clkSelGet == NULL) {
         return BASE_STATUS_ERROR;
     }
-    *clkSel = g_ipClkProc[p->type].clkSelGet(p);
+    *select = g_ipClkProc[p->type].clkSelGet(p); /* Obtains the module clock selection. */
     return BASE_STATUS_OK;
 }
 

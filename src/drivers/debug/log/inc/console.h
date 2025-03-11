@@ -52,14 +52,14 @@ int ConsoleGetc(void);
   * @brief Output String
   * @{
   */
-int ConsolePuts(const char *str);
+unsigned int ConsolePuts(const char *str);
   /**
   * @brief Output Characters
   * @{
   */
 void ConsolePutc(const char c);
 /* Format print function */
-int UartPrintf(const char *format, ...);
+unsigned int UartPrintf(const char *format, ...);
 
 /* init console uart */
 void ConsoleInit(UART_Handle uart);

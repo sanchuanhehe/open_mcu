@@ -28,7 +28,34 @@
 #include "interrupt.h"
 #include "wdg.h"
 
+#define WDG_COUNT_MAX 0xFFFFFFFF
+#define TIME_CHANGE_NUM 1000
+
 static unsigned int WDG_CalculateRegTimeout(WDG_RegStruct *baseAddress, float timeValue, WDG_TimeType timeType);
+
+/**
+  * @brief check wdg time value parameter.
+  * @param baseAddress Value of @ref WDG_RegStruct
+  * @param timeValue time value
+  * @param timeType Value of @ref WDG_TimeType.
+  * @retval Bool.
+  */
+static bool IsWdgTimeValue(WDG_RegStruct *baseAddress, float timeValue, WDG_TimeType timeType)
+{
+    unsigned int clockFreq = HAL_CRG_GetIpFreq((void *)baseAddress); /* Get WDG clock freq. */
+    if (clockFreq == 0) {
+        return false;
+    }
+
+    double maxSecValue = ((double)(WDG_COUNT_MAX) / (double)clockFreq);
+    double maxMsValue = maxSecValue * TIME_CHANGE_NUM;
+    double maxUsValue = maxMsValue * TIME_CHANGE_NUM;
+    /* Check wdg time value parameter. */
+    return ((timeType == WDG_TIME_UNIT_TICK && timeValue <= (float)WDG_COUNT_MAX) ||
+            (timeType == WDG_TIME_UNIT_S && maxSecValue >= timeValue) ||
+            (timeType == WDG_TIME_UNIT_MS && maxMsValue >= timeValue) ||
+            (timeType == WDG_TIME_UNIT_US && maxUsValue >= timeValue));
+}
 
 /**
   * @brief Initializing WDG values
@@ -40,8 +67,7 @@ BASE_StatusType HAL_WDG_Init(WDG_Handle *handle)
     WDG_ASSERT_PARAM(handle != NULL);
     WDG_ASSERT_PARAM(IsWDGInstance(handle->baseAddress));
     WDG_PARAM_CHECK_WITH_RET(IsWdgTimeType(handle->timeType), BASE_STATUS_ERROR);
-    WDG_PARAM_CHECK_WITH_RET(IsWdgTimeValue(handle->baseAddress, handle->timeValue, handle->timeType),
-        BASE_STATUS_ERROR);
+
     /* baseaddress = WDG */
     HAL_WDG_SetTimeValue(handle, handle->timeValue, handle->timeType);
     /* Set Watchdog Reset and Interrupt */
@@ -91,7 +117,10 @@ void HAL_WDG_SetTimeValue(WDG_Handle *handle, unsigned int timeValue, WDG_TimeTy
     WDG_ASSERT_PARAM(handle != NULL);
     WDG_ASSERT_PARAM(IsWDGInstance(handle->baseAddress));
     WDG_PARAM_CHECK_NO_RET(IsWdgTimeType(timeType));
-    WDG_PARAM_CHECK_NO_RET(IsWdgTimeValue(handle->baseAddress, timeValue, timeType));
+    /* Check wdg time value parameter. */
+    if (IsWdgTimeValue(handle->baseAddress, timeValue, timeType) == false) {
+        return;
+    }
     /* handle->baseAddress only could be configured WDG */
     unsigned int value = WDG_CalculateRegTimeout(handle->baseAddress, timeValue, timeType);
     DCL_WDG_SetLoadValue(handle->baseAddress, value);

@@ -97,9 +97,10 @@ typedef void (* DMA_CallbackType)(void *handle);
 
 /**
   * @defgroup DMA_API_Declaration DMA HAL API
+  * @brief Hardware abstraction layer.
   * @{
   */
-/* Hardware abstraction layer */
+
 BASE_StatusType HAL_DMA_Init(DMA_Handle *dmaHandle);
 BASE_StatusType HAL_DMA_Deinit(DMA_Handle *dmaHandle);
 BASE_StatusType HAL_DMA_Start(DMA_Handle *dmaHandle, unsigned int srcAddr,

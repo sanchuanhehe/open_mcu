@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -47,7 +48,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
@@ -75,37 +75,32 @@ static void IWDG_Init(void)
     HAL_CRG_IpClkSelectSet(IWDG_BASE, CRG_PLL_NO_PREDV);
 
     g_iwdg.baseAddress = IWDG;
-    g_iwdg.irqNum = IRQ_IWDG;
 
-    g_iwdg.loadValue = 2000; /* 2000 is load value */
-    g_iwdg.timeType = WDG_TIME_UNIT_MS;
-    g_iwdg.enableIT = BASE_CFG_DISABLE;
-    g_iwdg.enableRST = BASE_CFG_ENABLE;
-    HAL_WDG_Init(&g_iwdg);
+    g_iwdg.timeValue = 2000; /* 2000 is time value */
+    g_iwdg.timeType = IWDG_TIME_UNIT_MS;
+    g_iwdg.enableIT = BASE_CFG_ENABLE;
+    HAL_IWDG_Init(&g_iwdg);
 
-    HAL_WDG_RegisterCallback(&g_iwdg, IwdgITCallBackFunc); /* Registering callback functions */
-    HAL_WDG_IRQService(&g_iwdg);
-    IRQ_SetPriority(g_iwdg.irqNum, 1);
-    IRQ_EnableN(g_iwdg.irqNum);
+    HAL_IWDG_RegisterCallback(&g_iwdg, IwdgITCallBackFunc);
+    IRQ_Register(IRQ_IWDG, HAL_IWDG_IrqHandler, &g_iwdg);
+    IRQ_SetPriority(IRQ_IWDG, 1); /* 1 is priority value */
+    IRQ_EnableN(IRQ_IWDG);
 }
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 void SystemInit(void)
 {

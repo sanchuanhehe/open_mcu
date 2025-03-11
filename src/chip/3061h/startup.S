@@ -767,6 +767,12 @@ coderom_data_copy:
     la t2, __data_end
     jal mem_cpy
 
+stack_sram_bound_data_copy:
+    la t0, __stack_sram_bound_data_start              /* SRAM addr */
+    la t1, __stack_sram_bound_data_load               /* ROM addr  */
+    la t2, __stack_sram_bound_data_end
+    jal mem_cpy
+
 pmp_init:
 #if defined(USER_MODE_ENABLE) && (USER_MODE_ENABLE == 1)
     li t0, 0xB00

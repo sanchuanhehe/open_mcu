@@ -59,7 +59,7 @@ struct MemoryLog {
 struct SysLogCtx {
     unsigned char init;
     char **modStr;
-    enum ExtLogLevel logLevel[EXT_MODULE_BUTT];
+    enum ExtLogLevel logLevel[EXT_MODULE_BUTT + 1];
     struct MemoryLog memLog;
 };
 struct SysDebugSwitch {

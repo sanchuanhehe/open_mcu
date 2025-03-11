@@ -37,10 +37,10 @@
 #define I2C0_SDA_PIN    IOCMG_PIN_MUX(iocmg_15, FUNC_MODE_5, 0x0001)
 
 static IOCMG_Handle g_ioListTable[] = {
-    {UART0_TXD_PIN, PULL_BOTH, SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2},
-    {UART0_RXD_PIN, PULL_BOTH, SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2},
-    {I2C0_SCL_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1},
-    {I2C0_SDA_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1},
+    {UART0_TXD_PIN, PULL_BOTH, SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2, {}},
+    {UART0_RXD_PIN, PULL_BOTH, SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2, {}},
+    {I2C0_SCL_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1, {}},
+    {I2C0_SDA_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1, {}},
 };
 
 const unsigned int IOLIST_SIZE = sizeof(g_ioListTable) / sizeof(g_ioListTable[0]);
@@ -93,7 +93,7 @@ void IOCMG_IOListInitSample(void)
         /* test osc pin function */
         HAL_IOCMG_SetOscClkFuncMode(BASE_CFG_ENABLE);
         HAL_IOCMG_SetOscClkOutputMode(BASE_CFG_ENABLE);
-        HAL_IOCMG_SetOscClkDriveRate(DRIVER_RATE_2);
+        HAL_IOCMG_SetOscClkDriveRate(OSC_CLK_DRIVER_RATE_2);
         /* test API */
         DBG_PRINTF("\r\nOsc func mode = %d \r\n", HAL_IOCMG_GetOscClkFuncMode());
         DBG_PRINTF("Osc clk output mode = %d \r\n", HAL_IOCMG_GetOscClkOutputMode());

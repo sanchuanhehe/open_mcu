@@ -32,6 +32,13 @@
 #define NUM 16
 #define TSENSOR_SOC_NUM ADC_SOC_NUM15  /* This parameter can be modified according to the actual situation */
 
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+#define TSENSOR_ADC_BASE       ADC1_BASE
+#else
+#define TSENSOR_ADC_BASE       ADC0_BASE
+#endif
+
 /**
   * @brief ADC for tsensor clock initialization.
   * @param None.
@@ -40,11 +47,11 @@
 static void ADC_ClkEnable(void)
 {
     unsigned int status = BASE_CFG_UNSET;
-    HAL_CRG_IpEnableGet(ADC0_BASE, &status); /* Check whether the ADC clock is enabled */
+    HAL_CRG_IpEnableGet(TSENSOR_ADC_BASE, &status); /* Check whether the ADC clock is enabled */
     if (status != IP_CLK_ENABLE) {
-        HAL_CRG_IpEnableSet(ADC0_BASE, IP_CLK_ENABLE);
-        HAL_CRG_IpClkSelectSet(ADC0_BASE, CRG_ADC_CLK_ASYN_PLL_DIV);
-        HAL_CRG_IpClkDivSet(ADC0_BASE, CRG_ADC_DIV_2);
+        HAL_CRG_IpEnableSet(TSENSOR_ADC_BASE, IP_CLK_ENABLE);
+        HAL_CRG_IpClkSelectSet(TSENSOR_ADC_BASE, CRG_ADC_CLK_ASYN_PLL_DIV);
+        HAL_CRG_IpClkDivSet(TSENSOR_ADC_BASE, CRG_ADC_DIV_2);
     }
 }
 
@@ -56,9 +63,9 @@ static void ADC_ClkEnable(void)
 static void TSENSOR_SampleConfigure(void)
 {
     ADC_Handle adcHandle = {0};
-    adcHandle.baseAddress = ADC0;
+    adcHandle.baseAddress = TSENSOR_ADC_BASE;
     adcHandle.socPriority = ADC_PRIMODE_ALL_ROUND;
-    HAL_ADC_Init(&adcHandle); /* ADC ADC initialization */
+    HAL_ADC_Init(&adcHandle); /* ADC initialization */
 
     SOC_Param socParam = {0};
     socParam.adcInput = ADC_CH_ADCINA16;
@@ -83,8 +90,14 @@ static void TSENSOR_SampleConfigure(void)
 static float TSENSOR_Conversion(unsigned int digital)
 {
     float curV = ((float)digital / 4096.0f) * 3.3f;  /* 4096.0 and 3.3 for voltage conversion */
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+    /* 1.3f and 25.0f are used as parameters to calculate result */
+    float curTemp = (curV - 1.3f) / g_tsensorGain + 25.0f;
+#else
     /* 1.228f and 25.0f are used as parameters to calculate result */
     float curTemp = (curV - 1.228f) / g_tsensorGain + 25.0f;
+#endif
     return curTemp;
 }
 
@@ -123,14 +136,14 @@ unsigned int HAL_TSENSOR_GetResult(void)
     unsigned int count = 0;
     for (unsigned int i = 0; i < NUM; i++) {
         unsigned int socRet;
-        DCL_ADC_SOCxSoftTrigger(ADC0, TSENSOR_SOC_NUM);
+        DCL_ADC_SOCxSoftTrigger(TSENSOR_ADC_BASE, TSENSOR_SOC_NUM);
         BASE_FUNC_DELAY_MS(1);                      /* waite for 1ms until conversion finish */
-        DCL_ADC_GetConvState(ADC0, TSENSOR_SOC_NUM);
-        if (DCL_ADC_GetConvState(ADC0, TSENSOR_SOC_NUM) != BASE_CFG_UNSET) {
-            socRet = DCL_ADC_ReadSOCxResult(ADC0, TSENSOR_SOC_NUM);
+        DCL_ADC_GetConvState(TSENSOR_ADC_BASE, TSENSOR_SOC_NUM);
+        if (DCL_ADC_GetConvState(TSENSOR_ADC_BASE, TSENSOR_SOC_NUM) != BASE_CFG_UNSET) {
+            socRet = DCL_ADC_ReadSOCxResult(TSENSOR_ADC_BASE, TSENSOR_SOC_NUM);
             ret += socRet;
             count++;
-            DCL_ADC_ResetConvState(ADC0, TSENSOR_SOC_NUM); /* Set the sampling completion flag */
+            DCL_ADC_ResetConvState(TSENSOR_ADC_BASE, TSENSOR_SOC_NUM); /* Set the sampling completion flag */
         }
     }
     if (count == 0) {

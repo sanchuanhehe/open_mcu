@@ -58,16 +58,16 @@ void STARTUP_Clear(STARTUP_Handle *startHandle)
 /**
   * @brief Calculate the reference current in the startup stage.
   * @param startHandle The startup control handle.
-  * @param refHz The speed reference in the startup stage.
+  * @param spdRef The speed reference in the startup stage.
   * @return The current AMP.
   */
-float STARTUP_CurrCal(const STARTUP_Handle *startHandle, float refHz)
+float STARTUP_CurrCal(STARTUP_Handle *startHandle, float spdRef)
 {
     MCS_ASSERT_PARAM(startHandle != NULL);
     float out;
     float tmp;
     /* Calculate the reference current in the startup stage */
-    tmp = startHandle->spdEnd - Abs(refHz);
+    tmp = startHandle->spdEnd - Abs(spdRef);
     tmp = tmp * startHandle->regionInv;
     out = tmp * startHandle->initCurr;
 

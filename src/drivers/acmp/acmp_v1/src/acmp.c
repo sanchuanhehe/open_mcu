@@ -167,7 +167,7 @@ BASE_StatusType HAL_ACMP_DeInit(ACMP_Handle *acmpHandle)
     acmpHandle->baseAddress->ACMP_CTRL0.reg = BASE_CFG_DISABLE;     /* Disable ACMP. */
     acmpHandle->baseAddress->ACMP_CTRL1.reg = BASE_CFG_DISABLE;     /* Clears the input and output status. */
     acmpHandle->baseAddress->ACMP_CTRL2.reg = BASE_CFG_DISABLE;     /* Clears the comparison result selection. */
-    acmpHandle->baseAddress->ACMP_INTR.reg = BASE_CFG_DISABLE;      /* Clear all interrrupt. */
+    acmpHandle->baseAddress->ACMP_INTR.reg =  ACMP_INTERRUPT_ENABLE;      /* Write 1 to Clear all interrrupt. */
     acmpHandle->userCallBack.AcmpEdgedCallBack = NULL;              /* Clears all user callback functions. */
     acmpHandle->userCallBack.AcmpNegativeCallBack = NULL;
     acmpHandle->userCallBack.AcmpPositiveCallBack = NULL;
@@ -234,8 +234,7 @@ BASE_StatusType HAL_ACMP_ResultSelect(ACMP_Handle *acmpHandle, ACMP_ResultSelect
             acmpHandle->baseAddress->ACMP_CTRL2.BIT.cfg_acmp_out_sel = 0x1; /* 0x1: Resulter after filtering. */
             break;
         case ACMP_RESULT_FILTER_BLOCK:
-            acmpHandle->baseAddress->ACMP_CTRL2.BIT.cfg_acmp_out_sel = 0x2; /* 0x2: Resulter after filtering
-                                                                                    and blocking. */
+            acmpHandle->baseAddress->ACMP_CTRL2.BIT.cfg_acmp_out_sel = 0x2; /* 0x2: Result after masking. */
             break;
         default:
             return BASE_STATUS_ERROR;
@@ -285,7 +284,7 @@ void HAL_ACMP_IrqHandler(void *handle)
   * @brief   Register the callback function of ACMP handle.
   * @param   acmpHandle   Acmp Handle
   * @param   typeID       CallBack function type of user, @ref ACMP_CallBackFun_Type
-  * @param   callBackFunc CallBack function of user, @ref ACMM_CallBackType
+  * @param   callBackFunc CallBack function of user, @ref ACMP_CallBackType
   * @retval  BASE_STATUS_OK  Success
   * @retval  BASE_STATUS_ERROR Parameter check fail
   */

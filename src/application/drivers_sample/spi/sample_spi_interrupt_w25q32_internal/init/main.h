@@ -53,4 +53,8 @@ void TxRxSampleCallbackHandle(void *handle);
 void ErrorSampleCallbackHandle(void *handle);
 void SPICsCallback(void *handle);
 
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
+
 #endif /* McuMagicTag_SYSTEM_INIT_H */

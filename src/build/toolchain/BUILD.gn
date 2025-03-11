@@ -26,3 +26,9 @@ hcc_toolchain("riscv32_hcc") {
     ld = cc
 }
 
+hcc_toolchain("bisheng") {
+    cc = "clang"
+    cxx = "clang++"
+    ar = "llvm-ar"
+    ld = cc
+}

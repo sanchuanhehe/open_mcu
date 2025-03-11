@@ -60,7 +60,7 @@
 #define ADC_READINIT_TIMES      20
 #define ADC_TRIMVALUE_MIN       1800.0f
 #define ADC_TRIMVALUE_MAX       2200.0f
-#define IRQ_QDM0_PRIORITY 7  /* the QDM encoder IRQ priority, highest */
+#define IRQ_QDM_PRIORITY 7  /* the QDM encoder IRQ priority, highest */
 #define ENC_TIMES_NUM           5
 /*------------------------------- Param Definition -----------------------------------------------*/
 /* Motor parameters. */
@@ -119,7 +119,7 @@ static void POSCTRL_InitWrapper(POSCTRL_Handle *posHandle, float ts)
         .upperLim = POS_UPPERLIM,
     };
     /* Position loop param init. */
-    POSCTRL_Init(posHandle, &posPi, ts);
+    POSCTRL_Init(posHandle, &posPi, ts, USER_SPD_SLOPE);
 }
 
 /* Motor speed loop PI param. */
@@ -360,7 +360,7 @@ static void MCS_StartupSwitch(MTRCTRL_Handle *mtrCtrl)
             break;
         case STARTUP_STAGE_SPD:
             /* current frequency increase */
-            if (mtrCtrl->motorSpinPos > 3) {  /* 3 is motor rotations number in If mode */
+            if (mtrCtrl->encReady >= 1) {  /* 1 means enc is ready */
                 /* Stage change */
                 mtrCtrl->stateMachine = FSM_RUN;
             } else {
@@ -502,7 +502,7 @@ static void TSK_SystickIsr(MTRCTRL_Handle *mtrCtrl, APT_RegStruct **aptAddr)
                 POSCTRL_SetTarget(&mtrCtrl->posCtrl, 200.0 * DOUBLE_PI * g_motorParam.mtrNp);
                 float posFbk = POSCTRL_AngleExpand(&mtrCtrl->posCtrl, mtrCtrl->axisAngle);
                 if (mtrCtrl->sysTickCnt % 5 == 0) { /* 5 is Position loop division coefficient. */
-                    mtrCtrl->spdRefHz = POSCTRL_Exec(&mtrCtrl->posCtrl, mtrCtrl->posCtrl.posTarget, posFbk);
+                    mtrCtrl->spdRefHz = POSCTRL_Exec(&mtrCtrl->posCtrl, posFbk);
                 }
             }
             /* Speed loop control */
@@ -544,6 +544,9 @@ static void TrimInitAdcShiftValue(MTRCTRL_Handle *mtrCtrl)
             adc0TempSum += adc0SampleTemp;
             adc1TempSum += adc1SampleTemp;
         }
+    }
+    if (adcSampleTimes < 1.0f) {
+        adcSampleTimes = 1.0f; /* Prevent divide-by-zero errors */
     }
     adc0SampleTemp = adc0TempSum / adcSampleTimes;
     adc1SampleTemp = adc1TempSum / adcSampleTimes;
@@ -851,47 +854,6 @@ static void InitSoftware(void)
 }
 
 /**
-  * @brief Config the master APT.
-  * @param aptx The master APT handle.
-  * @retval None.
-  */
-static void AptMasterSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    /* Config the master APT. */
-    HAL_APT_MasterSyncInit(aptx, APT_SYNC_OUT_ON_CNTR_ZERO);
-}
-
-/**
-  * @brief Config the slave APT.
-  * @param aptx The slave APT handle.
-  * @retval None.
-  */
-static void AptSalveSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    APT_SlaveSyncIn slave;
-    /* Config the slave APT. */
-    slave.divPhase = 0;
-    slave.cntPhase = 0;
-    slave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
-    slave.syncInSrc = APT_SYNC_IN_SRC;
-    slave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
-    HAL_APT_SlaveSyncInit(aptx, &slave);
-}
-/**
-  * @brief Configuring Master and Slave APTs.
-  * @retval None.
-  */
-static void AptMasterSalveSet(void)
-{
-    /* motor fan APT master/slave synchronization */
-    AptMasterSet(&g_apt0);
-    AptSalveSet(&g_apt1);
-    AptSalveSet(&g_apt2);
-}
-
-/**
   * @brief Config the KEY func.
   * @param handle The GPIO handle.
   * @retval None.
@@ -943,7 +905,6 @@ int MotorMainProcess(void)
     HAL_TIMER_Start(&g_timer0);
     HAL_TIMER_Start(&g_timer1);
 
-    AptMasterSalveSet();
     /* Disable PWM output before startup. */
     MotorPwmOutputDisable(g_apt);
     /* Software initialization. */
@@ -954,7 +915,7 @@ int MotorMainProcess(void)
     qdmInit.qdmAddr = g_periph.qdm.qdmAddr;
     qdmInit.zPlusesIrqFunc = ISR_QdmzPulses;
     qdmInit.zPlusesNvic = &g_periph.qdm.zPulsesNvic;
-    qdmInit.zPlusesIrqPrio = IRQ_QDM0_PRIORITY;
+    qdmInit.zPlusesIrqPrio = IRQ_QDM_PRIORITY;
     MCS_QdmInit(&qdmInit); /* The initialization must be performed before the carrier interrupt is enabled. */
 
     /* Start the PWM clock. */

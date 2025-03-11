@@ -286,23 +286,6 @@ static inline bool IsWdgTimeType(WDG_TimeType timeType)
             timeType == WDG_TIME_UNIT_MS ||
             timeType == WDG_TIME_UNIT_US);
 }
-
-/**
-  * @brief check wdg time value parameter.
-  * @param baseAddress Value of @ref WDG_RegStruct
-  * @param timeValue time value
-  * @param timeType Value of @ref WDG_TimeType.
-  * @retval Bool.
-  */
-static inline bool IsWdgTimeValue(WDG_RegStruct *baseAddress, float timeValue, WDG_TimeType timeType)
-{
-    float clockFreq = (float)HAL_CRG_GetIpFreq((void *)baseAddress);
-    float maxSecond = (float)(0xFFFFFFFF / clockFreq); /* 0xFFFFFFFF max WDG register value */
-    return ((timeType == WDG_TIME_UNIT_TICK && timeValue <= 0xFFFFFFFF) ||
-            (timeType == WDG_TIME_UNIT_S && maxSecond >= timeValue) ||
-            (timeType == WDG_TIME_UNIT_MS && maxSecond >= timeValue / FREQ_CONVERT_MS_UNIT) ||
-            (timeType == WDG_TIME_UNIT_US && maxSecond >= timeValue / FREQ_CONVERT_US_UNIT));
-}
 /**
   * @}
   */

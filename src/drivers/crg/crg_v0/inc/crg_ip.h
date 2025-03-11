@@ -240,16 +240,15 @@ typedef enum {
  * @brief CRG Test Clock Select
  */
 typedef enum {
-    CRG_TEST_CLK_PLL  = 0x00000000U,
     CRG_TEST_CLK_HOSC = 0x00000001U,
     CRG_TEST_CLK_LOSC = 0x00000002U,
     CRG_TEST_CLK_XTAL = 0x00000003U,
     CRG_TEST_CLK_DAC0 = 0x00000004U,
     CRG_TEST_CLK_DAC1 = 0x00000005U,
     CRG_TEST_CLK_DAC2 = 0x00000006U,
-    CRG_TEST_CLK_ADC0 = 0x00000007U,
-    CRG_TEST_CLK_ADC1 = 0x00000008U,
-    CRG_TEST_CLK_ADC2 = 0x00000009U,
+    CRG_TEST_CLK_ADC0_DIV2 = 0x00000007U,
+    CRG_TEST_CLK_ADC1_DIV2 = 0x00000008U,
+    CRG_TEST_CLK_ADC2_DIV2 = 0x00000009U,
 } CRG_TestClkSel;
 
 /**
@@ -1246,8 +1245,8 @@ static inline void DCL_CRG_TestClkDisable(CRG_RegStruct *clk)
 static inline void DCL_CRG_TestClkSel(CRG_RegStruct *clk, CRG_TestClkSel clkSel)
 {
     CRG_ASSERT_PARAM(IsCRGInstance(clk));
-    CRG_PARAM_CHECK_NO_RET(clkSel >= CRG_TEST_CLK_PLL);
-    CRG_PARAM_CHECK_NO_RET(clkSel <= CRG_TEST_CLK_ADC2);
+    CRG_PARAM_CHECK_NO_RET(clkSel >= CRG_TEST_CLK_HOSC);
+    CRG_PARAM_CHECK_NO_RET(clkSel <= CRG_TEST_CLK_ADC2_DIV2);
     clk->PERI_CRG47.BIT.test_clk_sel = clkSel;
 }
 /**

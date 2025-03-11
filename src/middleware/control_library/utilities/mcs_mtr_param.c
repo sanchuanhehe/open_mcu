@@ -44,4 +44,7 @@
     handle->maxElecSpd = motorTable.maxElecSpd; /* max elec speed */
     handle->maxCurr = motorTable.maxCurr; /* max current */
     handle->maxTrq = motorTable.maxTrq; /* max torque */
+    handle->busVolt = motorTable.busVolt;
+    handle->mtrPPMR = motorTable.mtrPPMR;
+    handle->zShift = motorTable.zShift;
 }

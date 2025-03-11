@@ -34,9 +34,6 @@
 /* Start sending data to host delay after uart connect success */
 #define UART_UPDATA_DELAY_TIME_MS (50)
 
-/* Uart baudrate */
-#define UART0BAUDRATE (1843200)
-
 /* Data buffer */
 unsigned char g_uartRxBuf[UI_RX_BUF_LEN] = {0};
 unsigned char g_uartTxBuf[UI_TX_BUF_LEN] = {0};
@@ -45,6 +42,7 @@ static FRAME_Handle g_uartFrame;
 /**
     * @brief Receive Data Clear.
     * @param uartFrame  Receice Data.
+    * @retval None.
     */
 static void FrameRecvClear(FRAME_Handle *uartFrame)
 {
@@ -57,11 +55,13 @@ static void FrameRecvClear(FRAME_Handle *uartFrame)
     /* Clear received flag. */
     uartFrame->rxFlag = 0;
     uartFrame->upDataCnt = 0;
+    uartFrame->rxAckFlag = 0;
 }
 
 /**
   * @brief Set Dma status.
   * @param mtrCtrl The motor control handle.
+  * @retval None.
   */
 static void SetUartDmaStatus(MTRCTRL_Handle *mtrCtrl)
 {
@@ -78,19 +78,9 @@ static void SetUartDmaStatus(MTRCTRL_Handle *mtrCtrl)
 }
 
 /**
-    * @brief Set uart baudRate.
-    * @param baudrate  Uart baudRate.
-    */
-static void SetUartBaudRate(unsigned int baudrate)
-{
-    /* Re_Write uart0 baudrate. */
-    g_uart0.baudRate = baudrate;
-    HAL_UART_Init(&g_uart0);
-}
-
-/**
     * @brief Uart Dma interupt callback func.
-    * @param null.
+    * @param handle  Uart handle.
+    * @retval None.
     */
 void UART0_TXDMACallback(void *handle)
 {
@@ -99,6 +89,11 @@ void UART0_TXDMACallback(void *handle)
     static unsigned int getlastSystickCnt = 0;
     /* USER CODE BEGIN UART0_WRITE_DMA_FINISH */
     g_uartFrame.txFlag = 1;
+    /* Received information answered, information update reserved. */
+    if (g_uartFrame.rxAckFlag == 1) {
+        g_uartFrame.uartItTxFlag = 1;
+        g_uartFrame.rxAckFlag = 0;
+    }
     getCurSystickCnt =  DCL_SYSTICK_GetTick();
     if (getlastSystickCnt != 0) {
         /* Calculate unit frame data send time */
@@ -109,21 +104,9 @@ void UART0_TXDMACallback(void *handle)
 }
 
 /**
-  * @brief Uart0  interruput Write CallBack Function.
-  * @param handle  Uart handle.
-  */
-void UART0WriteInterruptCallback(void *handle)
-{
-    BASE_FUNC_UNUSED(handle);
-    /* USER CODE BEGIN UART0_WRITE_IT_FINISH */
-    g_uartFrame.uartItTxFlag = 1;
-    g_uartFrame.txFlag = 1;
-    /* USER CODE END UART0_WRITE_IT_FINISH */
-}
-
-/**
   * @brief Uart0 Interruput Read CallBack Function.
   * @param handle  Uart handle.
+  * @retval None.
   */
 void UART0ReadInterruptCallback(void *handle)
 {
@@ -144,18 +127,19 @@ void UART0ReadInterruptCallback(void *handle)
 /**
   * @brief Uart Read Data Init Function.
   * @param void.
+  * @retval None.
   */
 void UartRecvInit(void)
 {
     /* Uart reception initialization */
     FrameRecvClear(&g_uartFrame);
-    SetUartBaudRate(UART0BAUDRATE);
     HAL_UART_ReadIT(&g_uart0, &g_uartFrame.rxData, 1);
 }
 
 /**
   * @brief Uart Read Data Process Function.
   * @param mtrCtrl The motor control handle.
+  * @retval None.
   */
 void UartModuleProcess_Rx(MTRCTRL_Handle *mtrCtrl)
 {
@@ -170,6 +154,7 @@ void UartModuleProcess_Rx(MTRCTRL_Handle *mtrCtrl)
             g_uartFrame.timeOutCnt = 0;
             /* Execute data process. */
             CUST_DataReceProcss(mtrCtrl, g_uartRxBuf);
+            g_uartFrame.rxAckFlag = 1;
             g_uartFrame.rxLen = 0;
         }
     }
@@ -179,20 +164,21 @@ void UartModuleProcess_Rx(MTRCTRL_Handle *mtrCtrl)
 /**
     * @brief Uart Write Data Process Function.
     * @param mtrCtrl The motor control handle.
+    * @retval None.
     */
 void UartModuleProcess_Tx(MTRCTRL_Handle *mtrCtrl)
 {
     /* Verify Parameters */
     MCS_ASSERT_PARAM(mtrCtrl != NULL);
     if (g_uartFrame.txFlag == 1) {   /* Send data flag. */
-            mtrCtrl->uartTimeStamp = (float)getdeltaSystickCnt;  /* Unit data time stamp */
-            g_uartFrame.upDataCnt = 0;
-            g_uartFrame.txFlag = 0;
-            /* Send data to host. */
-            unsigned int txLen = CUST_TransmitData(mtrCtrl, g_uartTxBuf);
-            /* If txIT mode send data finish, convert to DMA mode */
-            if (g_uartFrame.uartItTxFlag == 1) {
-                    HAL_UART_WriteDMA(&g_uart0, g_uartTxBuf, txLen);
-            }
+        mtrCtrl->uartTimeStamp = (float)getdeltaSystickCnt;  /* Unit data time stamp */
+        g_uartFrame.upDataCnt = 0;
+        g_uartFrame.txFlag = 0;
+        /* Send data to host. */
+        unsigned int txLen = CUST_TransmitData(mtrCtrl, g_uartTxBuf);
+        /* If txIT mode send data finish, convert to DMA mode */
+        if (g_uartFrame.uartItTxFlag == 1) {
+            HAL_UART_WriteDMA(&g_uart0, g_uartTxBuf, txLen);
+        }
     }
 }

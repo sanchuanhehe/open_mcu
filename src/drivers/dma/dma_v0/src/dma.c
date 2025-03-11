@@ -416,9 +416,11 @@ BASE_StatusType HAL_DMA_Start(DMA_Handle *dmaHandle, unsigned int srcAddr,
     dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONFIG.reg &= ~(0x0000C000);
     dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONFIG.BIT.ch_en = BASE_CFG_ENABLE;
 #ifdef BASE_DEFINE_DMA_QUICKSTART
-    dmaHandle->DMA_Channels[channel].srcAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_SRC_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].destAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_DEST_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].controlVal = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONTROL.reg;
+    dmaHandle->DMA_Channels[channel].srcAddr = srcAddr;
+    dmaHandle->DMA_Channels[channel].destAddr = destAddr;
+    unsigned int val = DMA_CalControlval(dmaHandle, channel);
+    val |= dataLength;
+    dmaHandle->DMA_Channels[channel].controlVal = val;
     dmaHandle->DMA_Channels[channel].configVal = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONFIG.reg;
 #endif
     return BASE_STATUS_OK;
@@ -447,9 +449,11 @@ BASE_StatusType HAL_DMA_StartIT(DMA_Handle *dmaHandle, unsigned int srcAddr,
     /* Set tc_int_msk, err_int_msk, ch_en */
     dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONFIG.reg |= 0xC001;
 #ifdef BASE_DEFINE_DMA_QUICKSTART
-    dmaHandle->DMA_Channels[channel].srcAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_SRC_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].destAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_DEST_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].controlVal = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONTROL.reg;
+    dmaHandle->DMA_Channels[channel].srcAddr = srcAddr;
+    dmaHandle->DMA_Channels[channel].destAddr = destAddr;
+    unsigned int val = DMA_CalControlval(dmaHandle, channel);
+    val |= dataLength;
+    dmaHandle->DMA_Channels[channel].controlVal = val;
     dmaHandle->DMA_Channels[channel].configVal = dmaHandle->DMA_Channels[channel].channelAddr->DMAC_Cn_CONFIG.reg;
 #endif
     return BASE_STATUS_OK;

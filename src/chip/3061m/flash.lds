@@ -23,35 +23,34 @@
 OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
+
 SRAM_START   = 0x4000000;
 SRAM_END     = 0x4000000 + 32K;
 
-RAM_CODE_START = 0x2000000;
+RAM_DIAGNOSE_BUF_START = SRAM_START;
+RAM_DIAGNOSE_BUF_SIZE  = 0x20;
+
+RAM_CODE_START = 0x2000000 + RAM_DIAGNOSE_BUF_SIZE;
 RAM_CODE_SIZE  = 0;
 
-RAM_RESERVE_DATA_START = SRAM_START + RAM_CODE_SIZE;
+RAM_RESERVE_DATA_START = RAM_DIAGNOSE_BUF_START + RAM_DIAGNOSE_BUF_SIZE + RAM_CODE_SIZE;
 RAM_RESERVE_DATA_SIZE  = 0;
 
+STACK_SRAM_BOUND_SIZE = 0x10;
+
 RAM_START = RAM_RESERVE_DATA_START + RAM_RESERVE_DATA_SIZE;
-RAM_SIZE  = 0x5000 - RAM_CODE_SIZE - RAM_RESERVE_DATA_SIZE;
+RAM_SIZE  = 0x5000 - RAM_CODE_SIZE - RAM_RESERVE_DATA_SIZE - RAM_DIAGNOSE_BUF_SIZE - STACK_SRAM_BOUND_SIZE;
 RAM_END   = SRAM_END;
 
-STL_TEST_START   = RAM_START;
-RAM_BUF_SIZE     = 0x20;
-RAM_PNT_SIZE     = 0x10;
-CLASSB_SIZE      = 0x28;
-CLASSB_INV_SIZE  = 0x28;
-STL_MEM_CHK_SIZE = RAM_BUF_SIZE + RAM_PNT_SIZE + CLASSB_SIZE + CLASSB_INV_SIZE;
-STACK_TEST_SIZE  = 0x10;
+STACK_SRAM_BOUND_START = RAM_START + RAM_SIZE;
 
-RAM_DATA_START   = STL_TEST_START + STL_MEM_CHK_SIZE;
-RAM_DATA_SIZE    = RAM_SIZE - STL_MEM_CHK_SIZE - STACK_TEST_SIZE;
+STACK_START     = STACK_SRAM_BOUND_START + STACK_SRAM_BOUND_SIZE;
 
-STACK_TEST_START = RAM_DATA_START + RAM_DATA_SIZE;
-
-STATCK_START    = STACK_TEST_START + STACK_TEST_SIZE;
-STACK_SIZE      = 0x3000 - 1024;
 NMI_STACK_SIZE  = 1024;
+STACK_SIZE      = 0x3000 - NMI_STACK_SIZE;
 INIT_STACK_SIZE = 1024;
 
 FLASH_START     = 0x3000000;
@@ -59,32 +58,33 @@ FLASH_SIZE      = 0x1fffc;
 
 MEMORY
 {
+    /* ram for diagnose buf */
+    RAM_DIAGNOSE_BUF(rw) : ORIGIN = RAM_DIAGNOSE_BUF_START, LENGTH = RAM_DIAGNOSE_BUF_SIZE
+
     /* ram for code */
     RAM_CODE(xr) : ORIGIN = RAM_CODE_START, LENGTH = RAM_CODE_SIZE
 
     /* ram for reserved data */
     RAM_RESERVE_DATA(rw) : ORIGIN = RAM_RESERVE_DATA_START, LENGTH = RAM_RESERVE_DATA_SIZE
 
-    /*ram for STL var */
-    RAM_BUF(xrw)    : ORIGIN = STL_TEST_START, LENGTH = RAM_BUF_SIZE
-    RAM_PNT(xrw)    : ORIGIN = STL_TEST_START + RAM_BUF_SIZE, LENGTH = RAM_PNT_SIZE
-    CLASSB(xrw)     : ORIGIN = STL_TEST_START + RAM_BUF_SIZE + RAM_PNT_SIZE, LENGTH = CLASSB_SIZE
-    CLASSB_INV(xrw) : ORIGIN = STL_TEST_START + RAM_BUF_SIZE + RAM_PNT_SIZE + CLASSB_SIZE, LENGTH = CLASSB_INV_SIZE
+    /* ram for common bss and data */
+    RAM_DATA(xrw) : ORIGIN = RAM_START, LENGTH = RAM_SIZE
 
     /* ram for common bss and data */
-    RAM_DATA(xrw) : ORIGIN = RAM_DATA_START, LENGTH = RAM_DATA_SIZE
-
-    /* ram for stack test array (size: 1word) */
-    STACK_TEST(xrw) : ORIGIN = RAM_DATA_START + RAM_DATA_SIZE, LENGTH = STACK_TEST_SIZE
+    STACK_SRAM_BOUND(xrw) : ORIGIN = STACK_SRAM_BOUND_START, LENGTH = STACK_SRAM_BOUND_SIZE
 
     /* ram for stack */
-    RAM_STACK(xrw) : ORIGIN = STATCK_START, LENGTH = STACK_SIZE + NMI_STACK_SIZE
+    RAM_STACK(xrw) : ORIGIN = STACK_START, LENGTH = STACK_SIZE + NMI_STACK_SIZE
 
     /*magic number */
     FLASH_MAGIC(rw) : ORIGIN = FLASH_START, LENGTH = 4
 
     /* ram for target */
     FLASH_CODE(rx) : ORIGIN = FLASH_START + 4, LENGTH = FLASH_SIZE
+
+/* USER CODE BEGIN 1 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 1 */
 }
 
 SECTIONS
@@ -100,11 +100,6 @@ SECTIONS
     {
         KEEP(*(.text.entry))
     } > FLASH_CODE
-
-    STACK_TEST (NOLOAD):
-    {
-        *(STACK_BOTTOM)
-    } > STACK_TEST
 
     /* Stack in SRAM at Highest addresses */
     .stacks (NOLOAD) :
@@ -163,16 +158,39 @@ SECTIONS
         __data_load = LOADADDR(.data);
         __data_start = .;
         *(.data*)
+        *(.sdata*)
         . = ALIGN(4);
         __data_end = .;
     } > RAM_DATA AT> FLASH_CODE
     __data_size = __data_end - __data_start;
+
+    .stackBound : ALIGN(4)
+    {
+        __stack_sram_bound_data_load  = LOADADDR(.stackBound);
+        __stack_sram_bound_data_start = .;
+        *(STACK_SRAM_BOUND)
+        . = ALIGN(4);
+        __stack_sram_bound_data_end   = .;
+    } > STACK_SRAM_BOUND AT> FLASH_CODE
+
+    .ramBuf : ALIGN(4)
+    {
+        *(RAM_DIAGNOSE_BUF)
+    } > RAM_DIAGNOSE_BUF AT> FLASH_CODE
+
+    .checkSum : ALIGN(4)
+    {
+        __checksum_addr = .;
+        *(CHECKSUM)
+        __checksum_end = .;
+    } > FLASH_CODE
 
     /* bss section */
     .bss (NOLOAD) : ALIGN(4)
     {
         __bss_begin__ = .;
         *(.bss*)
+        *(.sbss*)
         *(COMMON)
         . = ALIGN(4);
         __bss_end__ = .;
@@ -180,35 +198,7 @@ SECTIONS
     __bss_size__ = __bss_end__ - __bss_begin__;
     __global_pointer$ = __data_start + ((__data_size + __bss_size__) / 2);
 
-    /* CHECKSUM section in FLASH end */
-    CHECKSUM :
-    {
-        __checksum_addr = .;
-        *(CHECKSUM)
-        __checksum_end = .;
-    } > FLASH_CODE
-
-    /* Runtime ram buffer */
-    RAM_BUF (NOLOAD):
-    {
-        *(RUN_TIME_RAM_BUF)
-    } > RAM_BUF
-
-    /* Ram test pointer */
-    RAM_PNT (NOLOAD):
-    {
-        *(RUN_TIME_RAM_PNT)
-    } > RAM_PNT
-
-    /* STL classB var */
-    CLASSB (NOLOAD):
-    {
-        *(CLASS_B_RAM)
-    } > CLASSB
-
-    /* STL classB var inverse */
-    CLASSB_INV (NOLOAD):
-    {
-        *(CLASS_B_RAM_REV)
-    } > CLASSB_INV
+/* USER CODE BEGIN 2 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 2 */
 }

@@ -28,14 +28,14 @@
 /**
   * @brief   Setting DMA request overflow interrupt.
   * @param   handle Timer Handle
-  * @param   bool   enable or disable interrupt of DMA request overflow.
+  * @param   overflow enable or disable interrupt of DMA request overflow.
   * @retval  None
   */
-void HAL_TIMER_DMARequestOverFlowEx(TIMER_Handle *handle, bool overFlowSet)
+void HAL_TIMER_DMARequestOverFlowEx(TIMER_Handle *handle, bool overflow)
 {
     TIMER_ASSERT_PARAM(handle != NULL);
     TIMER_ASSERT_PARAM(IsTIMERInstance(handle->baseAddress));
-    handle->baseAddress->TIMERx_CONTROL.BIT.dmaovintenable = overFlowSet;
+    handle->baseAddress->TIMERx_CONTROL.BIT.dmaovintenable = (overflow == true) ? BASE_CFG_ENABLE : BASE_CFG_DISABLE;
     return;
 }
 

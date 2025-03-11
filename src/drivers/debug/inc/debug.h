@@ -66,15 +66,29 @@ static inline int DBG_dummy(const char *format, ...)
 #define DBG_PRINTF DBG_UartPrintf /**< Select the customized printf function */
 #endif
 
+#define DBG_SNPRINTF DBG_Snprintf /**< Select debug snprintf function */
+
 /**
-  * @defgroup DEBUG_API_Declaration DEBUG HAL API
+  * @defgroup DEBUG_API_Declaration
+  * @brief DEBUG HAL API.
   * @{
   */
+
 BASE_StatusType DBG_UartPrintInit(unsigned int baudRate);
 BASE_StatusType DBG_UartPrintDeInit(void);
 
-/* Format print function */
+/**
+  * @defgroup DEBUG_API_Declaration
+  * @brief Format print function.
+  * @{
+  */
+
 int DBG_UartPrintf(const char *format, ...); /* Supported format: %c, %s, %d, %u, %x, %X, %p, %f */
+int DBG_Snprintf(char* destMem, unsigned int destLen, const char *format, ...);
+
+/**
+  * @}
+  */
 
 /**
   * @}

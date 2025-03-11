@@ -58,7 +58,7 @@ unsigned int CHIP_GetIpFreqHz(const void *ipBaseAddr)
 }
 #endif
 
-static const CHIP_CrgIpMatchInfo g_CrgIpMatch[] = {
+static const CHIP_CrgIpMatchInfo g_crgIpMatch[] = {
     {UART0_BASE, CRG_IP_WITH_LS, 0x30, 0},
     {UART1_BASE, CRG_IP_WITH_LS, 0x34, 0},
     {UART2_BASE, CRG_IP_WITH_LS, 0x38, 0},
@@ -116,17 +116,17 @@ static const CHIP_CrgIpMatchInfo g_CrgIpMatch[] = {
 };
 
 /**
-  * @brief Get IP Match Info, @see g_CrgIpMatch
+  * @brief Get IP Match Info, @see g_crgIpMatch
   * @param baseAddr The ip base address
-  * @retval The Address(offset) in g_CrgIpMatch if match success
+  * @retval The Address(offset) in g_crgIpMatch if match success
   * @retval 0 if match fail
   */
 CHIP_CrgIpMatchInfo *GetCrgIpMatchInfo(const void *baseAddr)
 {
     unsigned int i;
-    for (i = 0; i < sizeof(g_CrgIpMatch) / sizeof(g_CrgIpMatch[0]); ++i) {
-        if (baseAddr == g_CrgIpMatch[i].ipBaseAddr) {
-            return (CHIP_CrgIpMatchInfo *)&g_CrgIpMatch[i];
+    for (i = 0; i < sizeof(g_crgIpMatch) / sizeof(g_crgIpMatch[0]); ++i) {
+        if (baseAddr == g_crgIpMatch[i].ipBaseAddr) {
+            return (CHIP_CrgIpMatchInfo *)&g_crgIpMatch[i];
         }
     }
     return (CHIP_CrgIpMatchInfo *)0;

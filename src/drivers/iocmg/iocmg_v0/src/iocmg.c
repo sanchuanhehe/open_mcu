@@ -112,9 +112,7 @@ IOCMG_FuncMode HAL_IOCMG_GetPinAltFuncMode(unsigned int pinTypedef)
 {
     /* get iocmg reg address */
     IOCMG_REG* iocmgRegx = IOCMG_GetRegAddr(pinTypedef);
-    if (!IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK))) {
-        return IOCMG_REG_ADDR_ERROR;
-    }
+    IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return DCL_IOCMG_GetFuncMode(iocmgRegx);
 }
 
@@ -145,9 +143,7 @@ IOCMG_PullMode HAL_IOCMG_GetPinPullMode(unsigned int pinTypedef)
 {
     /* get iocmg reg address */
     IOCMG_REG* iocmgRegx = IOCMG_GetRegAddr(pinTypedef);
-    if (!IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK))) {
-        return IOCMG_REG_ADDR_ERROR;
-    }
+    IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return DCL_IOCMG_GetPullMode(iocmgRegx);
 }
 
@@ -178,9 +174,7 @@ IOCMG_SchmidtMode HAL_IOCMG_GetPinSchmidtMode(unsigned int pinTypedef)
 {
     /* get iocmg reg address */
     IOCMG_REG* iocmgRegx = IOCMG_GetRegAddr(pinTypedef);
-    if (!IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK))) {
-        return IOCMG_REG_ADDR_ERROR;
-    }
+    IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return DCL_IOCMG_GetSchmidtMode(iocmgRegx);
 }
 
@@ -212,9 +206,7 @@ IOCMG_LevelShiftRate HAL_IOCMG_GetPinLevelShiftRate(unsigned int pinTypedef)
 {
     /* get iocmg reg address */
     IOCMG_REG* iocmgRegx = IOCMG_GetRegAddr(pinTypedef);
-    if (!IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK))) {
-        return IOCMG_REG_ADDR_ERROR;
-    }
+    IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return DCL_IOCMG_GetLevelShiftRate(iocmgRegx);
 }
 
@@ -245,9 +237,7 @@ IOCMG_DriveRate HAL_IOCMG_GetPinDriveRate(unsigned int pinTypedef)
 {
     /* get iocmg reg address */
     IOCMG_REG* iocmgRegx = IOCMG_GetRegAddr(pinTypedef);
-    if (!IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK))) {
-        return IOCMG_REG_ADDR_ERROR;
-    }
+    IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return DCL_IOCMG_GetDriveRate(iocmgRegx);
 }
 

@@ -208,7 +208,6 @@ typedef enum {
  * @brief CRG Test Clock Select
  */
 typedef enum {
-    CRG_TEST_CLK_PLL_PFD         = 0x00000000U,
     CRG_TEST_CLK_HOSC            = 0x00000001U,
     CRG_TEST_CLK_LOSC            = 0x00000002U,
     CRG_TEST_CLK_TCXO            = 0x00000003U,
@@ -1716,7 +1715,7 @@ static inline void DCL_CRG_TestClkDisable(CRG_RegStruct *clk)
 static inline void DCL_CRG_TestClkSel(CRG_RegStruct *clk, CRG_TestClkSel clkSel)
 {
     CRG_ASSERT_PARAM(IsCRGInstance(clk));
-    CRG_PARAM_CHECK_NO_RET(clkSel >= CRG_TEST_CLK_PLL_PFD);
+    CRG_PARAM_CHECK_NO_RET(clkSel >= CRG_TEST_CLK_HOSC);
     CRG_PARAM_CHECK_NO_RET(clkSel <= CRG_TEST_CLK_HOSC_DIV);
     clk->PERI_CRG639.BIT.test_clk_sel = clkSel; /* Set the test clock select. */
 }

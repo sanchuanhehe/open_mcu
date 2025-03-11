@@ -37,10 +37,10 @@
  * @param len ： length of the information to be read
  * @retval None.
  */
-void ExtLoadRead(uintptr_t add, char *value, int len)
+void ExtLoadRead(uintptr_t add, char *value, unsigned int len)
 {
     /* Check whether the address is out of range */
-    if (add > REGISTER_END || add < REGISTER_START) {
+    if (add > SRAM_END || add < SRAM_START) {
         EXT_PRINT("The address is out of range");
         return;
     }
@@ -50,7 +50,7 @@ void ExtLoadRead(uintptr_t add, char *value, int len)
         return;
     }
     /* Read information cyclically */
-    for (int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         *(value + i) = *(volatile char *)(add + i);
     }
 }
@@ -62,10 +62,10 @@ void ExtLoadRead(uintptr_t add, char *value, int len)
  * @param len ： length of the information to write
  * @retval None.
  */
-void ExtLoadWrite(uintptr_t add, const char *value, int len)
+void ExtLoadWrite(uintptr_t add, const char *value, unsigned int len)
 {
     /* Check whether the address is out of range */
-    if (add > REGISTER_END || add < REGISTER_START) {
+    if (add > SRAM_END || add < SRAM_START) {
         EXT_PRINT("The address is out of range");
         return;
     }
@@ -75,12 +75,12 @@ void ExtLoadWrite(uintptr_t add, const char *value, int len)
         return;
     }
     /* Write information cyclically */
-    for (int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++) {
         *(volatile char *)(add + i) = *(value + i);
     }
 }
 
-char g_dataItem[DATA_ITEM_NUM_MAX][DATA_ITEM_MAX_LEN];
+char g_dataItem[DATA_ITEM_NUM_MAX + 1][DATA_ITEM_MAX_LEN + 1];
 
 /**
  * @brief read information by config

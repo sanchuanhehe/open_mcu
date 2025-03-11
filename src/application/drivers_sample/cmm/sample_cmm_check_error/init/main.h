@@ -36,15 +36,23 @@
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
 
-extern CMM_Handle g_cmm;
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
 
+extern CMM_Handle g_cmm;
 extern UART_Handle g_uart0;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
-void CMMCheckEndCallback(CMM_Handle *handle);
-void CMMCounterOverFlowCallback(CMM_Handle *handle);
-void CMM_CheckErrorCallback(CMM_Handle *handle);
+void CountOverflowCallback(CMM_Handle *handle);
+void CheckEndCallback(CMM_Handle *handle);
+void FreqErrorCallback(CMM_Handle *handle);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

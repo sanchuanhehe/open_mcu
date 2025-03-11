@@ -67,11 +67,15 @@ extern GPIO_Handle g_gpio2;
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
-void MotorCarrierProcessCallback(void *aptHandle);
-void MotorSysErrCallback(void *aptHandle);
 void MotorStatemachineCallBack(void *handle);
 void TIMER1_DMAOverFlow_InterruptProcess(void *handle);
+void MotorCarrierProcessCallback(void *aptHandle);
+void MotorSysErrCallback(void *aptHandle);
 
 void MotorStartStopKeyCallback(void *param);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

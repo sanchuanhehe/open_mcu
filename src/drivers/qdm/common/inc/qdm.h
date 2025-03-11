@@ -116,7 +116,7 @@ typedef struct _QDM_handle {
     unsigned int        qcMax;              /**< TSU maximum counter number, default zero */
     unsigned int        period;             /**< PTU period*/
     unsigned int        interruptEn;        /**< interrupt settings by bits */
-    int                 motorLineNum;       /**< encoder line number */
+    unsigned int        motorLineNum;       /**< encoder line number */
     int                 speedRpm;           /**< motor speed */
     QDM_IndexLockMode lock_mode;          /**< QDM Z index lock mode */
     QDM_UserCallBack  userCallBack;         /**< QDM Interrupt callback functions */
@@ -129,11 +129,11 @@ typedef void (* QDM_CallbackType)(void *handle);
   */
 
 /**
-  * @defgroup QDM_API_Declaration QDM HAL API
+  * @defgroup QDM_API_Declaration
+  * @brief  QDM HAL API, Hardware abstraction layer
   * @{
   */
 
-/* Hardware abstraction layer */
 BASE_StatusType HAL_QDM_Init(QDM_Handle *qdmHandle);
 BASE_StatusType HAL_QDM_DeInit(QDM_Handle *qdmHandle);
 void HAL_QDM_GetPhaseErrorStatus(const QDM_Handle *qdmHandle, unsigned int *errStatus);

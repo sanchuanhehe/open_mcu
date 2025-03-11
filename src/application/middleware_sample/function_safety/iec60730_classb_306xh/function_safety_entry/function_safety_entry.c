@@ -1,0 +1,54 @@
+/**
+  * @copyright Copyright (c) 2023, HiSilicon (Shanghai) Technologies Co., Ltd. All rights reserved.
+  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+  * following conditions are met:
+  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+  * disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+  * following disclaimer in the documentation and/or other materials provided with the distribution.
+  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+  * products derived from this software without specific prior written permission.
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * @file      function_safety_startup.c
+  * @author    MCU Driver Team
+  * @brief     function safety startup module.
+  * @details   function safety startup interface implementation.
+  */
+#include "debug.h"
+#include "main.h"
+#include "function_safety_init.h"
+#include "function_safety_startup.h"
+#include "function_safety_runtime.h"
+#include "function_safety_entry.h"
+
+/**
+  * @brief Excute function safety entry.
+  * @param None.
+  * @retval None.
+  */
+void FunctionSafetyEntry(void)
+{
+    SystemInit();
+    DBG_PRINTF("*** Function Safety Startup Process Begin *** \r\n");
+    FunctionSafetyStartupProcess();
+    DBG_PRINTF("*** Function Safety Startup Process End*** \r\n");
+    /* USER CODE END 2 */
+    /* USER CODE BEGIN 3 */
+    /* 建议用户放置初始配置代码 */
+    DBG_PRINTF("\r\n*** Function Safety Runtime Process Begin *** \r\n");
+    /* USER CODE END 3 */
+    while (1) {
+        /* USER CODE BEGIN 4 */
+        FunctionSafetyRuntimeProcess();
+        HAL_WDG_Refresh(g_diagnoseMonitor.wdgHandle);
+        HAL_IWDG_Refresh(g_diagnoseMonitor.iwdgHandle);
+        BASE_FUNC_DELAY_MS(50); /* 50 : delay time 50ms */
+        /* USER CODE END 4 */
+    }
+}

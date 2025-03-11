@@ -440,9 +440,9 @@ static unsigned short BinSearch(float u, const float *table,
   * @param maxIndex: Max Index.
   * @retval Target index.
   */
-static unsigned short PreLookBinSearch(float u, const float *table,
-                                       unsigned short maxIndex,
-                                       float *fraction)
+unsigned short PreLookBinSearch(float u, const float *table,
+                                unsigned short maxIndex,
+                                float *fraction)
 {
     MCS_ASSERT_PARAM(table != NULL);
     MCS_ASSERT_PARAM(fraction != NULL);
@@ -476,13 +476,22 @@ static float ATan(float u)
     float y = 0.0f;
     if (tmp >= 0.0f && tmp < ATAN_INPUTVALUE_MIN) {
         index = PreLookBinSearch(tmp, atanInBottom, 49U, &frac); /* atanInBottom Max Index is 49 */
-        y = atanValBottom[index] + frac * (atanValBottom[index + 1] - atanValBottom[index]);
+        /* Ensure that index+1 <= maxIndex, maxIndex = 49U. */
+        y = index == 49U? \
+            atanValBottom[index] : \
+            atanValBottom[index] + frac * (atanValBottom[index + 1] - atanValBottom[index]);
     } else if (tmp >= ATAN_INPUTVALUE_MIN && tmp < ATAN_INPUTVALUE_MID) {
         index = PreLookBinSearch(tmp, atanInMid, 24U, &frac);   /* atanInMid Max Index is 24 */
-        y = atanValMid[index] + frac * (atanValMid[index + 1] - atanValMid[index]);
+        /* Ensure that index+1 <= maxIndex, atanInMid Max Index is 24 */
+        y = index == 24U? \
+            atanValMid[index] : \
+            atanValMid[index] + frac * (atanValMid[index + 1] - atanValMid[index]);
     } else if (tmp >= ATAN_INPUTVALUE_MID && tmp < ATAN_INPUTVALUE_MAX) {
         index = PreLookBinSearch(tmp, atanInTop, 9U, &frac);  /* atanInTop Max Index is 9 */
-        y = atanValTop[index] + frac * (atanValTop[index + 1] - atanValTop[index]);
+        /* Ensure that index+1 <= maxIndex, atanInTop Max Index is 9 */
+        y = index == 9U? \
+            atanValTop[index] : \
+            atanValTop[index] + frac * (atanValTop[index + 1] - atanValTop[index]);
     } else {
         y = HALF_PI; /* The input parameter is greater than the maximum radian, The value is PI/2. */
     }
@@ -554,4 +563,31 @@ float Sat(float u, float delta)
     } else {
         return (u / delta); /* all other values */
     }
+}
+
+/**
+  * @brief Rms calculation.
+  * @param Rms Rms Handle.
+  * @param freq signal frequency.
+  * @retval Rms results.
+  */
+float RmsCalc(RMS_Handle *rms, float realVal, float freq, float ts)
+{
+    float absHz = Abs(freq);
+    /* Limit frequency to prevent division by zero. */
+    if (absHz < 1.0f) {
+        absHz = 1.0f;
+    }
+    /* Accumulated times of calculating the sum of squares */
+    unsigned int num = (unsigned int)(1.0f / (absHz * ts));
+    /* rms Sqrt((+= i * i * ts) / T) */
+    rms->periodCnt++;
+    if (rms->periodCnt < num) {
+        rms->sum += realVal * realVal;
+    } else {
+        rms->periodCnt = 0;
+        rms->val = Sqrt(rms->sum / num);
+        rms->sum = 0.0f;
+    }
+    return rms->val;
 }

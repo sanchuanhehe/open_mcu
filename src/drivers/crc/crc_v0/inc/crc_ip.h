@@ -65,7 +65,7 @@
   *          +CRC16_MODBUS      -- CRC-16/MODBUS algorithm, CRC16_8005, crc_mode reg value:b010
   *          +CRC16_CCITT_FALSE -- CRC-16/CCITT-FALSE algorithm, CRC16_1021, crc_mode reg value:b011
   *          +CRC16_XMODEM      -- CRC-16/XMODEM algorithm, CRC16_1021, crc_mode reg value:b011
-  *          +CRC32             -- CRC32 algorithm, CRC32_04C11D87, crc_mode reg value:b10x
+  *          +CRC32             -- CRC32 algorithm, CRC32_04C11DB7, crc_mode reg value:b10x
   *          +CRC_ALG_MODE_MAX  -- CRC_mode bunder
   */
 typedef enum {
@@ -86,8 +86,8 @@ typedef enum {
     CRC8_07_POLY_MODE_BK = 0x00000001U,
     CRC16_8005_POLY_MODE = 0x00000002U,
     CRC16_1021_POLY_MODE = 0x00000003U,
-    CRC32_04C11D87_POLY_MODE = 0x00000004U,
-    CRC32_04C11D87_POLY_MODE_BK = 0x00000005U,
+    CRC32_04C11DB7_POLY_MODE = 0x00000004U,
+    CRC32_04C11DB7_POLY_MODE_BK = 0x00000005U,
     CRC_POLY_MODE_MAX
 } CRC_PolynomialMode;
 
@@ -543,7 +543,7 @@ static inline bool IsCrcPolynomial(CRC_PolynomialMode mode)
     /* Check crc polynomial mode. */
     return (mode == CRC8_07_POLY_MODE || mode == CRC8_07_POLY_MODE_BK || \
             mode == CRC16_8005_POLY_MODE || mode == CRC16_1021_POLY_MODE || \
-            mode == CRC32_04C11D87_POLY_MODE || mode == CRC32_04C11D87_POLY_MODE_BK);
+            mode == CRC32_04C11DB7_POLY_MODE || mode == CRC32_04C11DB7_POLY_MODE_BK);
 }
 
 /**

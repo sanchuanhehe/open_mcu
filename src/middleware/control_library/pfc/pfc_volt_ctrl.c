@@ -25,6 +25,47 @@
 
 
 /**
+  * @brief Init PFC voltage control structure.
+  * @param voltCtrl PFC voltage control Handle.
+  * @param piParam PI controller parameter table.
+  * @param vdcRef Reference voltage.
+  * @retval None.
+  */
+void PFC_VoltCtrlInit(PFC_VOLTCTRL_Handle *voltCtrl, PI_Param *piParam, float vdcRef, float ts)
+{
+    MCS_ASSERT_PARAM(voltCtrl != NULL);
+    MCS_ASSERT_PARAM(piParam != NULL);
+    MCS_ASSERT_PARAM(vdcRef > 0.0f);
+    /* Reset pi parameters. */
+    PID_Reset(&voltCtrl->voltPi);
+    /* Init pi parameters. */
+    voltCtrl->voltPi.kp = piParam->kp;
+    voltCtrl->voltPi.ki = piParam->ki;
+    voltCtrl->voltPi.upperLimit = piParam->upperLim;
+    voltCtrl->voltPi.lowerLimit = piParam->lowerLim;
+    voltCtrl->voltPi.ts = ts;
+    /* Init user parameter and control parameter. */
+    voltCtrl->iamp = 0.0f;
+    voltCtrl->vdcRef = vdcRef;
+}
+
+
+/**
+  * @brief Power factor correction(PFC) voltage controller PI calculation.
+  * @param voltCtrl PFC voltage control structure
+  * @retval None.
+  */
+void PFC_VoltCtrlExec(PFC_VOLTCTRL_Handle *voltCtrl, float vdcFbk)
+{
+    MCS_ASSERT_PARAM(voltCtrl != NULL);
+    voltCtrl->vdcFbk = vdcFbk;
+    /* Calculate the voltage error of power factor correction(PFC). */
+    voltCtrl->voltPi.error = voltCtrl->vdcRef - voltCtrl->vdcFbk;
+    /* Calculation the voltage loop control output of power factor correction(PFC). */
+    voltCtrl->iamp = PI_Exec(&voltCtrl->voltPi);
+}
+
+/**
   * @brief Clear historical values of power factor correction(PFC) voltage controller.
   * @param voltCtrl PFC voltage control structure
   * @retval None.
@@ -32,20 +73,7 @@
 void PFC_VoltCtrlClear(PFC_VOLTCTRL_Handle *voltCtrl)
 {
     MCS_ASSERT_PARAM(voltCtrl != NULL);
-    voltCtrl->voltPiCtrl.differ = 0.0f;
-    voltCtrl->voltPiCtrl.integral = 0.0f;
-}
+    voltCtrl->iamp = 0.0f;
 
-/**
-  * @brief Simplified power factor correction(PFC) voltage controller PI calculation.
-  * @param voltCtrl PFC voltage control structure
-  * @retval None.
-  */
-void PFC_VoltCtrlExec(PFC_VOLTCTRL_Handle *voltCtrl)
-{
-    MCS_ASSERT_PARAM(voltCtrl != NULL);
-    /* Calculate the voltage error of power factor correction(PFC). */
-    voltCtrl->voltPiCtrl.error = voltCtrl->uniVoltRef - voltCtrl->unitVoltFdbk;
-    /* Calculation the voltage loop control output of power factor correction(PFC). */
-    voltCtrl->voltOut = PI_Exec(&voltCtrl->voltPiCtrl);
+    PID_Clear(&voltCtrl->voltPi);
 }

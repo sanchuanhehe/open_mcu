@@ -63,6 +63,7 @@ void Chip_Init(void)
 
     /* Config FLASH Clock */
     FLASH_ClockConfig(coreClkSelect);
+    IRQ_Init();
     SYSTICK_Init();
     /* Set CoreClock Select after FLASH Config Done */
     CRG_SetCoreClockSelect(coreClkSelect);
@@ -71,9 +72,10 @@ void Chip_Init(void)
     if (HAL_CRG_GetCoreClkFreq() != HOSC_FREQ) {
         FLASH_WaitClockConfigDone();
     }
-
-    IRQ_Init();
-
+#ifdef NOS_TASK_SUPPORT
+    /* Support IRQ to upload the totalCycle and detect the timeout lists */
+    SYSTICK_IRQ_Enable();
+#endif
     ADC_InitVref();
     TSENSOR_InitVrefList();
     PGA_InitVref();

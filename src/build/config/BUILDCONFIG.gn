@@ -22,4 +22,6 @@ if (build_compiler_specified == "hcc") {
     set_default_toolchain("//build/toolchain:riscv32_hcc")
 }else if (build_compiler_specified == "hcc_fpu") {
     set_default_toolchain("//build/toolchain:riscv32_hcc")
+}else if (build_compiler_specified == "bisheng") {
+    set_default_toolchain("//build/toolchain:bisheng")
 }

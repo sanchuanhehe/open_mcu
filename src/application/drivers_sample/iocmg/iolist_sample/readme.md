@@ -12,3 +12,7 @@
 
 **【注意事项】**
 + PIN NUMBER和function mode均已编码定义，在iomap中，若配置数据与定义的数据不符则配置失败返回对应的错误，已定义的pin number和function mode可在iomap.h中直接调用。
+
++ 此示例init文件夹下的工程初始化配置是基于3065HRPIRZ芯片工程生成的。
++ 不通过IDE创建生成场景：初始化配置请参考sample下的init文件内容。
++ 通过IDE创建生成场景：初始化配置请参考user/generatecode下的文件内容。

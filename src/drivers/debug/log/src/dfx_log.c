@@ -38,7 +38,7 @@ static struct MemoryLog g_memoryLog = {0};
 #define DIVISOR 10
 #define EXT_MODULE_DFX 12 /* Test Version Information Cases */
 /* Address of the test case for obtaining version information */
-#define VERSION_INFO_ADDR 0x4000000
+#define VERSION_INFO_ADDR 0x2000000
 /* Device Name */
 char *moduleStr[EXT_MODULE_BUTT] = {
     "app_main",
@@ -194,13 +194,13 @@ static unsigned int IsLogOutBufLegal(enum ExtLogLevel level, struct SysDebugSwit
  * @brief Log output and printing
  * @param level: Specifies the log level.
  * @param modId: Device ID
- * @param id: device name
+ * @param xmlId: XML file ID
  * @param logBuf: Character string information to be printed
  * @param logBuflen: Indicates the length of the printed information.
  * @retval Indicates whether the printing is successful.
  */
-int ExtDrvLogOutBuf(enum ExtLogLevel level, enum ExtModule modId, unsigned int id, const unsigned int* logBuf,
-    unsigned short logBufLen)
+int ExtDrvLogOutBuf(enum ExtLogLevel level, enum ExtModule modId, unsigned int xmlId,
+                    const unsigned int* logBuf, unsigned short logBufLen)
 {
     /* Check whether the array is empty */
     if (logBuf == NULL)
@@ -216,7 +216,7 @@ int ExtDrvLogOutBuf(enum ExtLogLevel level, enum ExtModule modId, unsigned int i
     struct SysDebugSwitch *debugSwitch = GetDebugSwitch();
     if (!ctx->init) { LogCtxInit(ctx); } /* Initialize the structure */
     if (!(IsLogOutBufLegal(level, debugSwitch, modId, ctx))) { return EXT_SUCCESS; }
-    cnt = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u", id);
+    cnt = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u", xmlId);
     /* an error message is displayed when the return value is a negative value */
     if (cnt < 0) {
         EXT_PRINT("sprintf err\n");
@@ -307,17 +307,17 @@ static int DealLogBuf(int len, enum ExtLogLevel level, enum ExtModule modId, con
  * @brief Print with no int number
  * @param level: Specifies the log level.
  * @param modId: Device ID
- * @param id: custom string variable
+ * @param xmlId: custom string variable
  * @retval Indicates whether the printing is successful.
  */
-int ExtDrvLogOut0(enum ExtLogLevel level, enum ExtModule modId, unsigned int id)
+int ExtDrvLogOut0(enum ExtLogLevel level, enum ExtModule modId, unsigned int xmlId)
 {
     /* Check whether the value is out of range */
     if (level > EXT_LOG_LEVEL_BUTT || modId > EXT_MODULE_BUTT)
         return EXT_FAILURE;
     char buf[LOG_UINT_MAX_LEN] = { 0 };
     int len = 0;
-    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u\n", id);
+    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u\n", xmlId);
     if (len < 0) {
         EXT_PRINT("sprintf err\n");
         return EXT_FAILURE;
@@ -330,18 +330,18 @@ int ExtDrvLogOut0(enum ExtLogLevel level, enum ExtModule modId, unsigned int id)
  * @brief Print with an int number
  * @param level: Specifies the log level.
  * @param modId: Device ID
- * @param id: custom string variable
+ * @param xmlId: custom string variable
  * @param d0: User-defined first variable of the int type
  * @retval Indicates whether the printing is successful.
  */
-int ExtDrvLogOut1(enum ExtLogLevel level, enum ExtModule modId, unsigned int id, unsigned int d0)
+int ExtDrvLogOut1(enum ExtLogLevel level, enum ExtModule modId, unsigned int xmlId, unsigned int d0)
 {
     /* Check whether the value is out of range */
     if (level > EXT_LOG_LEVEL_BUTT || modId > EXT_MODULE_BUTT)
         return EXT_FAILURE;
     char buf[LOG_UINT_MAX_LEN] = { 0 };
     int len = 0;
-    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u %u\n", id, d0);
+    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u %u\n", xmlId, d0);
     if (len < 0) {
         EXT_PRINT("sprintf err\n");
         return EXT_FAILURE;
@@ -354,19 +354,19 @@ int ExtDrvLogOut1(enum ExtLogLevel level, enum ExtModule modId, unsigned int id,
  * @brief Print with two int numbers
  * @param level: Specifies the log level.
  * @param modId: Device ID
- * @param id: custom string variable
+ * @param xmlId: custom string variable
  * @param d0: User-defined first variable of the int type
  * @param d1: User-defined second variable of the int type
  * @retval Indicates whether the printing is successful.
  */
-int ExtDrvLogOut2(enum ExtLogLevel level, enum ExtModule modId, unsigned int id, unsigned int d0, unsigned int d1)
+int ExtDrvLogOut2(enum ExtLogLevel level, enum ExtModule modId, unsigned int xmlId, unsigned int d0, unsigned int d1)
 {
     /* Check whether the value is out of range */
     if (level > EXT_LOG_LEVEL_BUTT || modId > EXT_MODULE_BUTT)
         return EXT_FAILURE;
     char buf[LOG_UINT_MAX_LEN] = { 0 };
     int len = 0;
-    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u %u %u\n", id, d0, d1);
+    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u %u %u\n", xmlId, d0, d1);
     if (len < 0) {
         EXT_PRINT("sprintf err\n");
         return EXT_FAILURE;
@@ -379,13 +379,13 @@ int ExtDrvLogOut2(enum ExtLogLevel level, enum ExtModule modId, unsigned int id,
  * @brief Print with three int numbers
  * @param level: Specifies the log level.
  * @param modId: Device ID
- * @param id: custom string variable
+ * @param xmlId: custom string variable
  * @param d0: User-defined first variable of the int type
  * @param d1: User-defined second variable of the int type
  * @param d2: User-defined third variable of the int type
  * @retval Indicates whether the printing is successful.
  */
-int ExtDrvLogOut3(enum ExtLogLevel level, enum ExtModule modId, unsigned int id, unsigned int d0, unsigned int d1,
+int ExtDrvLogOut3(enum ExtLogLevel level, enum ExtModule modId, unsigned int xmlId, unsigned int d0, unsigned int d1,
                   unsigned int d2)
 {
     /* Check whether the value is out of range */
@@ -393,7 +393,7 @@ int ExtDrvLogOut3(enum ExtLogLevel level, enum ExtModule modId, unsigned int id,
         return EXT_FAILURE;
     char buf[LOG_UINT_MAX_LEN] = { 0 };
     int len = 0;
-    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u %u %u %u\n", id, d0, d1, d2);
+    len = sprintf_s(buf, LOG_UINT_MAX_LEN, "%u %u %u %u\n", xmlId, d0, d1, d2);
     if (len < 0) {
         EXT_PRINT("sprintf err\n");
         return EXT_FAILURE;
@@ -404,14 +404,14 @@ int ExtDrvLogOut3(enum ExtLogLevel level, enum ExtModule modId, unsigned int id,
 
 /**
  * @brief Setting the log level
- * @param id: Indicates the device ID of the specified level
+ * @param modId: Indicates the device ID of the specified level
  * @param level: Level set for the device
  * @retval Indicates whether the printing is successful
  */
-int ExtDrvLogSetLogLevel(enum ExtModule id, enum ExtLogLevel level)
+int ExtDrvLogSetLogLevel(enum ExtModule modId, enum ExtLogLevel level)
 {
     /* Exceeded the maximum value of the storage array */
-    if (level >= EXT_LOG_LEVEL_BUTT || id >= EXT_MODULE_BUTT) {
+    if (level >= EXT_LOG_LEVEL_BUTT || modId >= EXT_MODULE_BUTT) {
         EXT_PRINT("module or level unsupport\n");
         return EXT_FAILURE;
     }
@@ -421,7 +421,7 @@ int ExtDrvLogSetLogLevel(enum ExtModule id, enum ExtLogLevel level)
     if (!ctx->init) {
         LogCtxInit(ctx); /* Initialize the structure */
     }
-    ctx->logLevel[id] = level;
+    ctx->logLevel[modId] = level;
     return EXT_SUCCESS;
 }
 

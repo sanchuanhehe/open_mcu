@@ -515,7 +515,7 @@ static inline bool IsUartFIFOThreshold(UART_FIFO_Threshold fifoThreshold)
 static inline void DCL_UART_WriteData(UART_RegStruct * const uartx, unsigned char data)
 {
     UART_ASSERT_PARAM(IsUARTInstance(uartx));
-    uartx->UART_DR.BIT.data = data; /* Data to be sent. */
+    uartx->UART_DR.reg = (unsigned int)data; /* Data to be sent. */
 }
 
 /**
@@ -526,7 +526,7 @@ static inline void DCL_UART_WriteData(UART_RegStruct * const uartx, unsigned cha
 static inline unsigned char DCL_UART_ReadData(const UART_RegStruct *uartx)
 {
     UART_ASSERT_PARAM(IsUARTInstance(uartx));
-    return uartx->UART_DR.BIT.data; /* Data to be read. */
+    return uartx->UART_DR.reg; /* Data to be read. */
 }
 
 /**

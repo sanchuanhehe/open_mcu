@@ -62,7 +62,7 @@ typedef struct _TIMER_Handle {
     volatile unsigned int      bgLoad;            /**< Backgroud period, set the TIMEx_BGLOAD. */
     bool                       interruptEn;       /**< Interrupt enable or disable. */
     bool                       adcSocReqEnable;   /**< Trigger ADC Enable Sampling. */
-    bool                       dmaReqEnable;      /**< Enable bit for DMA single request and DAM burst sampling. */
+    bool                       dmaReqEnable;      /**< Enable bit for DMA single request and DMA burst sampling. */
     TIMER_UserCallBack         userCallBack;      /**< Callback function of timer. */
     TIMER_ExtendHandle         handleEx;          /**< TIMER extend handle */
 } TIMER_Handle;

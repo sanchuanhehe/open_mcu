@@ -20,8 +20,8 @@
   * @brief   Header file containing functions prototypes of APT module HAL sample.
   */
 
-#ifndef McuMagicTag_APT_HAL_SAMPLE_H
-#define McuMagicTag_APT_HAL_SAMPLE_H
+#ifndef McuMagicTag_SAMPLE_APT_THREE_RESISTOR_H
+#define McuMagicTag_SAMPLE_APT_THREE_RESISTOR_H
 
 #include "apt_ip.h"
 #include "interrupt.h"
