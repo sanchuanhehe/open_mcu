@@ -31,5 +31,5 @@
 #include "interrupt.h"
 #include "main.h"
 
-void UART_BlcokingTX(void);
+void UART_BlockingTX(void);
 #endif

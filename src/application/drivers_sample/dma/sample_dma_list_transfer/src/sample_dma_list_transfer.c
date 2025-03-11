@@ -27,38 +27,18 @@
 static unsigned char g_str1[NUM] = "1234567890123456789012345678901234567890123456789012345678901234567890";
 static unsigned char g_str2[NUM] = {0};
 static unsigned char g_str3[NUM] = {0};
-static DMA_Handle g_dmac;
-static DMA_ChannelParam g_param;
-
-/**
-  * @brief DMA controller initialization.
-  * @param None.
-  * @retval None.
-  */
-static void DMA_ControllerInit(void)
-{
-    g_dmac.baseAddress = DMA;
-    g_dmac.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.irqNumTc = IRQ_DMA_TC;
-    g_dmac.irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_Init(&g_dmac);
-}
-
-/**
-  * @brief DMA interrupt initialization.
-  * @param handle DMA handle.
-  * @retval None.
-  */
-static void DMA_InterruptInit(DMA_Handle *handle)
-{
-    IRQ_Enable();
-    handle->irqNumTc = IRQ_DMA_TC;
-    handle->irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_IRQService(handle);
-    IRQ_EnableN(IRQ_DMA_TC);
-    IRQ_EnableN(IRQ_DMA_ERR);
-}
+static DMA_ChannelParam g_param = {
+    .direction = DMA_MEMORY_TO_MEMORY_BY_DMAC,
+    .srcAddrInc = DMA_ADDR_INCREASE,
+    .destAddrInc = DMA_ADDR_INCREASE,
+    .srcPeriph = DMA_REQUEST_MEM,
+    .destPeriph = DMA_REQUEST_MEM,
+    .srcWidth = DMA_TRANSWIDTH_BYTE,
+    .destWidth = DMA_TRANSWIDTH_BYTE,
+    .srcBurst = DMA_BURST_LENGTH_1,
+    .destBurst = DMA_BURST_LENGTH_1,
+    .pHandle = NULL,
+};
 
 /**
   * @brief User-defined callback function for completing the transfer of memory to the memory.
@@ -86,30 +66,18 @@ static DMA_LinkList g_secondNode;
   */
 int DMA_MemoryToMemoryList(void)
 {
-    DBG_UartPrintInit(BAUDRATE);    /* baud rate is 115200 */
+    SystemInit();
     DBG_PRINTF("MemoryToMemoryList Begin: \r\n");
     DBG_PRINTF("src_memory g_str1: %s\r\n", g_str1);
     DBG_PRINTF("dest_memory g_str2: %s\r\n", g_str2);
     DBG_PRINTF("dest_memory g_str3: %s\r\n", g_str3);
 
-    unsigned int channel = 2;   /* select transfer channel 2 */
-    DMA_ControllerInit();
-    DMA_InterruptInit(&g_dmac);
+    unsigned int channel = 2;  /* select transfer channel 2 */
     HAL_DMA_RegisterCallback(&g_dmac, DMA_CHANNEL_FINISH, channel, DMA_MemToMemFinishList);
-
-    g_param.direction = DMA_MEMORY_TO_MEMORY_BY_DMAC;
-    g_param.srcAddrInc = DMA_ADDR_UNALTERED;
-    g_param.destAddrInc = DMA_ADDR_INCREASE;
-    g_param.srcWidth = DMA_TRANSWIDTH_BYTE;
-    g_param.destWidth = DMA_TRANSWIDTH_BYTE;
-    g_param.srcBurst = DMA_BURST_LENGTH_1;
-    g_param.destBurst = DMA_BURST_LENGTH_1;
-    g_param.pHandle = &g_dmac;
     /* The transmission length is defined as 5 */
     HAL_DMA_InitNewNode(&g_firstNode, &g_param, (uintptr_t)(void *)g_str1, (uintptr_t)(void *)g_str2, 5);
     /* The transmission length is defined as 50 */
     HAL_DMA_InitNewNode(&g_secondNode, &g_param, (uintptr_t)(void *)g_str1, (uintptr_t)(void *)g_str3, 50);
-
     HAL_DMA_ListAddNode(&g_firstNode, &g_secondNode);
     HAL_DMA_StartListTransfer(&g_dmac, &g_firstNode, channel);
     DBG_PRINTF("End!\r\n");

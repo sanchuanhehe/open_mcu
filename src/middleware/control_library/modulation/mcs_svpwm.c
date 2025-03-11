@@ -71,6 +71,10 @@ void SVPWM_SectorCalc(SVPWM_CALC_Handle *svCalc)
     } else {
         svCalc->volt[SVPWM_VOLT_2] = -svCalc->volt[SVPWM_VOLT_2];
     }
+    /* Sector empty judgment. */
+    if (svCalc->sectorIndex == 0) {
+        svCalc->sectorIndex = SVPWM_ANGLE_0_TO_60_DEG;
+    }
 }
 
 /**

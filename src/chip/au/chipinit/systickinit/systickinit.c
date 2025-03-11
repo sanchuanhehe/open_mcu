@@ -23,31 +23,38 @@
 #include "baseaddr.h"
 #include "timer.h"
 #include "systick.h"
-#include "systickinit.h"
 #include "crg.h"
-
-TIMER_Handle g_systickHandle;
-
+#include "systickinit.h"
+#include "feature.h"
 #ifdef NOS_TASK_SUPPORT
 #include "interrupt.h"
 #include "systick.h"
+#include "nosinit.h"
+#endif
+
+TIMER_Handle g_systickHandle;
+#ifdef NOS_TASK_SUPPORT
 #define NOS_TickPostDispatch OsHwiDispatchTick
 
-void SYSTICK_Default_Callback(void)
+static void SYSTICK_Default_Callback(void *handle)
 {
     /* The default systick callback when using th nos task */
-    HAL_TIMER_IrqClear(&g_systickHandle);
+    BASE_FUNC_UNUSED(handle);
     NOS_TickPostDispatch();
 }
 
 void SYSTICK_IRQ_Enable(void)
 {
     /* When Support NOS Task, Need to open the TickIRQ, us per tick will to update the load */
-    g_systickHandle.irqNum = IRQ_TIMER3;
+    g_systickHandle.load = (HAL_CRG_GetIpFreq(SYSTICK_BASE) / CRG_FREQ_1MHz) * CFG_SYSTICK_TICKINTERVAL_US;
+    g_systickHandle.bgLoad = (HAL_CRG_GetIpFreq(SYSTICK_BASE) / CRG_FREQ_1MHz) * CFG_SYSTICK_TICKINTERVAL_US;
+    HAL_TIMER_Config(&g_systickHandle, TIMER_CFG_LOAD);  /* config load value */
+    HAL_TIMER_Config(&g_systickHandle, TIMER_CFG_BGLOAD);  /* config bgLoad value */
     g_systickHandle.interruptEn = BASE_CFG_ENABLE;
-    HAL_TIMER_RegisterCallback(&g_systickHandle, SYSTICK_Default_Callback);
-    HAL_TIMER_Config(&g_systickHandle, TIMER_CFG_INTERRUPT);  // enable the systickIRQ
-    IRQ_SetPriority(g_systickHandle.irqNum, 1);
+    HAL_TIMER_RegisterCallback(&g_systickHandle, TIMER_PERIOD_FIN, SYSTICK_Default_Callback);
+    HAL_TIMER_Config(&g_systickHandle, TIMER_CFG_INTERRUPT);  /* enable the systickIRQ */
+    IRQ_SetPriority(IRQ_TIMER3, 1); /* interrupt priority 1 */
+    IRQ_Register(IRQ_TIMER3, HAL_TIMER_IrqHandler, &g_systickHandle);
     IRQ_EnableN(IRQ_TIMER3);
 }
 
@@ -57,7 +64,7 @@ unsigned int SYSTICK_GetTickInterval(void)
     return CFG_SYSTICK_TICKINTERVAL_US;
 }
 
-static inline unsigned int DCL_GetCpuCycle()
+static inline unsigned int DCL_GetCpuCycle(void)
 {
     /* Get the Cpu Cycle Register(CSR) */
     unsigned int cycle;
@@ -99,7 +106,7 @@ unsigned int SYSTICK_GetTimeStampUs(void)
   * @param   None
   * @retval  None
   */
-void SYSTICK_Init()
+void SYSTICK_Init(void)
 {
     /* Choose the config to support GetTick and Delay */
     g_systickHandle.baseAddress = SYSTICK;

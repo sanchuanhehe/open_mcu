@@ -25,6 +25,8 @@
 #include "mcs_motor_process.h"
 #include "main.h"
 /* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* 建议用户放置头文件 */
 /* USER CODE END 0 */
 ACMP_Handle g_acmp0;
 PGA_Handle g_pga0;
@@ -37,23 +39,29 @@ ADC_Handle g_adc0;
 GPIO_Handle g_gpio0;
 GPIO_Handle g_gpio2;
 /* USER CODE BEGIN 1 */
+/* 建议用户定义全局变量、结构体、宏定义或函数声明等 */
 /* USER CODE END 1 */
 
 int main(void)
 {
     /* USER CODE BEGIN 2 */
+    /* 建议用户放置初始化代码或启动代码等 */
     /* USER CODE END 2 */
     MotorMainProcess();
     /* USER CODE BEGIN 3 */
+    /* 建议用户放置初始配置代码 */
     /* USER CODE END 3 */
     while (1) {
         /* USER CODE BEGIN 4 */
+        /* 建议用户放置周期性执行代码 */
         /* USER CODE END 4 */
     }
     /* USER CODE BEGIN 5 */
+    /* 建议用户放置代码流程 */
     /* USER CODE END 5 */
     return BASE_STATUS_OK;
 }
 
 /* USER CODE BEGIN 6 */
+/* 建议用户放置自定义函数 */
 /* USER CODE END 6 */

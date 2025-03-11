@@ -20,7 +20,7 @@
   * @brief     nos init module.
   * @details   nos initialization function during startup
   */
-
+#include "feature.h"
 #ifdef NOS_TASK_SUPPORT
 #include "nos_task.h"
 #include "nosinit.h"
@@ -36,7 +36,7 @@ unsigned char __attribute__((aligned(16))) g_taskMainStackSpace[CFG_NOS_MAINTASK
 
 static unsigned int g_nosSysFreq;
 // Get tick in real time
-static unsigned long long NOS_GetTick()
+static unsigned long long NOS_GetTick(void)
 {
     unsigned int cycle, cycleh;
     asm volatile("csrr %0, cycle" : "=r"(cycle));
@@ -65,7 +65,7 @@ void NOS_Init(void)
     param.taskEntry = (NOS_TaskEntryFunc)main; /* Set the entry function by user define */
     param.param = 0;
     param.priority = NOS_TASK_PRIORITY_LOWEST;
-    param.stackAddr = g_taskMainStackSpace;
+    param.stackAddr = (unsigned int)g_taskMainStackSpace;
     param.stackSize = sizeof(g_taskMainStackSpace);
     param.privateData = 0;
     (void)NOS_TaskCreate(&param, &taskId);

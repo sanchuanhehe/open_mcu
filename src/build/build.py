@@ -33,8 +33,33 @@ import platform
 import logging
 import stat
 import shlex
+import logging
 
 from build_gn import read_json_file, del_allgn, AutoCreate
+
+LOGGER = None
+
+
+def init_logger():
+    global LOGGER
+    LOGGER = logging.getLogger()
+    LOGGER.setLevel(logging.INFO)
+
+    if not pathlib.Path('out').exists():
+        makedirs('out')
+
+    file_handler = logging.FileHandler('out/build.log', mode='w')
+    file_handler.setLevel(logging.INFO)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(message)s')
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    LOGGER.addHandler(file_handler)
+    LOGGER.addHandler(console_handler)
 
 
 def usage():
@@ -58,6 +83,8 @@ def copy_xml():
                                                  'mss_prim_db')
     xml_path = build_tmp_path.joinpath('dfx_db', 'log.xml')
     target_path = pathlib.Path.cwd().joinpath('out')
+    if not os.path.exists(xml_path):
+        LOGGER.info("xml path is not exist")
     shutil.copy(xml_path, target_path)
     if os.path.isdir(build_tmp_path):
         shutil.rmtree(build_tmp_path)
@@ -67,16 +94,20 @@ def generatefile(file_path, config):
     '''
     Function description: Signing Executable Files.
     '''
+    dfx_path = pathlib.Path.cwd().joinpath('drivers', 'debug', 'log')
+    if os.path.exists(dfx_path):
+        LOGGER.info("exist dfx feature, copy log.xml")
+        copy_xml()
+    toolchain_prefix = config.get_toolchain_prefix()
     # Instantiation parameter check.
     if not isinstance(file_path, str):
-        raise TypeError("file_path in para type error {}".format(
-                        type(file_path)))
+        raise TypeError("file_path in para type error {}".format(type(file_path)))
 
     file_abspath = pathlib.Path(file_path).resolve()
     # Generate the bin file.
     bin_abspath = file_abspath.parent.joinpath('{}.bin'
                                                .format(file_abspath.stem))
-    cmd = ['riscv32-linux-musl-objcopy', '-Obinary', str(file_abspath), str(bin_abspath)]
+    cmd = [toolchain_prefix + 'objcopy', '-Obinary', str(file_abspath), str(bin_abspath)]
     process = subprocess.Popen(cmd, shell=False)
     process.wait()
     ret_code = process.returncode
@@ -86,7 +117,7 @@ def generatefile(file_path, config):
     # Generate the hex file.
     hex_abspath = file_abspath.parent.joinpath('{}.hex'
                                                .format(file_abspath.stem))
-    cmd = ['riscv32-linux-musl-objcopy', '-Oihex', str(file_abspath), str(hex_abspath)]
+    cmd = [toolchain_prefix + 'objcopy', '-Oihex', str(file_abspath), str(hex_abspath)]
     process = subprocess.Popen(cmd, shell=False)
     process.wait()
     ret_code = process.returncode
@@ -102,14 +133,21 @@ def generatefile(file_path, config):
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         modes = stat.S_IWUSR | stat.S_IRUSR
         with os.fdopen(os.open(list_path, flags, modes), 'w+') as list_file:
-            cmd = ['riscv32-linux-musl-objdump', '-S', str(file_abspath)]
+            cmd = [toolchain_prefix + 'objdump', '-S', str(file_abspath)]
             process = subprocess.Popen(cmd, stdout=list_file, shell=False)
             process.wait()
             ret_code = process.returncode
             if ret_code != 0:
                 raise Exception("list_file failed, return code is " + ret_code)
     else:
-        cmd = ['riscv32-linux-musl-strip', str(file_abspath)]
+        strip_path = None
+        if config.tool_chain == "bisheng":
+            strip_path = pathlib.Path(config.compiler_path).joinpath("riscv32", 'riscv32-linux-musl-strip')
+        else:
+            strip_path = pathlib.Path(config.compiler_path).joinpath('riscv32-linux-musl-strip')
+        cmd = [strip_path, str(file_abspath)]
+
+        
         process = subprocess.Popen(cmd, shell=False)
         process.wait()
         ret_code = process.returncode
@@ -122,39 +160,39 @@ def run_build(**kwargs):
     Function description: Start building.
     '''
 
+    LOGGER.info("\n=== start build ===\n")
     config = kwargs.get('config')
     compile_var = Compile()
     compile_var.compile(config)
     file_path = str(pathlib.Path().joinpath('out',
                                                 'bin', 'target.elf'))
     generatefile(file_path, config)
+    LOGGER.info("Build success!")
+    LOGGER.info("\n=== end build ===\n")
 
 
-def exec_command(cmd, log_path, **kwargs):
+def exec_command(cmd, **kwargs):
     '''
     Function description: Run the build command.
     '''
-    flags = os.O_WRONLY | os.O_CREAT
-    modes = stat.S_IWUSR | stat.S_IRUSR
-    with os.fdopen(os.open(log_path, flags, modes), 'w') as log_file:
-        process = subprocess.Popen(cmd,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   universal_newlines=True,
-                                   errors='ignore',
-                                   **kwargs)
-        # Write the build process to the build.log.
-        for line in iter(process.stdout.readline, ''):
-            log_file.write(line)
+    process = subprocess.Popen(cmd,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               universal_newlines=True,
+                               errors='ignore',
+                               **kwargs)
+
+    for line in iter(process.stdout.readline, ''):
+        LOGGER.info(line.replace('\n', ' '))
 
     process.wait()
     ret_code = process.returncode
 
     # An error code is returned when the command is executed.
     if ret_code != 0:
-        with os.fdopen(os.open(log_path, flags, modes), 'at') as log_file:
-            for line in iter(process.stderr.readline, ''):
-                log_file.write(line)
+        for line in iter(process.stderr.readline, ''):
+            LOGGER.info(line.replace('\n', ' '))
+        LOGGER.info('you can check build log in out/build.log')
         raise Exception("{} failed, return code is {}".format(cmd, ret_code))
 
 
@@ -162,7 +200,6 @@ def parsejson_startautocreat(config):
     '''
     Function description: Parsing Chip Template Files.
     '''
-
     # Obtaining the gn and ninja Paths.
     Compile.get_tool_path()
     # Read the content of the compilation configuration file.
@@ -175,8 +212,8 @@ def parsejson_startautocreat(config):
     check_output(config)
     check_extcomponent()
     del_allgn()
-    AutoCreate(json_content)
-    return True
+    AutoCreate(json_content, LOGGER)
+    LOGGER.info("The compilation script is successfully built.")
 
 
 def makedirs(path, exist_ok=True):
@@ -186,11 +223,11 @@ def makedirs(path, exist_ok=True):
 
     try:
         os.makedirs(path)
-    except OSError:
+    except OSError as e:
         if not pathlib.Path(path).is_dir():
-            raise Exception("{} makedirs failed".format(path))
+            raise Exception("{} makedirs failed".format(path)) from e
         if not exist_ok:
-            raise Exception("{} exists, makedirs failed".format(path))
+            raise Exception("{} exists, makedirs failed".format(path)) from e
     finally:
         pass
 
@@ -268,7 +305,6 @@ def config_create(**kwargs):
     '''
     Function description: Start to create configuration.
     '''
-
     config = kwargs.get('config')
     parsejson_startautocreat(config)
     return True
@@ -294,6 +330,7 @@ def exec_create(args):
         config = Config(args)
         del_output(config)
         del_allgn()
+        LOGGER.info("Clean Successfully!")
     else:
         raise Exception("Error: action not found.")
 
@@ -304,16 +341,15 @@ class Config():
     '''
 
     def __init__(self, args):
+        self.compiler_path = None
         self.action = args.action[0]
         self.build_type = args.build_type[0]
         self.tool_chain = args.tool_chain[0]
         self.__set_path()
         self.config = pathlib.Path(self.get_build_path())\
                       .joinpath('config.ini')
-        self.log_path = pathlib.Path(self.get_out_path()).joinpath('build.log')
         self.cfg = ConfigParser()
         self.cfg.read(self.config)
-        self.toolenv_check()
         self.set_default_cmd()
         self.set_env_path()
         self.args_list = []
@@ -335,28 +371,6 @@ class Config():
             raise Exception('Error: set out_path first.')
 
         return self.__out_path
-
-    def toolenv_check(self):
-        '''
-        Function description: Check whether the tool chain path is set.
-        '''
-
-        toolspath = self.cfg.get('gn_args', 'tools_path')
-        user_tool_path = os.path.join(os.path.expanduser("~"), 
-            ".deveco-device-tool/compiler_tool_chain")
-        if not os.path.exists(user_tool_path):
-            # use default tool chain path
-            return
-
-        if toolspath != user_tool_path:
-            self.cfg.set('gn_args', 'tools_path', user_tool_path)
-            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-            modes = stat.S_IWUSR | stat.S_IRUSR
-            with os.fdopen(os.open(self.config, flags, modes),
-                            'w') as configini:
-                self.cfg.write(configini)
-        elif not toolspath:
-            raise Exception("Error: please set config.ini tools_path.")
 
     def set_default_cmd(self):
         '''
@@ -381,7 +395,8 @@ class Config():
             self.cfg.set(section, 'build_type', self.build_type)
         if self.tool_chain != default_tool_chain:
             if self.tool_chain != 'hcc' and\
-               self.tool_chain != 'hcc_fpu':
+                self.tool_chain != 'hcc_fpu' and\
+                self.tool_chain != 'bisheng':
                 raise Exception('Error: {} is not tool_chain, please check.'\
                                 .format(self.tool_chain))
             # Updating the userconfig.json File.
@@ -389,6 +404,13 @@ class Config():
                         .joinpath(self.tool_chain, userconfig_file_name),
                         target_path)
             self.cfg.set(section, 'toolchain_select', self.tool_chain)
+            toolchain_prefix_key = 'toolchain_prefix'
+            if self.tool_chain == 'hcc' or self.tool_chain == 'hcc_fpu':
+                self.cfg.set(section, toolchain_prefix_key, "riscv32-linux-musl-")
+            elif self.tool_chain == 'bisheng':
+                self.cfg.set(section, toolchain_prefix_key, "llvm-")
+            else:
+                self.cfg.set(section, toolchain_prefix_key, "llvm-")
         if not pathlib.Path(target_path).joinpath(userconfig_file_name).exists():
             # userconfig.json file corresponding to different tool chains.
             shutil.copy(pathlib.Path(compileopt_path)\
@@ -407,8 +429,6 @@ class Config():
         Function description: Write the toolchain and version information to 
         the config.ini file.
         '''
-
-        compiler_path = None
         tools_path = self.cfg.get('gn_args', 'tools_path')
 
         cur_sys = platform.system()
@@ -417,31 +437,39 @@ class Config():
             ninja_name = 'ninja-linux'
             hcc_name = 'cc_riscv32_musl'
             hccfpu_name = 'cc_riscv32_musl_fp'
+            llvm_name = 'linx-llvm-binary-release-musl'
         elif cur_sys == "Windows":
-            gn_name = 'gn-win'
-            ninja_name = 'ninja-win'
+            gn_name = 'gn'
+            ninja_name = 'ninja'
             hcc_name = 'cc_riscv32_musl_win'
             hccfpu_name = 'cc_riscv32_musl_fp_win'
+            llvm_name = 'linx-llvm-binary-release-win-musl'
         # Setting GN and NINJA env.
         gn_path = pathlib.Path(tools_path).joinpath(cur_sys, gn_name)
         ninja_path = pathlib.Path(tools_path).joinpath(cur_sys, ninja_name)
         # Setting Toolchain env.
+        bin_folder_name = 'bin'
         if self.tool_chain == 'hcc':
-            # Check whether the env contains hcc.
-            compiler_path = distutils.spawn\
-                            .find_executable("riscv32-linux-musl-gcc")
-            if compiler_path is None:
-                # If no, set the hcc path to the env.
-                compiler_path = pathlib.Path(tools_path)\
-                           .joinpath(cur_sys, hcc_name, 'bin')
+            # Set the hcc path to the env.
+            self.compiler_path = pathlib.Path(tools_path)\
+                        .joinpath(cur_sys, hcc_name, bin_folder_name)
+            if not pathlib.Path(self.compiler_path).exists():
+                # Check whether the env contains hcc. If not exist, use env tool.
+                self.compiler_path = os.path.dirname(distutils.spawn.find_executable("riscv32-linux-musl-gcc"))
         elif self.tool_chain == 'hcc_fpu':
-            # Check whether the env contains hcc_fpu.
-            compiler_path = distutils.spawn\
-                            .find_executable("riscv32-linux-musl-gcc")
-            if compiler_path is None:
-                # If no, set the hcc_fpu path to the env.
-                compiler_path = pathlib.Path(tools_path)\
-                           .joinpath(cur_sys, hccfpu_name, 'bin')
+            # Set the hcc_fpu path to the env.
+            self.compiler_path = pathlib.Path(tools_path)\
+                        .joinpath(cur_sys, hccfpu_name, bin_folder_name)
+            if not pathlib.Path(self.compiler_path).exists():
+                # Check whether the env contains hcc_fpu. If not exist, use env tool.
+                self.compiler_path = os.path.dirname(distutils.spawn.find_executable("riscv32-linux-musl-gcc"))
+        elif self.tool_chain == 'bisheng':
+            # Set the hcc_fpu path to the env.
+            self.compiler_path = pathlib.Path(tools_path)\
+                        .joinpath(cur_sys, llvm_name, bin_folder_name)
+            if not pathlib.Path(self.compiler_path).exists():
+                # Check whether the env contains llvm. If not exist, use env tool.
+                self.compiler_path = os.path.dirname(distutils.spawn.find_executable("clang"))
         else:
             raise Exception('Error: Unsupported compiler {}.'\
                             .format(self.tool_chain))
@@ -449,12 +477,12 @@ class Config():
         str_path = 'PATH'
         if cur_sys == "Linux":
             # Setting Temporary Environment Variables
-            os.environ[str_path] = "{}:{}:{}:{}".format(os.environ[str_path],
-                                 gn_path, ninja_path, compiler_path)
+            os.environ[str_path] = "{}:{}:{}:{}".format(self.compiler_path,
+                                 gn_path, ninja_path, os.environ[str_path])
         elif cur_sys == "Windows":
             # Setting Temporary Environment Variables
-            os.environ[str_path] = "{};{};{};{}".format(os.environ[str_path],
-                                 gn_path, ninja_path, compiler_path)
+            os.environ[str_path] = "{};{};{};{}".format(self.compiler_path,
+                                 gn_path, ninja_path, os.environ[str_path])
 
     # get compile cmd
     def get_cmd(self, gn_path, ninja_path):
@@ -467,6 +495,9 @@ class Config():
         self.args_list.append(self.cfg.get('gn_args', 'build_type_args'))
         self.args_list.append(self.cfg.get('gn_args', 'toolchain_args'))
         return "".join(self.args_list).replace('\"', '\\"')
+
+    def get_toolchain_prefix(self):
+        return self.cfg.get('gn_args', 'toolchain_prefix')
 
     def __set_path(self):
         self.__root_path = pathlib.Path.cwd()
@@ -517,7 +548,7 @@ class Compile():
             if sys.platform == 'linux':
                 cmd = shlex.split(cmd)
             # If shell is True, cmd is a string; if not, a sequence.
-            exec_command(cmd, log_path=config.log_path, shell=False)
+            exec_command(cmd, shell=False)
 
 
 class CallbackDict(object):
@@ -546,7 +577,8 @@ def main(argv):
     '''
     Function description: build and compile entry function.
     '''
-
+    # initialize logger
+    init_logger()
     # Read the default command value
     configini_path = pathlib.Path.cwd().joinpath('build', 'config.ini')
     configini = ConfigParser()
@@ -566,18 +598,7 @@ def main(argv):
     parser.set_defaults(command=exec_create)
     args = parser.parse_args()
 
-    try:
-        status = args.command(args)
-    # Generally, press Ctrl+C to raise exception.
-    except KeyboardInterrupt:
-        logging.warning('interrupted')
-        status = -1
-    # Catch Other Exceptions
-    except Exception as exce:
-        parser.print_help()
-        status = -1
-    finally:
-        pass
+    status = args.command(args)
 
     return status
 

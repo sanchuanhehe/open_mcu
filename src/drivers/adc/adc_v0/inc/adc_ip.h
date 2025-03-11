@@ -1335,7 +1335,7 @@ typedef enum {
     ADC_CALLBACK_INT2 = 0x00000001U,
     ADC_CALLBACK_INT3 = 0x00000002U,
     ADC_CALLBACK_INT4 = 0x00000003U,
-    ADC_CALLBACK_DMA = 0x000000004U,
+    ADC_CALLBACK_DMA =  0x00000004U,
     ADC_CALLBACK_INTOVER = 0x00000005U,
     ADC_CALLBACK_DMAOVER = 0x00000006U,
     ADC_CALLBACK_TRIGOVER = 0x00000007U,
@@ -1650,7 +1650,7 @@ static inline bool IsADCVrefBufType(ADC_VrefType vrefBuf)
   */
 static inline bool IsADCGainType(ADC_GainType gain)
 {
-    return (gain >= ADC_GAIN_1) || (gain <= ADC_GAIN_0P6);
+    return (gain <= ADC_GAIN_0P6);
 }
 
 /**
@@ -2041,7 +2041,7 @@ static inline void DCL_ADC_ResetPollPoint(ADC_RegStruct * const adcx)
 
 
 /**
-  * @brief Set the specified SOC as the DAM request trigger source.
+  * @brief Set the specified SOC as the DMA request trigger source.
   * @param adcx ADC register base address.
   * @param socx Number of SOC, @ref ADC_SOCNumber.
   * @retval None.

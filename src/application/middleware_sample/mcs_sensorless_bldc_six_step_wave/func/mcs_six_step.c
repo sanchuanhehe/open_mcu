@@ -44,34 +44,34 @@ static void APT_ForcePwmByApt(APT_RegStruct *aptx, APT_Act actMode)
 {
     MCS_ASSERT_PARAM(aptx != NULL);
     switch (actMode) {
-        case APT_CHA_PWM_CHB_HIGH:
+        case APT_CHA_PWM_CHB_LOW:
             /* Channel A: 0 means not force output enable, channel A output PWM. */
             DCL_APT_DisableSwContPWMAction(aptx, APT_PWM_CHANNEL_A);
-            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_A, APT_PWM_OUT_ALWAYS_LOW);
+            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_A, APT_PWM_CONTINUOUS_ACTION_LOW);
             /* Channel B: 1 means force output enable. */
             DCL_APT_EnableSwContPWMAction(aptx, APT_PWM_CHANNEL_B);
             /* Channel B: 2 means channel B force output LOW due to the A_H_B_L invert. */
-            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_B, APT_PWM_OUT_ALWAYS_HIGH);
+            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_B, APT_PWM_CONTINUOUS_ACTION_HIGH);
             break;
         case APT_CHA_LOW_CHB_HIGH:
             /* Channel A: 1 means force output enable. */
             /* Channel A: 1 means channel A force output LOW. */
             DCL_APT_EnableSwContPWMAction(aptx, APT_PWM_CHANNEL_A);
-            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_A, APT_PWM_OUT_ALWAYS_LOW);
+            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_A, APT_PWM_CONTINUOUS_ACTION_LOW);
             /* Channel B: 1 means force output enable. */
             /* Channel B: 2 means channel B force output HIGH. */
             DCL_APT_EnableSwContPWMAction(aptx, APT_PWM_CHANNEL_B);
-            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_B, APT_PWM_OUT_ALWAYS_HIGH);
+            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_B, APT_PWM_CONTINUOUS_ACTION_HIGH);
             break;
         case APT_CHA_LOW_CHB_LOW:
             /* Channel A: 1 means force output enable. */
             /* Channel A: 1 means channel A force output LOW. */
             DCL_APT_EnableSwContPWMAction(aptx, APT_PWM_CHANNEL_A);
-            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_A, APT_PWM_OUT_ALWAYS_LOW);
+            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_A, APT_PWM_CONTINUOUS_ACTION_LOW);
             /* Channel B: 1 means force output enable. */
             /* Channel B: 1 means channel A force output HIGH due to the A_H_B_L invert. */
             DCL_APT_EnableSwContPWMAction(aptx, APT_PWM_CHANNEL_B);
-            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_B, APT_PWM_OUT_ALWAYS_LOW);
+            DCL_APT_SetSwContPWMAction(aptx, APT_PWM_CHANNEL_B, APT_PWM_CONTINUOUS_ACTION_LOW);
             break;
         default:
             break;
@@ -90,35 +90,35 @@ void SixStepPwm(const SixStepHandle *handle)
     APT_RegStruct *aptV = handle->controlApt.v->baseAddress;
     APT_RegStruct *aptW = handle->controlApt.w->baseAddress;
     switch (handle->phaseStep) {
-        case STEP1: /* U+, W- */
-            APT_ForcePwmByApt(aptU, APT_CHA_PWM_CHB_HIGH);
+        case STEP1: /* U+, V- */
+            APT_ForcePwmByApt(aptU, APT_CHA_PWM_CHB_LOW);
             APT_ForcePwmByApt(aptV, APT_CHA_LOW_CHB_LOW);
             APT_ForcePwmByApt(aptW, APT_CHA_LOW_CHB_HIGH);
             break;
-        case STEP2: /* V+, W- */
-            APT_ForcePwmByApt(aptU, APT_CHA_PWM_CHB_HIGH);
+        case STEP2: /* U+, W- */
+            APT_ForcePwmByApt(aptU, APT_CHA_PWM_CHB_LOW);
             APT_ForcePwmByApt(aptV, APT_CHA_LOW_CHB_HIGH);
             APT_ForcePwmByApt(aptW, APT_CHA_LOW_CHB_LOW);
             break;
-        case STEP3: /* V+, U- */
+        case STEP3: /* V+, W- */
             APT_ForcePwmByApt(aptU, APT_CHA_LOW_CHB_HIGH);
-            APT_ForcePwmByApt(aptV, APT_CHA_PWM_CHB_HIGH);
+            APT_ForcePwmByApt(aptV, APT_CHA_PWM_CHB_LOW);
             APT_ForcePwmByApt(aptW, APT_CHA_LOW_CHB_LOW);
             break;
-        case STEP4: /* W+, U- */
+        case STEP4: /* V+, U- */
             APT_ForcePwmByApt(aptU, APT_CHA_LOW_CHB_LOW);
-            APT_ForcePwmByApt(aptV, APT_CHA_PWM_CHB_HIGH);
+            APT_ForcePwmByApt(aptV, APT_CHA_PWM_CHB_LOW);
             APT_ForcePwmByApt(aptW, APT_CHA_LOW_CHB_HIGH);
             break;
-        case STEP5: /* W+, V- */
+        case STEP5: /* W+, U- */
             APT_ForcePwmByApt(aptU, APT_CHA_LOW_CHB_LOW);
             APT_ForcePwmByApt(aptV, APT_CHA_LOW_CHB_HIGH);
-            APT_ForcePwmByApt(aptW, APT_CHA_PWM_CHB_HIGH);
+            APT_ForcePwmByApt(aptW, APT_CHA_PWM_CHB_LOW);
             break;
-        case STEP6: /* U+, V- */
+        case STEP6: /* W+, V- */
             APT_ForcePwmByApt(aptU, APT_CHA_LOW_CHB_HIGH);
             APT_ForcePwmByApt(aptV, APT_CHA_LOW_CHB_LOW);
-            APT_ForcePwmByApt(aptW, APT_CHA_PWM_CHB_HIGH);
+            APT_ForcePwmByApt(aptW, APT_CHA_PWM_CHB_LOW);
             break;
         default:
             break;

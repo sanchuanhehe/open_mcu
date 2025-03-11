@@ -1,0 +1,2208 @@
+diff -uNr old/CM4/Core/Inc/DAP_config.h new/CM4/Core/Inc/DAP_config.h
+--- old/CM4/Core/Inc/DAP_config.h	2023-05-29 09:46:06.000000000 +0800
++++ new/CM4/Core/Inc/DAP_config.h	2023-12-27 14:21:36.267212139 +0800
+@@ -3,7 +3,7 @@
+  * @brief
+  *
+  * DAPLink Interface Firmware
+- * Copyright (c) 2009-2021, ARM Limited, All Rights Reserved
++ * Copyright (c) 2009-2016, ARM Limited, All Rights Reserved
+  * SPDX-License-Identifier: Apache-2.0
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License"); you may
+@@ -22,20 +22,19 @@
+ #ifndef __DAP_CONFIG_H__
+ #define __DAP_CONFIG_H__
+ 
+-#include "IO_Config.h"
++#include "stdint.h"
++#include "stm32mp1xx.h"
++#include "gpio_config.h"
+ 
+ //**************************************************************************************************
+ /**
+ \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
+ \ingroup DAP_ConfigIO_gr
+ @{
+-Provides definitions about the hardware and configuration of the Debug Unit.
+-
+-This information includes:
++Provides definitions about:
+  - Definition of Cortex-M processor parameters used in CMSIS-DAP Debug Unit.
+- - Debug Unit Identification strings (Vendor, Product, Serial Number).
+  - Debug Unit communication packet size.
+- - Debug Access Port supported modes and settings (JTAG/SWD and SWO).
++ - Debug Access Port communication mode (JTAG or SWD).
+  - Optional information about a connected Target Device (for Evaluation Boards).
+ */
+ 
+@@ -43,13 +42,18 @@
+ /// This value is used to calculate the SWD/JTAG clock speed.
+ #define CPU_CLOCK               SystemCoreClock        ///< Specifies the CPU Clock in Hz
+ 
++
++// ToDo(elee): Review, is this 6 for H743?
++// https://stackoverflow.com/questions/51736591/stm32h7xx-toggle-io-as-fast-as-possible
++
+ /// Number of processor cycles for I/O Port write operations.
+ /// This value is used to calculate the SWD/JTAG clock speed that is generated with I/O
+ /// Port write operations in the Debug Unit by a Cortex-M MCU. Most Cortex-M processors
+-/// require 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
++/// requrie 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
+ /// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
+-/// required.
+-#define IO_PORT_WRITE_CYCLES    2U              ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
++/// requrired.
++#define IO_PORT_WRITE_CYCLES    2               ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
++
+ 
+ /// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
+ /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+@@ -57,11 +61,11 @@
+ 
+ /// Indicate that JTAG communication mode is available at the Debug Port.
+ /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+-#define DAP_JTAG                0               ///< JTAG Mode: 1 = available, 0 = not available.
++#define DAP_JTAG                1               ///< JTAG Mode: 1 = available, 0 = not available.
+ 
+ /// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
+ /// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
+-#define DAP_JTAG_DEV_CNT        0               ///< Maximum number of JTAG devices on scan chain
++#define DAP_JTAG_DEV_CNT        4               ///< Maximum number of JTAG devices on scan chain
+ 
+ /// Default communication mode on the Debug Access Port.
+ /// Used for the command \ref DAP_Connect when Port Default mode is selected.
+@@ -72,38 +76,41 @@
+ /// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
+ #define DAP_DEFAULT_SWJ_CLOCK   5000000         ///< Default SWD/JTAG clock frequency in Hz.
+ 
++//ToDo(elee): 512 for WinUSB?  https://arm-software.github.io/CMSIS_5/DAP/html/group__DAP__Config__Debug__gr.html#gaa28bb1da2661291634c4a8fb3e227404
++
+ /// Maximum Package Size for Command and Response data.
+-/// This configuration settings is used to optimize the communication performance with the
+-/// debugger and depends on the USB peripheral. Typical vales are 64 for Full-speed USB HID or WinUSB,
+-/// 1024 for High-speed USB HID and 512 for High-speed USB WinUSB.
+-#ifndef HID_ENDPOINT            //HID end points currently set limits to 64
+-#define DAP_PACKET_SIZE         512              ///< Specifies Packet Size in bytes.
+-#else
+-#define DAP_PACKET_SIZE         64              ///< Specifies Packet Size in bytes.
+-#endif
++/// This configuration settings is used to optimized the communication performance with the
++/// debugger and depends on the USB peripheral. Change setting to 1024 for High-Speed USB.
++#define DAP_PACKET_SIZE        64              ///< USB: 64 = Full-Speed, 1024 = High-Speed.
+ 
+ /// Maximum Package Buffers for Command and Response data.
+-/// This configuration settings is used to optimize the communication performance with the
++/// This configuration settings is used to optimized the communication performance with the
+ /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
+ /// setting can be reduced (valid range is 1 .. 255). Change setting to 4 for High-Speed USB.
+-#define DAP_PACKET_COUNT       4              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
++#define DAP_PACKET_COUNT       64              ///< Buffers: 64 = Full-Speed, 4 = High-Speed.
++
++
++// ToDo(elee): enable SWO_UART
+ 
+ /// Indicate that UART Serial Wire Output (SWO) trace is available.
+ /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+ #define SWO_UART                0               ///< SWO UART:  1 = available, 0 = not available
+ 
+-/// USART Driver instance number for the UART SWO.
+-#define SWO_UART_DRIVER         0               ///< USART Driver instance number (Driver_USART#).
+-
+ /// Maximum SWO UART Baudrate
+ #define SWO_UART_MAX_BAUDRATE   10000000U       ///< SWO UART Maximum Baudrate in Hz
+ 
++
++// ToDo(elee): Supported?  How common?
++
+ /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
+ /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+-#define SWO_MANCHESTER          0               ///< SWO Manchester:  1 = available, 0 = not available.
++#define SWO_MANCHESTER          0               ///< SWO Manchester:  1 = available, 0 = not available
+ 
+ /// SWO Trace Buffer Size.
+-#define SWO_BUFFER_SIZE         4096U           ///< SWO Trace Buffer Size in bytes (must be 2^n).
++#define SWO_BUFFER_SIZE         4096U           ///< SWO Trace Buffer Size in bytes (must be 2^n)
++
++
++// Todo(elee): Looks like is 0 for all DAPLink probes.
+ 
+ /// SWO Streaming Trace.
+ #define SWO_STREAM              0               ///< SWO Streaming Trace: 1 = available, 0 = not available.
+@@ -111,88 +118,50 @@
+ /// Clock frequency of the Test Domain Timer. Timer value is returned with \ref TIMESTAMP_GET.
+ #define TIMESTAMP_CLOCK         1000000U      ///< Timestamp clock in Hz (0 = timestamps not supported).
+ 
+-/// Indicate that UART Communication Port is available.
+-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+-#define DAP_UART                0               ///< DAP UART:  1 = available, 0 = not available.
+-
+-/// USART Driver instance number for the UART Communication Port.
+-#define DAP_UART_DRIVER         1               ///< USART Driver instance number (Driver_USART#).
+-
+-/// UART Receive Buffer Size.
+-#define DAP_UART_RX_BUFFER_SIZE 1024U           ///< Uart Receive Buffer Size in bytes (must be 2^n).
+-
+-/// UART Transmit Buffer Size.
+-#define DAP_UART_TX_BUFFER_SIZE 1024U           ///< Uart Transmit Buffer Size in bytes (must be 2^n).
+-
+-/// Indicate that UART Communication via USB COM Port is available.
+-/// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
+-#define DAP_UART_USB_COM_PORT   1               ///< USB COM Port:  1 = available, 0 = not available.
+ 
+ /// Debug Unit is connected to fixed Target Device.
+ /// The Debug Unit may be part of an evaluation board and always connected to a fixed
+-/// known device. In this case a Device Vendor, Device Name, Board Vendor and Board Name strings
+-/// are stored and may be used by the debugger or IDE to configure device parameters.
+-#define TARGET_FIXED            0               ///< Target: 1 = known, 0 = unknown;
+-
++/// known device.  In this case a Device Vendor and Device Name string is stored which
++/// may be used by the debugger or IDE to configure device parameters.
++#define TARGET_DEVICE_FIXED     0               ///< Target Device: 1 = known, 0 = unknown;
++
++#if TARGET_DEVICE_FIXED
++#define TARGET_DEVICE_VENDOR    ""              ///< String indicating the Silicon Vendor
++#define TARGET_DEVICE_NAME      ""              ///< String indicating the Target Device
++#endif
+ ///@}
+-
+-
+ __STATIC_INLINE void pin_out_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
+ {
+-    if(pin_bit >= 8)
+-    {
+-        GPIOx->CRH &= ~(0x0000000F << ((pin_bit-8) << 2));
+-        GPIOx->CRH |= ( ((uint32_t)(0x00|0x03) & 0x0F) << ((pin_bit-8) << 2) );
+-    }
+-    else
+-    {
+-        GPIOx->CRL &= ~(0x0000000F << ((pin_bit) << 2));
+-        GPIOx->CRL |= ( ((uint32_t)(0x00|0x03) & 0x0F) << ((pin_bit) << 2) );
+-    }
++    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1)); //shift in 2 bit increments.
++    GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
++    GPIOx->OTYPER &= ~(0x00000001 << (pin_bit));  //  0b0 = push-pull mode
++    GPIOx->OSPEEDR |= (0x0000003 << ((pin_bit) << 1));  // set "very high speed"
+ }
+ 
+ __STATIC_INLINE void pin_out_od_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit)
+ {
+-    if(pin_bit >= 8)
+-    {
+-        GPIOx->CRH &= ~(0x0000000F << ((pin_bit-8) << 2));
+-        GPIOx->CRH |= ( ((uint32_t)(0x04|0x03) & 0x0F) << ((pin_bit-8) << 2) );
+-    }
+-    else
+-    {
+-        GPIOx->CRL &= ~(0x0000000F << ((pin_bit) << 2));
+-        GPIOx->CRL |= ( ((uint32_t)(0x04|0x03) & 0x0F) << ((pin_bit) << 2) );
+-    }
++    GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));
++    GPIOx->MODER |= ( 0x00000001 << ((pin_bit) << 1) );  // 0b01 = gpio out
++    GPIOx->OTYPER |= (0x00000001 << (pin_bit));  // 0b1 = open drain mode
++    GPIOx->OSPEEDR |= (0x0000003 << ((pin_bit) << 1));  // set "very high speed"
+ }
+ 
+ __STATIC_INLINE void pin_in_init(GPIO_TypeDef* GPIOx, uint8_t pin_bit, uint8_t mode)
+ {
+-    uint8_t config;
+-    if(mode == 1)
+-        config = 0x08; //Up
+-    else if(mode == 2)
+-        config = 0x08; //down
+-    else
+-        config = 0x00; //GPIO_Mode_AIN
+-
+-    if(pin_bit >= 8)
+-    {
+-        GPIOx->CRH &= ~(0x0000000F << ((pin_bit-8) << 2));
+-        GPIOx->CRH |= ( ((uint32_t)(config) & 0x0F) << ((pin_bit-8) << 2) );
+-        if(mode == 1)
+-            GPIOx->BSRR = (((uint32_t)0x01) << pin_bit);
+-        else if(mode == 2)
+-            GPIOx->BRR = (((uint32_t)0x01) << pin_bit);
++    // mode = 0 -> analog input, 1->pullup, 2->pulldown, 3->input-no-pullups
++    uint8_t config = 0;
++    if(mode == 1) {
++        config = 0x01; //pull-up
++    } else if(mode == 2) {
++        config = 0x02; //pull-down
+     }
+-    else
+-    {
+-        GPIOx->CRL &= ~(0x0000000F << ((pin_bit) << 2));
+-        GPIOx->CRL |= ( ((uint32_t)(config) & 0x0F) << ((pin_bit) << 2) );
+-        if(mode == 1)
+-            GPIOx->BSRR = (((uint32_t)0x01) << pin_bit);
+-        else if(mode == 2)
+-            GPIOx->BRR = (((uint32_t)0x01) << pin_bit);
++    if( mode == 0) { //analog input
++        GPIOx->MODER |= ( 0x00000003 << ((pin_bit) << 1) );  // 0b11 = analog mode
++    } else { // gpio in (mode >0)
++        GPIOx->MODER &= ~(0x00000003 << ((pin_bit) << 1));  // clear (input mode)
+     }
++    GPIOx->PUPDR &= ~(0x00000003 << ((pin_bit) << 1));  // clear
++    GPIOx->PUPDR |= ( ((uint32_t)(config) & 0x03) << ((pin_bit) << 1));  // set pullup/down
+ }
+ //**************************************************************************************************
+ /**
+@@ -251,17 +220,6 @@
+ */
+ __STATIC_INLINE void PORT_SWD_SETUP(void)
+ {
+-    // Set SWCLK HIGH
+-    pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
+-    SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
+-    // Set SWDIO HIGH
+-    pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
+-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+-
+-    pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);
+-    // Set RESET HIGH
+-    pin_out_od_init(nRESET_PIN_PORT, nRESET_PIN_Bit);//TODO - fix reset logic
+-    nRESET_PIN_PORT->BSRR = nRESET_PIN;
+ }
+ 
+ /** Disable JTAG/SWD I/O Pins.
+@@ -269,10 +227,7 @@
+  - TCK/SWCLK, TMS/SWDIO, TDI, TDO, nTRST, nRESET to High-Z mode.
+ */
+ __STATIC_INLINE void PORT_OFF(void)
+-{
+-    pin_in_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit, 0);
+-    pin_in_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit, 0);
+-    pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 0);
++{ 
+ }
+ 
+ // SWCLK/TCK I/O pin -------------------------------------
+@@ -298,7 +253,7 @@
+ */
+ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
+ {
+-    SWCLK_TCK_PIN_PORT->BRR = SWCLK_TCK_PIN;
++    SWCLK_TCK_PIN_PORT->BSRR = (SWCLK_TCK_PIN << 16);
+ }
+ 
+ // SWDIO/TMS Pin I/O --------------------------------------
+@@ -308,7 +263,7 @@
+ */
+ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
+ {
+-    return ((SWDIO_IN_PIN_PORT->IDR & SWDIO_IN_PIN) ? 1 : 0);
++    return ((SWDIO_OUT_TMS_PIN_PORT->IDR & SWDIO_OUT_TMS_PIN) ? 1 : 0);
+ }
+ 
+ /** SWDIO/TMS I/O pin: Set Output to High.
+@@ -316,7 +271,7 @@
+ */
+ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
+ {
+-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
++    SWDIO_OUT_TMS_PIN_PORT->BSRR = SWDIO_OUT_TMS_PIN;
+ }
+ 
+ /** SWDIO/TMS I/O pin: Set Output to Low.
+@@ -324,7 +279,7 @@
+ */
+ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
+ {
+-    SWDIO_OUT_PIN_PORT->BRR = SWDIO_OUT_PIN;
++    SWDIO_OUT_TMS_PIN_PORT->BSRR = (SWDIO_OUT_TMS_PIN << 16);
+ }
+ 
+ /** SWDIO I/O pin: Get Input (used in SWD mode only).
+@@ -339,11 +294,12 @@
+ \param bit Output value for the SWDIO DAP hardware I/O pin.
+ */
+ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
++//extern void PIN_SWDIO_OUT(uint32_t bit);
+ {
+     if (bit & 1)
+-        SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
++        SWDIO_OUT_TMS_PIN_PORT->BSRR = SWDIO_OUT_TMS_PIN;
+     else
+-        SWDIO_OUT_PIN_PORT->BRR = SWDIO_OUT_PIN;
++        SWDIO_OUT_TMS_PIN_PORT->BSRR = (SWDIO_OUT_TMS_PIN << 16);
+ }
+ 
+ /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
+@@ -352,8 +308,8 @@
+ */
+ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
+ {
+-    pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
+-    SWDIO_OUT_PIN_PORT->BRR = SWDIO_OUT_PIN;
++    SWDIO_INOUT_OE_PORT->BSRR = (SWDIO_INOUT_OE_PIN << 16);
++    __NOP();
+ }
+ 
+ /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
+@@ -362,8 +318,8 @@
+ */
+ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
+ {
+-    pin_in_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit, 0);
+-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
++    SWDIO_INOUT_OE_PORT->BSRR = SWDIO_INOUT_OE_PIN;
++    __NOP();
+ }
+ 
+ 
+@@ -374,7 +330,7 @@
+ */
+ __STATIC_FORCEINLINE uint32_t PIN_TDI_IN(void)
+ {
+-    return (0);   // Not available
++    return ((JTAG_TDI_PIN_PORT->IDR & JTAG_TDI_PIN) ? 1 : 0);
+ }
+ 
+ /** TDI I/O pin: Set Output.
+@@ -382,7 +338,10 @@
+ */
+ __STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
+ {
+-    ;             // Not available
++    if (bit & 1)
++        JTAG_TDI_PIN_PORT->BSRR = JTAG_TDI_PIN;
++    else
++        JTAG_TDI_PIN_PORT->BSRR = (JTAG_TDI_PIN << 16);
+ }
+ 
+ 
+@@ -393,7 +352,7 @@
+ */
+ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
+ {
+-    return (0);   // Not available
++    return ((JTAG_TDO_PIN_PORT->IDR & JTAG_TDO_PIN) ? 1 : 0);
+ }
+ 
+ 
+@@ -404,7 +363,7 @@
+ */
+ __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN(void)
+ {
+-    return (0);   // Not available
++    return ((JTAG_TRST_PIN_PORT->IDR & JTAG_TRST_PIN) ? 1 : 0);
+ }
+ 
+ /** nTRST I/O pin: Set Output.
+@@ -414,7 +373,10 @@
+ */
+ __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
+ {
+-    ;             // Not available
++    if (bit & 1)
++        JTAG_TRST_PIN_PORT->BSRR = JTAG_TRST_PIN;
++    else
++        JTAG_TRST_PIN_PORT->BSRR = (JTAG_TRST_PIN << 16);
+ }
+ 
+ // nRESET Pin I/O------------------------------------------
+@@ -424,7 +386,7 @@
+ */
+ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
+ {
+-    return ((nRESET_PIN_PORT->IDR >> nRESET_PIN_Bit) & 1);
++    return ((JTAG_TARGET_RST_PIN_PORT->IDR >> JTAG_TARGET_RST_PIN_BIT) & 1);
+ }
+ 
+ /** nRESET I/O pin: Set Output.
+@@ -437,9 +399,9 @@
+ __STATIC_FORCEINLINE void     PIN_nRESET_OUT(uint32_t bit)
+ {
+     if (bit & 1)
+-        nRESET_PIN_PORT->BSRR = nRESET_PIN;
++        JTAG_TARGET_RST_PIN_PORT->BSRR = (JTAG_TARGET_RST_PIN << 16); // DIR pin low -> nRST goes high
+     else
+-        nRESET_PIN_PORT->BRR = nRESET_PIN;
++        JTAG_TARGET_RST_PIN_PORT->BSRR = JTAG_TARGET_RST_PIN; // DIR pin high -> nRST goes low
+ }
+ 
+ //**************************************************************************************************
+@@ -462,10 +424,6 @@
+ */
+ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
+ {
+-    if (bit & 1)
+-        CONNECTED_LED_PORT->BRR = CONNECTED_LED_PIN; // LED on
+-    else
+-        CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;// LED off
+ }
+ 
+ /** Debug Unit: Set status Target Running LED.
+@@ -475,7 +433,6 @@
+ */
+ __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
+ {
+-    ;             // Not available
+ }
+ 
+ ///@}
+@@ -496,8 +453,9 @@
+ /** Get timestamp of Test Domain Timer.
+ \return Current timestamp value.
+ */
+-__STATIC_INLINE uint32_t TIMESTAMP_GET (void) {
+-  return (DWT->CYCCNT) / (CPU_CLOCK / TIMESTAMP_CLOCK);
++__STATIC_INLINE uint32_t TIMESTAMP_GET (void) 
++{ 
++    return 100;
+ }
+ 
+ ///@}
+@@ -522,25 +480,7 @@
+ */
+ __STATIC_INLINE void DAP_SETUP(void)
+ {
+-    /* Enable port clock */
+-    __HAL_RCC_GPIOA_CLK_ENABLE();
+-    __HAL_RCC_GPIOB_CLK_ENABLE();
+-    __HAL_RCC_GPIOC_CLK_ENABLE();
+-    __HAL_RCC_GPIOD_CLK_ENABLE();
+-    /* Configure I/O pin SWCLK */
+-    pin_out_init(SWCLK_TCK_PIN_PORT, SWCLK_TCK_PIN_Bit);
+-    SWCLK_TCK_PIN_PORT->BSRR = SWCLK_TCK_PIN;
+-
+-    pin_out_init(SWDIO_OUT_PIN_PORT, SWDIO_OUT_PIN_Bit);
+-    SWDIO_OUT_PIN_PORT->BSRR = SWDIO_OUT_PIN;
+-
+-    pin_in_init(SWDIO_IN_PIN_PORT, SWDIO_IN_PIN_Bit, 1);
+-
+-    pin_out_od_init(nRESET_PIN_PORT, nRESET_PIN_Bit);
+-    nRESET_PIN_PORT->BSRR = nRESET_PIN;
+-
+-    pin_out_init(CONNECTED_LED_PORT, CONNECTED_LED_PIN_Bit);
+-    CONNECTED_LED_PORT->BSRR = CONNECTED_LED_PIN;
++    //ToDo(elee): Can it just call PORT_SWD_SETUP() instead?
+ }
+ 
+ /** Reset Target Device with custom specific I/O pin or command sequence.
+@@ -556,6 +496,4 @@
+ }
+ 
+ ///@}
+-
+-
+-#endif /* __DAP_CONFIG_H__ */
++#endif /* __DAP_CONFIG_H__ */
+\ No newline at end of file
+diff -uNr old/CM4/Core/Inc/DAP.h new/CM4/Core/Inc/DAP.h
+--- old/CM4/Core/Inc/DAP.h	2023-05-29 09:46:06.000000000 +0800
++++ new/CM4/Core/Inc/DAP.h	2023-12-27 14:21:19.308466152 +0800
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2013-2021 ARM Limited. All rights reserved.
++ * Copyright (c) 2013-2020 ARM Limited. All rights reserved.
+  * Copyright 2019, Cypress Semiconductor Corporation
+  * or a subsidiary of Cypress Semiconductor Corporation.
+  *
+@@ -19,8 +19,8 @@
+  *
+  * ----------------------------------------------------------------------
+  *
+- * $Date:        26. May 2021
+- * $Revision:    V2.1.0
++ * $Date:        26. November 2019
++ * $Revision:    V2.0.0
+  *
+  * Project:      CMSIS-DAP Include
+  * Title:        DAP.h Definitions
+@@ -33,9 +33,9 @@
+ 
+ // DAP Firmware Version
+ #ifdef  DAP_FW_V1
+-#define DAP_FW_VER                      "1.3.0"
++#define DAP_FW_VER                      "1.2.0"
+ #else
+-#define DAP_FW_VER                      "2.1.0"
++#define DAP_FW_VER                      "2.0.0"
+ #endif
+ 
+ // DAP Command IDs
+@@ -65,11 +65,6 @@
+ #define ID_DAP_SWO_Status               0x1BU
+ #define ID_DAP_SWO_ExtendedStatus       0x1EU
+ #define ID_DAP_SWO_Data                 0x1CU
+-#define ID_DAP_UART_Transport           0x1FU
+-#define ID_DAP_UART_Configure           0x20U
+-#define ID_DAP_UART_Control             0x22U
+-#define ID_DAP_UART_Status              0x23U
+-#define ID_DAP_UART_Transfer            0x21U
+ 
+ #define ID_DAP_QueueCommands            0x7EU
+ #define ID_DAP_ExecuteCommands          0x7FU
+@@ -123,16 +118,13 @@
+ #define DAP_ID_VENDOR                   1U
+ #define DAP_ID_PRODUCT                  2U
+ #define DAP_ID_SER_NUM                  3U
+-#define DAP_ID_DAP_FW_VER               4U
++#define DAP_ID_CMSIS_DAP_VER            4U
++#define DAP_ID_FW_VER                   4U      // Deprecated alias of DAP_ID_CMSIS_DAP_VER for backwards compatibility.
+ #define DAP_ID_DEVICE_VENDOR            5U
+ #define DAP_ID_DEVICE_NAME              6U
+-#define DAP_ID_BOARD_VENDOR             7U
+-#define DAP_ID_BOARD_NAME               8U
+-#define DAP_ID_PRODUCT_FW_VER           9U
++#define DAP_ID_PRODUCT_FW_VER           7U
+ #define DAP_ID_CAPABILITIES             0xF0U
+ #define DAP_ID_TIMESTAMP_CLOCK          0xF1U
+-#define DAP_ID_UART_RX_BUFFER_SIZE      0xFBU
+-#define DAP_ID_UART_TX_BUFFER_SIZE      0xFCU
+ #define DAP_ID_SWO_BUFFER_SIZE          0xFDU
+ #define DAP_ID_PACKET_COUNT             0xFEU
+ #define DAP_ID_PACKET_SIZE              0xFFU
+@@ -182,30 +174,6 @@
+ #define DAP_SWO_STREAM_ERROR            (1U<<6)
+ #define DAP_SWO_BUFFER_OVERRUN          (1U<<7)
+ 
+-// DAP UART Transport
+-#define DAP_UART_TRANSPORT_NONE         0U
+-#define DAP_UART_TRANSPORT_USB_COM_PORT 1U
+-#define DAP_UART_TRANSPORT_DAP_COMMAND  2U
+-
+-// DAP UART Control
+-#define DAP_UART_CONTROL_RX_ENABLE      (1U<<0)
+-#define DAP_UART_CONTROL_RX_DISABLE     (1U<<1)
+-#define DAP_UART_CONTROL_RX_BUF_FLUSH   (1U<<2)
+-#define DAP_UART_CONTROL_TX_ENABLE      (1U<<4)
+-#define DAP_UART_CONTROL_TX_DISABLE     (1U<<5)
+-#define DAP_UART_CONTROL_TX_BUF_FLUSH   (1U<<6)
+-
+-// DAP UART Status
+-#define DAP_UART_STATUS_RX_ENABLED      (1U<<0)
+-#define DAP_UART_STATUS_RX_DATA_LOST    (1U<<1)
+-#define DAP_UART_STATUS_FRAMING_ERROR   (1U<<2)
+-#define DAP_UART_STATUS_PARITY_ERROR    (1U<<3)
+-#define DAP_UART_STATUS_TX_ENABLED      (1U<<4)
+-
+-// DAP UART Configure Error
+-#define DAP_UART_CFG_ERROR_DATA_BITS    (1U<<0)
+-#define DAP_UART_CFG_ERROR_PARITY       (1U<<1)
+-#define DAP_UART_CFG_ERROR_STOP_BITS    (1U<<2)
+ 
+ // Debug Port Register Addresses
+ #define DP_IDCODE                       0x00U   // IDCODE Register (SW Read only)
+@@ -239,39 +207,40 @@
+ 
+ // DAP Data structure
+ typedef struct {
+-  uint8_t     debug_port;                       // Debug Port
+-  uint8_t     fast_clock;                       // Fast Clock Flag
+-  uint8_t     padding[2];
+-  uint32_t   clock_delay;                       // Clock Delay
+-  uint32_t nominal_clock;                       // Nominal requested clock frequency in Hertz.
+-  uint32_t     timestamp;                       // Last captured Timestamp
+-  struct {                                      // Transfer Configuration
+-    uint8_t   idle_cycles;                      // Idle cycles after transfer
+-    uint8_t    padding[3];
+-    uint16_t  retry_count;                      // Number of retries after WAIT response
+-    uint16_t  match_retry;                      // Number of retries if read value does not match
+-    uint32_t  match_mask;                       // Match Mask
+-  } transfer;
++    uint8_t     debug_port;                       // Debug Port
++    uint8_t     fast_clock;                       // Fast Clock Flag
++    uint32_t    clock_level;                      // clock_level
++    uint8_t     padding[2];
++    uint32_t   clock_delay;                       // Clock Delay
++    uint32_t nominal_clock;                       // Nominal requested clock frequency in Hertz.
++    uint32_t     timestamp;                       // Last captured Timestamp
++    struct {                                      // Transfer Configuration
++        uint8_t   idle_cycles;                      // Idle cycles after transfer
++        uint8_t    padding[3];
++        uint16_t  retry_count;                      // Number of retries after WAIT response
++        uint16_t  match_retry;                      // Number of retries if read value does not match
++        uint32_t  match_mask;                       // Match Mask
++    } transfer;
+ #if (DAP_SWD != 0)
+-  struct {                                      // SWD Configuration
+-    uint8_t    turnaround;                      // Turnaround period
+-    uint8_t    data_phase;                      // Always generate Data Phase
+-  } swd_conf;
++    struct {                                      // SWD Configuration
++        uint8_t    turnaround;                      // Turnaround period
++        uint8_t    data_phase;                      // Always generate Data Phase
++    } swd_conf;
+ #endif
+ #if (DAP_JTAG != 0)
+-  struct {                                      // JTAG Device Chain
+-    uint8_t   count;                            // Number of devices
+-    uint8_t   index;                            // Device index (device at TDO has index 0)
++    struct {                                      // JTAG Device Chain
++        uint8_t   count;                            // Number of devices
++        uint8_t   index;                            // Device index (device at TDO has index 0)
+ #if (DAP_JTAG_DEV_CNT != 0)
+-    uint8_t   ir_length[DAP_JTAG_DEV_CNT];      // IR Length in bits
+-    uint16_t  ir_before[DAP_JTAG_DEV_CNT];      // Bits before IR
+-    uint16_t  ir_after [DAP_JTAG_DEV_CNT];      // Bits after IR
++        uint8_t   ir_length[DAP_JTAG_DEV_CNT];      // IR Length in bits
++        uint16_t  ir_before[DAP_JTAG_DEV_CNT];      // Bits before IR
++        uint16_t  ir_after [DAP_JTAG_DEV_CNT];      // Bits after IR
+ #endif
+-  } jtag_dev;
++    } jtag_dev;
+ #endif
+ } DAP_Data_t;
+ 
+-extern          DAP_Data_t DAP_Data;            // DAP Data
++//extern          DAP_Data_t DAP_Data;            // DAP Data
+ extern volatile uint8_t    DAP_TransferAbort;   // Transfer Abort Flag
+ 
+ 
+@@ -304,25 +273,17 @@
+ extern void     SWO_AbortTransfer    (void);
+ extern void     SWO_TransferComplete (void);
+ 
+-extern uint32_t SWO_Mode_UART     (uint32_t enable);
+-extern uint32_t SWO_Baudrate_UART (uint32_t baudrate);
+-extern uint32_t SWO_Control_UART  (uint32_t active);
+-extern void     SWO_Capture_UART  (uint8_t *buf, uint32_t num);
+-extern uint32_t SWO_GetCount_UART (void);
+-
+-extern uint32_t SWO_Mode_Manchester     (uint32_t enable);
+-extern uint32_t SWO_Baudrate_Manchester (uint32_t baudrate);
+-extern uint32_t SWO_Control_Manchester  (uint32_t active);
+-extern void     SWO_Capture_Manchester  (uint8_t *buf, uint32_t num);
+-extern uint32_t SWO_GetCount_Manchester (void);
+-
+-extern uint32_t UART_Transport (const uint8_t *request, uint8_t *response);
+-extern uint32_t UART_Configure (const uint8_t *request, uint8_t *response);
+-extern uint32_t UART_Control   (const uint8_t *request, uint8_t *response);
+-extern uint32_t UART_Status                            (uint8_t *response);
+-extern uint32_t UART_Transfer  (const uint8_t *request, uint8_t *response);
+-
+-extern uint8_t  USB_COM_PORT_Activate (uint32_t cmd);
++extern uint32_t UART_SWO_Mode     (uint32_t enable);
++extern uint32_t UART_SWO_Baudrate (uint32_t baudrate);
++extern uint32_t UART_SWO_Control  (uint32_t active);
++extern void     UART_SWO_Capture  (uint8_t *buf, uint32_t num);
++extern uint32_t UART_SWO_GetCount (void);
++
++extern uint32_t Manchester_SWO_Mode     (uint32_t enable);
++extern uint32_t Manchester_SWO_Baudrate (uint32_t baudrate);
++extern uint32_t Manchester_SWO_Control  (uint32_t active);
++extern void     Manchester_SWO_Capture  (uint8_t *buf, uint32_t num);
++extern uint32_t Manchester_SWO_GetCount (void);
+ 
+ extern uint32_t DAP_ProcessVendorCommand (const uint8_t *request, uint8_t *response);
+ extern uint32_t DAP_ProcessCommand       (const uint8_t *request, uint8_t *response);
+@@ -371,5 +332,4 @@
+ }
+ #endif
+ 
+-
+-#endif  /* __DAP_H__ */
++#endif  /* __DAP_H__ */
+\ No newline at end of file
+diff -uNr old/CM4/Core/Src/JTAG_DP.c new/CM4/Core/Src/JTAG_DP.c
+--- old/CM4/Core/Src/JTAG_DP.c	2023-05-29 09:46:06.000000000 +0800
++++ new/CM4/Core/Src/JTAG_DP.c	2023-06-09 15:19:50.898107400 +0800
+@@ -27,7 +27,8 @@
+ 
+ #include "DAP_config.h"
+ #include "DAP.h"
+-
++#include "swd_jtag_config.h"
++#include "debug.h"
+ 
+ // JTAG Macros
+ 
+@@ -36,335 +37,551 @@
+ #define PIN_TMS_SET PIN_SWDIO_TMS_SET
+ #define PIN_TMS_CLR PIN_SWDIO_TMS_CLR
+ 
+-#define JTAG_CYCLE_TCK()                \
+-  PIN_TCK_CLR();                        \
+-  PIN_DELAY();                          \
+-  PIN_TCK_SET();                        \
+-  PIN_DELAY()
+-
+-#define JTAG_CYCLE_TDI(tdi)             \
+-  PIN_TDI_OUT(tdi);                     \
+-  PIN_TCK_CLR();                        \
+-  PIN_DELAY();                          \
+-  PIN_TCK_SET();                        \
+-  PIN_DELAY()
+-
+-#define JTAG_CYCLE_TDO(tdo)             \
+-  PIN_TCK_CLR();                        \
+-  PIN_DELAY();                          \
+-  tdo = PIN_TDO_IN();                   \
+-  PIN_TCK_SET();                        \
+-  PIN_DELAY()
+-
+-#define JTAG_CYCLE_TDIO(tdi,tdo)        \
+-  PIN_TDI_OUT(tdi);                     \
+-  PIN_TCK_CLR();                        \
+-  PIN_DELAY();                          \
+-  tdo = PIN_TDO_IN();                   \
+-  PIN_TCK_SET();                        \
+-  PIN_DELAY()
++inline static void JTAGDP_DELAY_LEVEL_0(void)
++{
++    return;
++}
++
++inline static void JTAGDP_DELAY_LEVEL_1(void)
++{
++    __NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_2(void)
++{
++    __NOP();__NOP();
++}
+ 
+-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
++inline static void JTAGDP_DELAY_LEVEL_3(void)
++{
++    __NOP();__NOP();__NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_4(void)
++{
++    __NOP();__NOP();
++    __NOP();__NOP();__NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_5(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();
++}
+ 
++inline static void JTAGDP_DELAY_LEVEL_6(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_7(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_8(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_9(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++}
++
++inline static void JTAGDP_DELAY_LEVEL_LOW(uint32_t delay)
++{
++    volatile uint32_t cnt = delay;
++    while(cnt) {
++        cnt--;
++    }
++}
++
++#define JTAG_CYCLE_TCK()                  \
++    PIN_TCK_CLR();                        \
++    __NOP();__NOP();__NOP();__NOP();      \
++    PIN_DELAY();                          \
++    PIN_TCK_SET();                        \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY()
++
++#define JTAG_CYCLE_TDI(tdi)               \
++    PIN_TDI_OUT(tdi);                     \
++    PIN_TCK_CLR();                        \
++    __NOP();__NOP();__NOP();__NOP();      \
++    PIN_DELAY();                          \
++    PIN_TCK_SET();                        \
++    __NOP(); __NOP();__NOP();             \
++    PIN_DELAY()
++
++#define JTAG_CYCLE_TDO(tdo)               \
++    PIN_TCK_CLR();                        \
++    __NOP();__NOP();__NOP();__NOP();      \
++    PIN_DELAY();                          \
++    tdo = PIN_TDO_IN();                   \
++    PIN_TCK_SET();                        \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY()
++
++#define JTAG_CYCLE_TDIO(tdi, tdo)         \
++    PIN_TDI_OUT(tdi);                     \
++    PIN_TCK_CLR();                        \
++    __NOP();__NOP();__NOP();__NOP();      \
++    __NOP(); __NOP();                     \
++    PIN_DELAY();                          \
++    tdo = PIN_TDO_IN();                   \
++    PIN_TCK_SET();                        \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY()
++
++#define PIN_DELAY() PIN_DELAY_SLOW(g_DAP_Data.clock_delay)
+ 
+ #if (DAP_JTAG != 0)
++/* Generate JTAG Sequence
++ *   info:   sequence information
++ *   tdi:    pointer to TDI generated data
++ *   tdo:    pointer to TDO captured data
++ *   return: none
++ */
++void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) 
++{
++    uint32_t i_val;
++    uint32_t o_val;
++    uint32_t bit;
++    uint32_t n, k;
++
++    n = info & JTAG_SEQUENCE_TCK;
++    if (n == 0U) {
++        n = 64U;
++    }
++
++    if (info & JTAG_SEQUENCE_TMS) {
++        PIN_TMS_SET();
++    } else {
++        PIN_TMS_CLR();
++    }
++
++    while (n) {
++        i_val = *tdi++;
++        o_val = 0U;
++        for (k = 8U; k && n; k--, n--) {
++            JTAG_CYCLE_TDIO(i_val, bit);
++            i_val >>= 1;
++            o_val >>= 1;
++            o_val  |= bit << 7;
++        }
++        o_val >>= k;
++        if (info & JTAG_SEQUENCE_TDO) {
++            *tdo++ = (uint8_t)o_val;
++        }
++    }
++}
++
++/* JTAG Set IR
++ *  ir: IR value
++ *  return: none
++ */
++#define JTAG_IR_Function(speed)                                                       \
++static void JTAG_IR_##speed (uint32_t ir)                                             \
++{                                                                                     \
++    uint32_t n;                                                                       \
++                                                                                      \
++    PIN_TMS_SET();                                                                    \
++    JTAG_CYCLE_TCK();                         /* Select-DR-Scan */                    \
++    JTAG_CYCLE_TCK();                         /* Select-IR-Scan */                    \
++    PIN_TMS_CLR();                                                                    \
++    JTAG_CYCLE_TCK();                         /* Capture-IR */                        \
++    JTAG_CYCLE_TCK();                         /* Shift-IR */                          \
++                                                                                      \
++    PIN_TDI_OUT(1U);                                                                  \
++    for (n = g_DAP_Data.jtag_dev.ir_before[g_DAP_Data.jtag_dev.index]; n; n--) {      \
++        JTAG_CYCLE_TCK();                     /* Bypass before data */                \
++    }                                                                                 \
++    for (n = g_DAP_Data.jtag_dev.ir_length[g_DAP_Data.jtag_dev.index] - 1U; n; n--) { \
++        JTAG_CYCLE_TDI(ir);                     /* Set IR bits (except last) */       \
++        ir >>= 1;                                                                     \
++    }                                                                                 \
++    n = g_DAP_Data.jtag_dev.ir_after[g_DAP_Data.jtag_dev.index];                      \
++    if (n) {                                                                          \
++        JTAG_CYCLE_TDI(ir);                     /* Set last IR bit */                 \
++        PIN_TDI_OUT(1U);                                                              \
++        for (--n; n; n--) {                                                           \
++            JTAG_CYCLE_TCK();                     /* Bypass after data */             \
++        }                                                                             \
++        PIN_TMS_SET();                                                                \
++        JTAG_CYCLE_TCK();                       /* Bypass & Exit1-IR */               \
++    } else {                                                                          \
++        PIN_TMS_SET();                                                                \
++        JTAG_CYCLE_TDI(ir);                     /* Set last IR bit & Exit1-IR */      \
++    }                                                                                 \
++                                                                                      \
++    JTAG_CYCLE_TCK();                         /* Update-IR */                         \
++    PIN_TMS_CLR();                                                                    \
++    JTAG_CYCLE_TCK();                         /* Idle */                              \
++    PIN_TDI_OUT(1U);                                                                  \
++}
++
++
++/* JTAG Transfer I/O
++ *   request: A[3:2] RnW APnDP
++ *   data:    DATA[31:0]
++ *   return:  ACK[2:0]
++ */
++#define JTAG_TransferFunction(speed)                                         \
++static uint8_t JTAG_Transfer##speed (uint32_t request, uint32_t *data)       \
++{                                                                            \
++    uint32_t ack;                                                            \
++    uint32_t bit;                                                            \
++    uint32_t val;                                                            \
++    uint32_t n;                                                              \
++                                                                             \
++    PIN_TMS_SET();                                                           \
++    JTAG_CYCLE_TCK();                         /* Select-DR-Scan */           \
++    PIN_TMS_CLR();                                                           \
++    JTAG_CYCLE_TCK();                         /* Capture-DR */               \
++    JTAG_CYCLE_TCK();                         /* Shift-DR */                 \
++                                                                             \
++    for (n = g_DAP_Data.jtag_dev.index; n; n--) {                            \
++        JTAG_CYCLE_TCK();                       /* Bypass before data */     \
++    }                                                                        \
++                                                                             \
++    JTAG_CYCLE_TDIO(request >> 1, bit);       /* Set RnW, Get ACK.0 */       \
++    ack  = bit << 1;                                                         \
++    JTAG_CYCLE_TDIO(request >> 2, bit);       /* Set A2,  Get ACK.1 */       \
++    ack |= bit << 0;                                                         \
++    JTAG_CYCLE_TDIO(request >> 3, bit);       /* Set A3,  Get ACK.2 */       \
++    ack |= bit << 2;                                                         \
++                                                                             \
++    if (ack != DAP_TRANSFER_OK) {                                            \
++        /* Exit on error */                                                  \
++        PIN_TMS_SET();                                                       \
++        JTAG_CYCLE_TCK();                       /* Exit1-DR */               \
++        goto exit;                                                           \
++    }                                                                        \
++                                                                             \
++    if (request & DAP_TRANSFER_RnW) {                                        \
++        /* Read Transfer */                                                  \
++        val = 0U;                                                            \
++        for (n = 31U; n; n--) {                                              \
++            JTAG_CYCLE_TDO(bit);                  /* Get D0..D30 */          \
++            val  |= bit << 31;                                               \
++            val >>= 1;                                                       \
++        }                                                                    \
++        n = g_DAP_Data.jtag_dev.count - g_DAP_Data.jtag_dev.index - 1U;      \
++        if (n) {                                                             \
++            JTAG_CYCLE_TDO(bit);                  /* Get D31 */              \
++            for (--n; n; n--) {                                              \
++                JTAG_CYCLE_TCK();                /* Bypass after data */     \
++            }                                                                \
++            PIN_TMS_SET();                                                   \
++            JTAG_CYCLE_TCK();                     /* Bypass & Exit1-DR */    \
++        } else {                                                             \
++            PIN_TMS_SET();                                                   \
++            JTAG_CYCLE_TDO(bit);                  /* Get D31 & Exit1-DR */   \
++        }                                                                    \
++        val |= bit << 31;                                                    \
++        if (data) {                                                          \
++            *data = val;                                                     \
++        }                                                                    \
++    } else {                                                                 \
++        /* Write Transfer */                                                 \
++        val = *data;                                                         \
++        for (n = 31U; n; n--) {                                              \
++            JTAG_CYCLE_TDI(val);                  /* Set D0..D30 */          \
++            val >>= 1;                                                       \
++        }                                                                    \
++        n = g_DAP_Data.jtag_dev.count - g_DAP_Data.jtag_dev.index - 1U;      \
++        if (n) {                                                             \
++            JTAG_CYCLE_TDI(val);                  /* Set D31 */              \
++            for (--n; n; n--) {                                              \
++                JTAG_CYCLE_TCK();                   /* Bypass after data */  \
++            }                                                                \
++            PIN_TMS_SET();                                                   \
++            JTAG_CYCLE_TCK();                     /* Bypass & Exit1-DR */    \
++        } else {                                                             \
++            PIN_TMS_SET();                                                   \
++            JTAG_CYCLE_TDI(val);                  /* Set D31 & Exit1-DR */   \
++        }                                                                    \
++    }                                                                        \
++                                                                             \
++exit:                                                                        \
++    JTAG_CYCLE_TCK();                         /* Update-DR */                \
++    PIN_TMS_CLR();                                                           \
++    JTAG_CYCLE_TCK();                         /* Idle */                     \
++    PIN_TDI_OUT(1U);                                                         \
++                                                                             \
++    /* Capture Timestamp */                                                  \
++    if (request & DAP_TRANSFER_TIMESTAMP) {                                  \
++        g_DAP_Data.timestamp = TIMESTAMP_GET();                              \
++    }                                                                        \
++                                                                             \
++    /* Idle cycles */                                                        \
++    n = g_DAP_Data.transfer.idle_cycles;                                     \
++    while (n--) {                                                            \
++        JTAG_CYCLE_TCK();                       /* Idle */                   \
++    }                                                                        \
++                                                                             \
++    return ((uint8_t)ack);                                                   \
++}
++
++#ifdef USE_HIGHT_LEVEL
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_0()
++JTAG_IR_Function(Level0)
++JTAG_TransferFunction(Level0)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_1()
++JTAG_IR_Function(Level1)
++JTAG_TransferFunction(Level1)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_2()
++JTAG_IR_Function(Level2)
++JTAG_TransferFunction(Level2)
+ 
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_3()
++JTAG_IR_Function(Level3)
++JTAG_TransferFunction(Level3)
++
++#endif /* #ifdef USE_HIGHT_LEVEL */
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_4()
++JTAG_IR_Function(Level4)
++JTAG_TransferFunction(Level4)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_5()
++JTAG_IR_Function(Level5)
++JTAG_TransferFunction(Level5)
+ 
+-// Generate JTAG Sequence
+-//   info:   sequence information
+-//   tdi:    pointer to TDI generated data
+-//   tdo:    pointer to TDO captured data
+-//   return: none
+-void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
+-  uint32_t i_val;
+-  uint32_t o_val;
+-  uint32_t bit;
+-  uint32_t n, k;
+-
+-  n = info & JTAG_SEQUENCE_TCK;
+-  if (n == 0U) {
+-    n = 64U;
+-  }
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_6()
++JTAG_IR_Function(Level6)
++JTAG_TransferFunction(Level6)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_7()
++JTAG_IR_Function(Level7)
++JTAG_TransferFunction(Level7)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_8()
++JTAG_IR_Function(Level8)
++JTAG_TransferFunction(Level8)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_9()
++JTAG_IR_Function(Level9)
++JTAG_TransferFunction(Level9)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() JTAGDP_DELAY_LEVEL_LOW(g_DAP_Data.clock_delay)
++JTAG_IR_Function(LevelLow)
++JTAG_TransferFunction(LevelLow)
++
++
++/* JTAG Read IDCODE register
++ *   return: value read
++ */
++uint32_t JTAG_ReadIDCode (void) 
++{
++    uint32_t bit;
++    uint32_t val;
++    uint32_t n;
+ 
+-  if (info & JTAG_SEQUENCE_TMS) {
+     PIN_TMS_SET();
+-  } else {
++    JTAG_CYCLE_TCK();                         /* Select-DR-Scan */
+     PIN_TMS_CLR();
+-  }
++    JTAG_CYCLE_TCK();                         /* Capture-DR */
++    JTAG_CYCLE_TCK();                         /* Shift-DR */
+ 
+-  while (n) {
+-    i_val = *tdi++;
+-    o_val = 0U;
+-    for (k = 8U; k && n; k--, n--) {
+-      JTAG_CYCLE_TDIO(i_val, bit);
+-      i_val >>= 1;
+-      o_val >>= 1;
+-      o_val  |= bit << 7;
+-    }
+-    o_val >>= k;
+-    if (info & JTAG_SEQUENCE_TDO) {
+-      *tdo++ = (uint8_t)o_val;
+-    }
+-  }
+-}
+-
+-
+-// JTAG Set IR
+-//   ir:     IR value
+-//   return: none
+-#define JTAG_IR_Function(speed) /**/                                            \
+-static void JTAG_IR_##speed (uint32_t ir) {                                     \
+-  uint32_t n;                                                                   \
+-                                                                                \
+-  PIN_TMS_SET();                                                                \
+-  JTAG_CYCLE_TCK();                         /* Select-DR-Scan */                \
+-  JTAG_CYCLE_TCK();                         /* Select-IR-Scan */                \
+-  PIN_TMS_CLR();                                                                \
+-  JTAG_CYCLE_TCK();                         /* Capture-IR */                    \
+-  JTAG_CYCLE_TCK();                         /* Shift-IR */                      \
+-                                                                                \
+-  PIN_TDI_OUT(1U);                                                              \
+-  for (n = DAP_Data.jtag_dev.ir_before[DAP_Data.jtag_dev.index]; n; n--) {      \
+-    JTAG_CYCLE_TCK();                       /* Bypass before data */            \
+-  }                                                                             \
+-  for (n = DAP_Data.jtag_dev.ir_length[DAP_Data.jtag_dev.index] - 1U; n; n--) { \
+-    JTAG_CYCLE_TDI(ir);                     /* Set IR bits (except last) */     \
+-    ir >>= 1;                                                                   \
+-  }                                                                             \
+-  n = DAP_Data.jtag_dev.ir_after[DAP_Data.jtag_dev.index];                      \
+-  if (n) {                                                                      \
+-    JTAG_CYCLE_TDI(ir);                     /* Set last IR bit */               \
+-    PIN_TDI_OUT(1U);                                                            \
+-    for (--n; n; n--) {                                                         \
+-      JTAG_CYCLE_TCK();                     /* Bypass after data */             \
+-    }                                                                           \
+-    PIN_TMS_SET();                                                              \
+-    JTAG_CYCLE_TCK();                       /* Bypass & Exit1-IR */             \
+-  } else {                                                                      \
+-    PIN_TMS_SET();                                                              \
+-    JTAG_CYCLE_TDI(ir);                     /* Set last IR bit & Exit1-IR */    \
+-  }                                                                             \
+-                                                                                \
+-  JTAG_CYCLE_TCK();                         /* Update-IR */                     \
+-  PIN_TMS_CLR();                                                                \
+-  JTAG_CYCLE_TCK();                         /* Idle */                          \
+-  PIN_TDI_OUT(1U);                                                              \
+-}
+-
+-
+-// JTAG Transfer I/O
+-//   request: A[3:2] RnW APnDP
+-//   data:    DATA[31:0]
+-//   return:  ACK[2:0]
+-#define JTAG_TransferFunction(speed)        /**/                                \
+-static uint8_t JTAG_Transfer##speed (uint32_t request, uint32_t *data) {        \
+-  uint32_t ack;                                                                 \
+-  uint32_t bit;                                                                 \
+-  uint32_t val;                                                                 \
+-  uint32_t n;                                                                   \
+-                                                                                \
+-  PIN_TMS_SET();                                                                \
+-  JTAG_CYCLE_TCK();                         /* Select-DR-Scan */                \
+-  PIN_TMS_CLR();                                                                \
+-  JTAG_CYCLE_TCK();                         /* Capture-DR */                    \
+-  JTAG_CYCLE_TCK();                         /* Shift-DR */                      \
+-                                                                                \
+-  for (n = DAP_Data.jtag_dev.index; n; n--) {                                   \
+-    JTAG_CYCLE_TCK();                       /* Bypass before data */            \
+-  }                                                                             \
+-                                                                                \
+-  JTAG_CYCLE_TDIO(request >> 1, bit);       /* Set RnW, Get ACK.0 */            \
+-  ack  = bit << 1;                                                              \
+-  JTAG_CYCLE_TDIO(request >> 2, bit);       /* Set A2,  Get ACK.1 */            \
+-  ack |= bit << 0;                                                              \
+-  JTAG_CYCLE_TDIO(request >> 3, bit);       /* Set A3,  Get ACK.2 */            \
+-  ack |= bit << 2;                                                              \
+-                                                                                \
+-  if (ack != DAP_TRANSFER_OK) {                                                 \
+-    /* Exit on error */                                                         \
+-    PIN_TMS_SET();                                                              \
+-    JTAG_CYCLE_TCK();                       /* Exit1-DR */                      \
+-    goto exit;                                                                  \
+-  }                                                                             \
+-                                                                                \
+-  if (request & DAP_TRANSFER_RnW) {                                             \
+-    /* Read Transfer */                                                         \
+-    val = 0U;                                                                   \
+-    for (n = 31U; n; n--) {                                                     \
+-      JTAG_CYCLE_TDO(bit);                  /* Get D0..D30 */                   \
+-      val  |= bit << 31;                                                        \
+-      val >>= 1;                                                                \
+-    }                                                                           \
+-    n = DAP_Data.jtag_dev.count - DAP_Data.jtag_dev.index - 1U;                 \
+-    if (n) {                                                                    \
+-      JTAG_CYCLE_TDO(bit);                  /* Get D31 */                       \
+-      for (--n; n; n--) {                                                       \
+-        JTAG_CYCLE_TCK();                   /* Bypass after data */             \
+-      }                                                                         \
+-      PIN_TMS_SET();                                                            \
+-      JTAG_CYCLE_TCK();                     /* Bypass & Exit1-DR */             \
+-    } else {                                                                    \
+-      PIN_TMS_SET();                                                            \
+-      JTAG_CYCLE_TDO(bit);                  /* Get D31 & Exit1-DR */            \
+-    }                                                                           \
+-    val |= bit << 31;                                                           \
+-    if (data) { *data = val; }                                                  \
+-  } else {                                                                      \
+-    /* Write Transfer */                                                        \
+-    val = *data;                                                                \
+-    for (n = 31U; n; n--) {                                                     \
+-      JTAG_CYCLE_TDI(val);                  /* Set D0..D30 */                   \
+-      val >>= 1;                                                                \
+-    }                                                                           \
+-    n = DAP_Data.jtag_dev.count - DAP_Data.jtag_dev.index - 1U;                 \
+-    if (n) {                                                                    \
+-      JTAG_CYCLE_TDI(val);                  /* Set D31 */                       \
+-      for (--n; n; n--) {                                                       \
+-        JTAG_CYCLE_TCK();                   /* Bypass after data */             \
+-      }                                                                         \
+-      PIN_TMS_SET();                                                            \
+-      JTAG_CYCLE_TCK();                     /* Bypass & Exit1-DR */             \
+-    } else {                                                                    \
+-      PIN_TMS_SET();                                                            \
+-      JTAG_CYCLE_TDI(val);                  /* Set D31 & Exit1-DR */            \
+-    }                                                                           \
+-  }                                                                             \
+-                                                                                \
+-exit:                                                                           \
+-  JTAG_CYCLE_TCK();                         /* Update-DR */                     \
+-  PIN_TMS_CLR();                                                                \
+-  JTAG_CYCLE_TCK();                         /* Idle */                          \
+-  PIN_TDI_OUT(1U);                                                              \
+-                                                                                \
+-  /* Capture Timestamp */                                                       \
+-  if (request & DAP_TRANSFER_TIMESTAMP) {                                       \
+-    DAP_Data.timestamp = TIMESTAMP_GET();                                       \
+-  }                                                                             \
+-                                                                                \
+-  /* Idle cycles */                                                             \
+-  n = DAP_Data.transfer.idle_cycles;                                            \
+-  while (n--) {                                                                 \
+-    JTAG_CYCLE_TCK();                       /* Idle */                          \
+-  }                                                                             \
+-                                                                                \
+-  return ((uint8_t)ack);                                                        \
+-}
+-
+-
+-#undef  PIN_DELAY
+-#define PIN_DELAY() PIN_DELAY_FAST()
+-JTAG_IR_Function(Fast)
+-JTAG_TransferFunction(Fast)
+-
+-#undef  PIN_DELAY
+-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
+-JTAG_IR_Function(Slow)
+-JTAG_TransferFunction(Slow)
+-
+-
+-// JTAG Read IDCODE register
+-//   return: value read
+-uint32_t JTAG_ReadIDCode (void) {
+-  uint32_t bit;
+-  uint32_t val;
+-  uint32_t n;
+-
+-  PIN_TMS_SET();
+-  JTAG_CYCLE_TCK();                         /* Select-DR-Scan */
+-  PIN_TMS_CLR();
+-  JTAG_CYCLE_TCK();                         /* Capture-DR */
+-  JTAG_CYCLE_TCK();                         /* Shift-DR */
+-
+-  for (n = DAP_Data.jtag_dev.index; n; n--) {
+-    JTAG_CYCLE_TCK();                       /* Bypass before data */
+-  }
+-
+-  val = 0U;
+-  for (n = 31U; n; n--) {
+-    JTAG_CYCLE_TDO(bit);                    /* Get D0..D30 */
+-    val  |= bit << 31;
+-    val >>= 1;
+-  }
+-  PIN_TMS_SET();
+-  JTAG_CYCLE_TDO(bit);                      /* Get D31 & Exit1-DR */
+-  val |= bit << 31;
+-
+-  JTAG_CYCLE_TCK();                         /* Update-DR */
+-  PIN_TMS_CLR();
+-  JTAG_CYCLE_TCK();                         /* Idle */
+-
+-  return (val);
+-}
+-
+-
+-// JTAG Write ABORT register
+-//   data:   value to write
+-//   return: none
+-void JTAG_WriteAbort (uint32_t data) {
+-  uint32_t n;
+-
+-  PIN_TMS_SET();
+-  JTAG_CYCLE_TCK();                         /* Select-DR-Scan */
+-  PIN_TMS_CLR();
+-  JTAG_CYCLE_TCK();                         /* Capture-DR */
+-  JTAG_CYCLE_TCK();                         /* Shift-DR */
+-
+-  for (n = DAP_Data.jtag_dev.index; n; n--) {
+-    JTAG_CYCLE_TCK();                       /* Bypass before data */
+-  }
+-
+-  PIN_TDI_OUT(0U);
+-  JTAG_CYCLE_TCK();                         /* Set RnW=0 (Write) */
+-  JTAG_CYCLE_TCK();                         /* Set A2=0 */
+-  JTAG_CYCLE_TCK();                         /* Set A3=0 */
+-
+-  for (n = 31U; n; n--) {
+-    JTAG_CYCLE_TDI(data);                   /* Set D0..D30 */
+-    data >>= 1;
+-  }
+-  n = DAP_Data.jtag_dev.count - DAP_Data.jtag_dev.index - 1U;
+-  if (n) {
+-    JTAG_CYCLE_TDI(data);                   /* Set D31 */
+-    for (--n; n; n--) {
+-      JTAG_CYCLE_TCK();                     /* Bypass after data */
++    for (n = g_DAP_Data.jtag_dev.index; n; n--) {
++        JTAG_CYCLE_TCK();                       /* Bypass before data */
++    }
++
++    val = 0U;
++    for (n = 31U; n; n--) {
++        JTAG_CYCLE_TDO(bit);                    /* Get D0..D30 */
++        val  |= bit << 31;
++        val >>= 1;
+     }
+     PIN_TMS_SET();
+-    JTAG_CYCLE_TCK();                       /* Bypass & Exit1-DR */
+-  } else {
+-    PIN_TMS_SET();
+-    JTAG_CYCLE_TDI(data);                   /* Set D31 & Exit1-DR */
+-  }
++    JTAG_CYCLE_TDO(bit);                      /* Get D31 & Exit1-DR */
++    val |= bit << 31;
+ 
+-  JTAG_CYCLE_TCK();                         /* Update-DR */
+-  PIN_TMS_CLR();
+-  JTAG_CYCLE_TCK();                         /* Idle */
+-  PIN_TDI_OUT(1U);
++    JTAG_CYCLE_TCK();                         /* Update-DR */
++    PIN_TMS_CLR();
++    JTAG_CYCLE_TCK();                         /* Idle */
++
++    return (val);
+ }
+ 
+ 
+-// JTAG Set IR
+-//   ir:     IR value
+-//   return: none
+-void JTAG_IR (uint32_t ir) {
+-  if (DAP_Data.fast_clock) {
+-    JTAG_IR_Fast(ir);
+-  } else {
+-    JTAG_IR_Slow(ir);
+-  }
+-}
++/* JTAG Write ABORT register
++ *   data:   value to write
++ *   return: none
++ */
++void JTAG_WriteAbort (uint32_t data) 
++{
++    uint32_t n;
++
++    PIN_TMS_SET();
++    JTAG_CYCLE_TCK();                         /* Select-DR-Scan */
++    PIN_TMS_CLR();
++    JTAG_CYCLE_TCK();                         /* Capture-DR */
++    JTAG_CYCLE_TCK();                         /* Shift-DR */
++
++    for (n = g_DAP_Data.jtag_dev.index; n; n--) {
++        JTAG_CYCLE_TCK();                       /* Bypass before data */
++    }
++
++    PIN_TDI_OUT(0U);
++    JTAG_CYCLE_TCK();                         /* Set RnW=0 (Write) */
++    JTAG_CYCLE_TCK();                         /* Set A2=0 */
++    JTAG_CYCLE_TCK();                         /* Set A3=0 */
++
++    for (n = 31U; n; n--) {
++        JTAG_CYCLE_TDI(data);                   /* Set D0..D30 */
++        data >>= 1;
++    }
++    n = g_DAP_Data.jtag_dev.count - g_DAP_Data.jtag_dev.index - 1U;
++    if (n) {
++        JTAG_CYCLE_TDI(data);                   /* Set D31 */
++        for (--n; n; n--) {
++            JTAG_CYCLE_TCK();                     /* Bypass after data */
++        }
++        PIN_TMS_SET();
++        JTAG_CYCLE_TCK();                       /* Bypass & Exit1-DR */
++    } else {
++        PIN_TMS_SET();
++        JTAG_CYCLE_TDI(data);                   /* Set D31 & Exit1-DR */
++    }
+ 
++    JTAG_CYCLE_TCK();                         /* Update-DR */
++    PIN_TMS_CLR();
++    JTAG_CYCLE_TCK();                         /* Idle */
++    PIN_TDI_OUT(1U);
++}
+ 
+-// JTAG Transfer I/O
+-//   request: A[3:2] RnW APnDP
+-//   data:    DATA[31:0]
+-//   return:  ACK[2:0]
+-uint8_t  JTAG_Transfer(uint32_t request, uint32_t *data) {
+-  if (DAP_Data.fast_clock) {
+-    return JTAG_TransferFast(request, data);
+-  } else {
+-    return JTAG_TransferSlow(request, data);
+-  }
++uint8_t  JTAG_RESET (void)
++{
++    PIN_TMS_SET();
++    for (int i = 0; i < 5; i++) {
++        JTAG_CYCLE_TCK();
++    }
++    PIN_TMS_CLR();
++    JTAG_CYCLE_TCK();
++    PIN_TDI_OUT(1U);
++    return 0;
+ }
+ 
+ 
+-#endif  /* (DAP_JTAG != 0) */
++/* JTAG Set IR
++ *   ir:     IR value
++ *   return: none
++ */
++void JTAG_IR (uint32_t ir) 
++{
++    switch (g_DAP_Data.clock_level) {
++        case SWD_JTAG_CLOCK_LEVEL_0:
++            JTAG_IR_Level4(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_1:
++            JTAG_IR_Level4(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_2:
++            JTAG_IR_Level4(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_3:
++            JTAG_IR_Level4(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_4:
++            JTAG_IR_Level4(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_5:
++            JTAG_IR_Level5(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_6:
++            JTAG_IR_Level6(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_7:
++            JTAG_IR_Level7(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_8:
++            JTAG_IR_Level8(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_9:
++            JTAG_IR_Level9(ir);
++            break;
++        case SWD_JTAG_CLOCK_LEVEL_LOW:
++            JTAG_IR_LevelLow(ir);
++            break;
++        default:
++            JTAG_IR_Level5(ir);
++            break;
++    }
++}
++
++/* JTAG Transfer I/O
++ *  request: A[3:2] RnW APnDP
++ *  data:    DATA[31:0]
++ *  return:  ACK[2:0]
++ */
++uint8_t JTAG_Transfer(uint32_t request, uint32_t *data) 
++{
++    switch (g_DAP_Data.clock_level) {
++        case SWD_JTAG_CLOCK_LEVEL_0:
++            return JTAG_TransferLevel4(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_1:
++            return JTAG_TransferLevel4(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_2:
++            return JTAG_TransferLevel4(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_3:
++            return JTAG_TransferLevel4(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_4:
++            return JTAG_TransferLevel4(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_5:
++            return JTAG_TransferLevel5(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_6:
++            return JTAG_TransferLevel6(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_7:
++            return JTAG_TransferLevel7(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_8:
++            return JTAG_TransferLevel8(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_9:
++            return JTAG_TransferLevel9(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_LOW:
++            return JTAG_TransferLevelLow(request, data);
++        default:
++            return JTAG_TransferLevel5(request, data);
++    }
++}
++#endif  /* (DAP_JTAG != 0) */
+\ No newline at end of file
+diff -uNr old/CM4/Core/Src/SW_DP.c new/CM4/Core/Src/SW_DP.c
+--- old/CM4/Core/Src/SW_DP.c	2023-05-29 09:46:06.000000000 +0800
++++ new/CM4/Core/Src/SW_DP.c	2023-06-09 15:20:04.769021500 +0800
+@@ -27,6 +27,8 @@
+ 
+ #include "DAP_config.h"
+ #include "DAP.h"
++#include "debug.h"
++#include "swd_jtag_config.h"
+ 
+ #if defined(__CC_ARM)
+ #pragma push
+@@ -38,264 +40,412 @@
+ #endif
+ 
+ // SW Macros
+-
+ #define PIN_SWCLK_SET PIN_SWCLK_TCK_SET
+ #define PIN_SWCLK_CLR PIN_SWCLK_TCK_CLR
+ 
+-#define SW_CLOCK_CYCLE()                \
+-  PIN_SWCLK_CLR();                      \
+-  PIN_DELAY();                          \
+-  PIN_SWCLK_SET();                      \
+-  PIN_DELAY()
+-
+-#define SW_WRITE_BIT(bit)               \
+-  PIN_SWDIO_OUT(bit);                   \
+-  PIN_SWCLK_CLR();                      \
+-  PIN_DELAY();                          \
+-  PIN_SWCLK_SET();                      \
+-  PIN_DELAY()
+-
+-#define SW_READ_BIT(bit)                \
+-  PIN_SWCLK_CLR();                      \
+-  PIN_DELAY();                          \
+-  bit = PIN_SWDIO_IN();                 \
+-  PIN_SWCLK_SET();                      \
+-  PIN_DELAY()
++inline static void SWDP_DELAY_LEVEL_0(void)
++{
++}
++
++inline static void SWDP_DELAY_LEVEL_1(void)
++{
++    __NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_2(void)
++{
++    __NOP();__NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_3(void)
++{
++    __NOP();__NOP();__NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_4(void)
++{
++    __NOP();__NOP();
++    __NOP();__NOP();__NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_5(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_6(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_7(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_8(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_9(void)
++{
++    __NOP();__NOP(); __NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++    __NOP();__NOP();__NOP();
++}
++
++inline static void SWDP_DELAY_LEVEL_LOW(uint32_t delay)
++{
++    volatile uint32_t cnt = delay;
++    while(cnt) {
++        cnt--;
++   }
++}
+ 
+-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
++#define SW_CLOCK_CYCLE()                  \
++    PIN_SWCLK_CLR();                      \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY();                          \
++    PIN_SWCLK_SET();                      \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY()
++
++#define SW_WRITE_BIT(bit)                 \
++    PIN_SWDIO_OUT(bit);                   \
++    PIN_SWCLK_CLR();                      \
++    __NOP();__NOP();                      \
++    PIN_DELAY();                          \
++    PIN_SWCLK_SET();                      \
++    __NOP(); __NOP();                     \
++    PIN_DELAY()
++
++#define SW_READ_BIT(bit)                  \
++    PIN_SWCLK_CLR();                      \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY();                         \
++    bit = PIN_SWDIO_IN();                 \
++    PIN_SWCLK_SET();                      \
++    __NOP();__NOP();__NOP();              \
++    PIN_DELAY()
+ 
++#define PIN_DELAY() SWDP_DELAY_LEVEL_9()
+ 
+ // Generate SWJ Sequence
+ //   count:  sequence bit count
+ //   data:   pointer to sequence bit data
+ //   return: none
+ #if ((DAP_SWD != 0) || (DAP_JTAG != 0))
+-__WEAK void SWJ_Sequence (uint32_t count, const uint8_t *data) {
+-  uint32_t val;
+-  uint32_t n;
+-
+-  val = 0U;
+-  n = 0U;
+-  while (count--) {
+-    if (n == 0U) {
+-      val = *data++;
+-      n = 8U;
+-    }
+-    if (val & 1U) {
+-      PIN_SWDIO_TMS_SET();
+-    } else {
+-      PIN_SWDIO_TMS_CLR();
++__WEAK void SWJ_Sequence (uint32_t count, const uint8_t *data) 
++{
++    uint32_t val;
++    uint32_t n;
++
++    val = 0U;
++    n = 0U;
++    while (count--) {
++        if (n == 0U) {
++            val = *data++;
++            n = 8U;
++        }
++        if (val & 1U) {
++            PIN_SWDIO_TMS_SET();
++        } else {
++            PIN_SWDIO_TMS_CLR();
++        }
++        SW_CLOCK_CYCLE();
++        val >>= 1;
++        n--;
+     }
+-    SW_CLOCK_CYCLE();
+-    val >>= 1;
+-    n--;
+-  }
+ }
+ #endif
+ 
+-
+ // Generate SWD Sequence
+ //   info:   sequence information
+ //   swdo:   pointer to SWDIO generated data
+ //   swdi:   pointer to SWDIO captured data
+ //   return: none
+ #if (DAP_SWD != 0)
+-__WEAK void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
+-  uint32_t val;
+-  uint32_t bit;
+-  uint32_t n, k;
+-
+-  n = info & SWD_SEQUENCE_CLK;
+-  if (n == 0U) {
+-    n = 64U;
+-  }
+-
+-  if (info & SWD_SEQUENCE_DIN) {
+-    while (n) {
+-      val = 0U;
+-      for (k = 8U; k && n; k--, n--) {
+-        SW_READ_BIT(bit);
+-        val >>= 1;
+-        val  |= bit << 7;
+-      }
+-      val >>= k;
+-      *swdi++ = (uint8_t)val;
++__WEAK void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi) 
++{
++    uint32_t val;
++    uint32_t bit;
++    uint32_t n, k;
++
++    n = info & SWD_SEQUENCE_CLK;
++    if (n == 0U) {
++        n = 64U;
+     }
+-  } else {
+-    while (n) {
+-      val = *swdo++;
+-      for (k = 8U; k && n; k--, n--) {
+-        SW_WRITE_BIT(val);
+-        val >>= 1;
+-      }
++
++    if (info & SWD_SEQUENCE_DIN) {
++        while (n) {
++            val = 0U;
++            for (k = 8U; k && n; k--, n--) {
++                SW_READ_BIT(bit);
++                val >>= 1;
++                val  |= bit << 7;
++            }
++            val >>= k;
++            *swdi++ = (uint8_t)val;
++        }
++    } else {
++        while (n) {
++            val = *swdo++;
++            for (k = 8U; k && n; k--, n--) {
++                SW_WRITE_BIT(val);
++                val >>= 1;
++            }
++        }
+     }
+-  }
+ }
+ #endif
+ 
+-
+ #if (DAP_SWD != 0)
+ 
+-
+ // SWD Transfer I/O
+ //   request: A[3:2] RnW APnDP
+ //   data:    DATA[31:0]
+ //   return:  ACK[2:0]
+-#define SWD_TransferFunction(speed)     /**/                                    \
+-static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {         \
+-  uint32_t ack;                                                                 \
+-  uint32_t bit;                                                                 \
+-  uint32_t val;                                                                 \
+-  uint32_t parity;                                                              \
+-                                                                                \
+-  uint32_t n;                                                                   \
+-                                                                                \
+-  /* Packet Request */                                                          \
+-  parity = 0U;                                                                  \
+-  SW_WRITE_BIT(1U);                     /* Start Bit */                         \
+-  bit = request >> 0;                                                           \
+-  SW_WRITE_BIT(bit);                    /* APnDP Bit */                         \
+-  parity += bit;                                                                \
+-  bit = request >> 1;                                                           \
+-  SW_WRITE_BIT(bit);                    /* RnW Bit */                           \
+-  parity += bit;                                                                \
+-  bit = request >> 2;                                                           \
+-  SW_WRITE_BIT(bit);                    /* A2 Bit */                            \
+-  parity += bit;                                                                \
+-  bit = request >> 3;                                                           \
+-  SW_WRITE_BIT(bit);                    /* A3 Bit */                            \
+-  parity += bit;                                                                \
+-  SW_WRITE_BIT(parity);                 /* Parity Bit */                        \
+-  SW_WRITE_BIT(0U);                     /* Stop Bit */                          \
+-  SW_WRITE_BIT(1U);                     /* Park Bit */                          \
+-                                                                                \
+-  /* Turnaround */                                                              \
+-  PIN_SWDIO_OUT_DISABLE();                                                      \
+-  for (n = DAP_Data.swd_conf.turnaround; n; n--) {                              \
+-    SW_CLOCK_CYCLE();                                                           \
+-  }                                                                             \
+-                                                                                \
+-  /* Acknowledge response */                                                    \
+-  SW_READ_BIT(bit);                                                             \
+-  ack  = bit << 0;                                                              \
+-  SW_READ_BIT(bit);                                                             \
+-  ack |= bit << 1;                                                              \
+-  SW_READ_BIT(bit);                                                             \
+-  ack |= bit << 2;                                                              \
+-                                                                                \
+-  if (ack == DAP_TRANSFER_OK) {         /* OK response */                       \
+-    /* Data transfer */                                                         \
+-    if (request & DAP_TRANSFER_RnW) {                                           \
+-      /* Read data */                                                           \
+-      val = 0U;                                                                 \
+-      parity = 0U;                                                              \
+-      for (n = 32U; n; n--) {                                                   \
+-        SW_READ_BIT(bit);               /* Read RDATA[0:31] */                  \
+-        parity += bit;                                                          \
+-        val >>= 1;                                                              \
+-        val  |= bit << 31;                                                      \
+-      }                                                                         \
+-      SW_READ_BIT(bit);                 /* Read Parity */                       \
+-      if ((parity ^ bit) & 1U) {                                                \
+-        ack = DAP_TRANSFER_ERROR;                                               \
+-      }                                                                         \
+-      if (data) { *data = val; }                                                \
+-      /* Turnaround */                                                          \
+-      for (n = DAP_Data.swd_conf.turnaround; n; n--) {                          \
+-        SW_CLOCK_CYCLE();                                                       \
+-      }                                                                         \
+-      PIN_SWDIO_OUT_ENABLE();                                                   \
+-    } else {                                                                    \
+-      /* Turnaround */                                                          \
+-      for (n = DAP_Data.swd_conf.turnaround; n; n--) {                          \
+-        SW_CLOCK_CYCLE();                                                       \
+-      }                                                                         \
+-      PIN_SWDIO_OUT_ENABLE();                                                   \
+-      /* Write data */                                                          \
+-      val = *data;                                                              \
+-      parity = 0U;                                                              \
+-      for (n = 32U; n; n--) {                                                   \
+-        SW_WRITE_BIT(val);              /* Write WDATA[0:31] */                 \
+-        parity += val;                                                          \
+-        val >>= 1;                                                              \
+-      }                                                                         \
+-      SW_WRITE_BIT(parity);             /* Write Parity Bit */                  \
+-    }                                                                           \
+-    /* Capture Timestamp */                                                     \
+-    if (request & DAP_TRANSFER_TIMESTAMP) {                                     \
+-      DAP_Data.timestamp = TIMESTAMP_GET();                                     \
+-    }                                                                           \
+-    /* Idle cycles */                                                           \
+-    n = DAP_Data.transfer.idle_cycles;                                          \
+-    if (n) {                                                                    \
+-      PIN_SWDIO_OUT(0U);                                                        \
+-      for (; n; n--) {                                                          \
+-        SW_CLOCK_CYCLE();                                                       \
+-      }                                                                         \
+-    }                                                                           \
+-    PIN_SWDIO_OUT(1U);                                                          \
+-    return ((uint8_t)ack);                                                      \
+-  }                                                                             \
+-                                                                                \
+-  if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {              \
+-    /* WAIT or FAULT response */                                                \
+-    if (DAP_Data.swd_conf.data_phase && ((request & DAP_TRANSFER_RnW) != 0U)) { \
+-      for (n = 32U+1U; n; n--) {                                                \
+-        SW_CLOCK_CYCLE();               /* Dummy Read RDATA[0:31] + Parity */   \
+-      }                                                                         \
+-    }                                                                           \
+-    /* Turnaround */                                                            \
+-    for (n = DAP_Data.swd_conf.turnaround; n; n--) {                            \
+-      SW_CLOCK_CYCLE();                                                         \
+-    }                                                                           \
+-    PIN_SWDIO_OUT_ENABLE();                                                     \
+-    if (DAP_Data.swd_conf.data_phase && ((request & DAP_TRANSFER_RnW) == 0U)) { \
+-      PIN_SWDIO_OUT(0U);                                                        \
+-      for (n = 32U+1U; n; n--) {                                                \
+-        SW_CLOCK_CYCLE();               /* Dummy Write WDATA[0:31] + Parity */  \
+-      }                                                                         \
+-    }                                                                           \
+-    PIN_SWDIO_OUT(1U);                                                          \
+-    return ((uint8_t)ack);                                                      \
+-  }                                                                             \
+-                                                                                \
+-  /* Protocol error */                                                          \
+-  for (n = DAP_Data.swd_conf.turnaround + 32U + 1U; n; n--) {                   \
+-    SW_CLOCK_CYCLE();                   /* Back off data phase */               \
+-  }                                                                             \
+-  PIN_SWDIO_OUT_ENABLE();                                                       \
+-  PIN_SWDIO_OUT(1U);                                                            \
+-  return ((uint8_t)ack);                                                        \
++#define SWD_TransferFunction(speed)                                                    \
++static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data)                  \
++{                                                                                      \
++    uint32_t ack;                                                                      \
++    uint32_t bit;                                                                      \
++    uint32_t val;                                                                      \
++    uint32_t parity;                                                                   \
++                                                                                       \
++    uint32_t n;                                                                        \
++    PIN_SWDIO_OUT_ENABLE();                                                            \
++                                                                                       \
++    /* Packet Request */                                                               \
++    parity = 0U;                                                                       \
++    SW_WRITE_BIT(1U);                     /* Start Bit */                              \
++    bit = request >> 0;                                                                \
++    SW_WRITE_BIT(bit);                    /* APnDP Bit */                              \
++    parity += bit;                                                                     \
++    bit = request >> 1;                                                                \
++    SW_WRITE_BIT(bit);                    /* RnW Bit */                                \
++    parity += bit;                                                                     \
++    bit = request >> 2;                                                                \
++    SW_WRITE_BIT(bit);                    /* A2 Bit */                                 \
++    parity += bit;                                                                     \
++    bit = request >> 3;                                                                \
++    SW_WRITE_BIT(bit);                    /* A3 Bit */                                 \
++    parity += bit;                                                                     \
++    SW_WRITE_BIT(parity);                 /* Parity Bit */                             \
++    __NOP();__NOP();                                                                   \
++    SW_WRITE_BIT(0U);                     /* Stop Bit */                               \
++    __NOP();__NOP();                                                                   \
++    SW_WRITE_BIT(1U);                     /* Park Bit */                               \
++   __NOP();__NOP();                                                                    \
++                                                                                       \
++    PIN_SWDIO_OUT_DISABLE();                                                           \
++    /* Turnaround */                                                                   \
++    for (n = g_DAP_Data.swd_conf.turnaround; n; n--) {                                 \
++        SW_CLOCK_CYCLE();                                                              \
++    }                                                                                  \
++                                                                                       \
++    /* Acknowledge response */                                                         \
++    SW_READ_BIT(bit);                                                                  \
++    __NOP();                                                                           \
++    ack  = bit << 0;                                                                   \
++    SW_READ_BIT(bit);                                                                  \
++    ack |= bit << 1;                                                                   \
++    SW_READ_BIT(bit);                                                                  \
++    ack |= bit << 2;                                                                   \
++    if (ack == DAP_TRANSFER_OK) {         /* OK response */                            \
++        /* Data transfer */                                                            \
++        if (request & DAP_TRANSFER_RnW) {                                              \
++            /* Read data */                                                            \
++            val = 0U;                                                                  \
++            parity = 0U;                                                               \
++            for (n = 32U; n; n--) {                                                    \
++                SW_READ_BIT(bit);               /* Read RDATA[0:31] */                 \
++                parity += bit;                                                         \
++                val >>= 1;                                                             \
++                val  |= bit << 31;                                                     \
++            }                                                                          \
++            SW_READ_BIT(bit);                 /* Read Parity */                        \
++            __NOP();__NOP();__NOP();                                                   \
++            if ((parity ^ bit) & 1U) {                                                 \
++                ack = DAP_TRANSFER_ERROR;                                              \
++            }                                                                          \
++            if (data) {                                                                \
++                *data = val;                                                           \
++            }                                                                          \
++            /* Turnaround */                                                           \
++            for (n = g_DAP_Data.swd_conf.turnaround; n; n--) {                         \
++                SW_CLOCK_CYCLE();                                                      \
++                __NOP();__NOP();                                                       \
++            }                                                                          \
++            PIN_SWDIO_OUT_ENABLE();                                                    \
++        } else {                                                                       \
++            /* Turnaround */                                                           \
++            for (n = g_DAP_Data.swd_conf.turnaround; n; n--) {                         \
++                SW_CLOCK_CYCLE();                                                      \
++                __NOP();__NOP();                                                       \
++            }                                                                          \
++            PIN_SWDIO_OUT_ENABLE();                                                    \
++            /* Write data */                                                           \
++            val = *data;                                                               \
++            parity = 0U;                                                               \
++            for (n = 32U; n; n--) {                                                    \
++                SW_WRITE_BIT(val);              /* Write WDATA[0:31] */                \
++                parity += val;                                                         \
++                val >>= 1;                                                             \
++            }                                                                          \
++            SW_WRITE_BIT(parity);             /* Write Parity Bit */                   \
++        }                                                                              \
++        /* Capture Timestamp */                                                        \
++        if (request & DAP_TRANSFER_TIMESTAMP) {                                        \
++            g_DAP_Data.timestamp = TIMESTAMP_GET();                                    \
++        }                                                                              \
++        /* Idle cycles */                                                              \
++        n = g_DAP_Data.transfer.idle_cycles;                                           \
++        if (n) {                                                                       \
++            PIN_SWDIO_OUT(0U);                                                         \
++            for (; n; n--) {                                                           \
++                SW_CLOCK_CYCLE();                                                      \
++            }                                                                          \
++        }                                                                              \
++        PIN_SWDIO_OUT(1U);                                                             \
++        return ((uint8_t)ack);                                                         \
++    }                                                                                  \
++                                                                                       \
++    if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {                   \
++        /* WAIT or FAULT response */                                                   \
++        if (g_DAP_Data.swd_conf.data_phase && ((request & DAP_TRANSFER_RnW) != 0U)) {  \
++            for (n = 32U+1U; n; n--) {                                                 \
++                SW_CLOCK_CYCLE();             /* Dummy Read RDATA[0:31] + Parity */    \
++            }                                                                          \
++        }                                                                              \
++        /* Turnaround */                                                               \
++        for (n = g_DAP_Data.swd_conf.turnaround; n; n--) {                             \
++            SW_CLOCK_CYCLE();                                                          \
++        }                                                                              \
++        PIN_SWDIO_OUT_ENABLE();                                                        \
++        if (g_DAP_Data.swd_conf.data_phase && ((request & DAP_TRANSFER_RnW) == 0U)) {  \
++            PIN_SWDIO_OUT(0U);                                                         \
++            for (n = 32U+1U; n; n--) {                                                 \
++                SW_CLOCK_CYCLE();            /* Dummy Write WDATA[0:31] + Parity */    \
++            }                                                                          \
++        }                                                                              \
++        PIN_SWDIO_OUT(1U);                                                             \
++        return ((uint8_t)ack);                                                         \
++    }                                                                                  \
++    /* Protocol error */                                                               \
++    for (n = g_DAP_Data.swd_conf.turnaround + 32U + 1U; n; n--) {                      \
++        SW_CLOCK_CYCLE();                   /* Back off data phase */                  \
++    }                                                                                  \
++    PIN_SWDIO_OUT_ENABLE();                                                            \
++    PIN_SWDIO_OUT(1U);                                                                 \
++    return ((uint8_t)ack);                                                             \
+ }
+ 
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_0()
++SWD_TransferFunction(Level0)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_1()
++SWD_TransferFunction(Level1)
+ 
+ #undef  PIN_DELAY
+-#define PIN_DELAY() PIN_DELAY_FAST()
+-SWD_TransferFunction(Fast)
++#define PIN_DELAY() SWDP_DELAY_LEVEL_2()
++SWD_TransferFunction(Level2)
+ 
+ #undef  PIN_DELAY
+-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
+-SWD_TransferFunction(Slow)
++#define PIN_DELAY() SWDP_DELAY_LEVEL_3()
++SWD_TransferFunction(Level3)
+ 
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_4()
++SWD_TransferFunction(Level4)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_5()
++SWD_TransferFunction(Level5)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_6()
++SWD_TransferFunction(Level6)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_7()
++SWD_TransferFunction(Level7)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_8()
++SWD_TransferFunction(Level8)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_9()
++SWD_TransferFunction(Level9)
++
++#undef  PIN_DELAY
++#define PIN_DELAY() SWDP_DELAY_LEVEL_LOW(g_DAP_Data.clock_delay)
++SWD_TransferFunction(LevelLow)
+ 
+ // SWD Transfer I/O
+ //   request: A[3:2] RnW APnDP
+ //   data:    DATA[31:0]
+ //   return:  ACK[2:0]
+ __WEAK uint8_t  SWD_Transfer(uint32_t request, uint32_t *data) {
+-  if (DAP_Data.fast_clock) {
+-    return SWD_TransferFast(request, data);
+-  } else {
+-    return SWD_TransferSlow(request, data);
+-  }
++    switch (g_DAP_Data.clock_level) {
++        case SWD_JTAG_CLOCK_LEVEL_0:
++            return SWD_TransferLevel0(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_1:
++            return SWD_TransferLevel1(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_2:
++            return SWD_TransferLevel2(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_3:
++            return SWD_TransferLevel3(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_4:
++            return SWD_TransferLevel4(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_5:
++            return SWD_TransferLevel5(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_6:
++            return SWD_TransferLevel6(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_7:
++                    return SWD_TransferLevel7(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_8:
++                    return SWD_TransferLevel8(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_9:
++                    return SWD_TransferLevel9(request, data);
++        case SWD_JTAG_CLOCK_LEVEL_LOW:
++            return SWD_TransferLevelLow(request, data);
++        default:
++            return SWD_TransferLevel6(request, data);
++    }
+ }
+ 
+-
+ #endif  /* (DAP_SWD != 0) */
+ 
+-
+ #if defined(__CC_ARM)
+ #pragma pop
+ #elif defined(__GNUC__) && !defined(__ARMCC_VERSION)
+ #pragma GCC pop_options
+-#endif
++#endif
+\ No newline at end of file

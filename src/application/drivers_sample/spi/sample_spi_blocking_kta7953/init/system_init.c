@@ -50,7 +50,6 @@ static void SPI_Init(void)
     HAL_CRG_IpClkSelectSet(SPI_BASE, CRG_PLL_NO_PREDV);
 
     g_spiSampleHandle.baseAddress = SPI;
-    g_spiSampleHandle.irqNum = IRQ_SPI;
 
     g_spiSampleHandle.mode = HAL_SPI_MASTER;
     g_spiSampleHandle.csMode = SPI_CHIP_SELECT_MODE_INTERNAL;
@@ -83,7 +82,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;

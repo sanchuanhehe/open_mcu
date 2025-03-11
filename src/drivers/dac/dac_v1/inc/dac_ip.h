@@ -62,6 +62,7 @@
  * @brief  Extent handle definition of DAC.
  */
 typedef struct {
+    bool  pinOutputEn;
 } DAC_ExtendHandle;
 
 /**
@@ -110,6 +111,19 @@ typedef union {
     } BIT;
 } volatile DAC_TRIM_REG1;
 
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+/**
+  * @brief DAC TEST register.
+  */
+typedef union {
+    unsigned int reg;
+    struct {
+        unsigned int da_dac_test_enh    : 1;   /**< Value of DAC test output enable. */
+        unsigned int reserved_1         : 31;
+    } BIT;
+} volatile DAC_TEST_REG;
+#endif
 /**
   * @brief DAC registers definition structure.
   */
@@ -117,6 +131,11 @@ typedef struct _DAC_RegStruct {
     DAC_CTRL_REG0        DAC_CTRL;      /**< DAC control register. Offset address: 0x00000000U */
     unsigned char        space0[12];
     DAC_CTRL_REG1        DAC_VALUE;     /**< DAC voltage level configuration register. Offset address: 0x00000010U */
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+    unsigned char        space1[116];
+    DAC_TEST_REG         DAC_TEST_EN;   /**< DAC control register. Offset address: 0x00000088U */
+#endif
 } volatile DAC_RegStruct;
 
 /* Parameter Check -----------------------------------------------------------*/
@@ -165,6 +184,30 @@ static inline void DCL_DAC_SetValue(DAC_RegStruct *dacx, unsigned int value)
     DAC_PARAM_CHECK_NO_RET(value <= DAC_MAX_OUT_VALUE);
     dacx->DAC_VALUE.BIT.cfg_dac_vset = value;
 }
+
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+/**
+  * @brief Set DAC test mode config, pin ouput enable or diable
+  * @param dacx: DAC register base address.
+  * @param config: DAC output enable bit value.
+  */
+static inline void DCL_DAC_SetPinOutputConfig(DAC_RegStruct *dacx, bool config)
+{
+    DAC_ASSERT_PARAM(IsDACInstance(dacx));
+    dacx->DAC_TEST_EN.BIT.da_dac_test_enh = config;
+}
+
+/**
+  * @brief Get DAC test mode config, pin ouput enable or diable
+  * @param dacx: DAC register base address.
+  */
+static inline bool DCL_DAC_GetPinOutputConfig(DAC_RegStruct *dacx)
+{
+    DAC_ASSERT_PARAM(IsDACInstance(dacx));
+    return dacx->DAC_TEST_EN.BIT.da_dac_test_enh;
+}
+#endif
 
 /**
   * @}

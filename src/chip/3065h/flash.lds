@@ -26,18 +26,18 @@ ENTRY(_start)
 SRAM_START   = 0x4000000;
 SRAM_END     = 0x4000000 + 16K;
 
-RAM_CODE_START = 0x2000000;
+RAM_DIAGNOSE_BUF_START = SRAM_START;
+RAM_DIAGNOSE_BUF_SIZE  = 0x20;
+
+RAM_CODE_START = 0x2000000 + RAM_DIAGNOSE_BUF_SIZE;
 RAM_CODE_SIZE  = 0;
 
-RAM_RESERVE_DATA_START = SRAM_START + RAM_CODE_SIZE;
+RAM_RESERVE_DATA_START = RAM_DIAGNOSE_BUF_START + RAM_DIAGNOSE_BUF_SIZE + RAM_CODE_SIZE;
 RAM_RESERVE_DATA_SIZE  = 0;
-
-RAM_DIAGNOSE_BUF_START = RAM_RESERVE_DATA_START + RAM_RESERVE_DATA_SIZE;
-RAM_DIAGNOSE_BUF_SIZE  = 0x20;
 
 STACK_SRAM_BOUND_SIZE = 0x10;
 
-RAM_START = RAM_RESERVE_DATA_START + RAM_RESERVE_DATA_SIZE + RAM_DIAGNOSE_BUF_SIZE;
+RAM_START = RAM_RESERVE_DATA_START + RAM_RESERVE_DATA_SIZE;
 RAM_SIZE  = 0x2800 - RAM_CODE_SIZE - RAM_RESERVE_DATA_SIZE - RAM_DIAGNOSE_BUF_SIZE - STACK_SRAM_BOUND_SIZE;
 RAM_END   = SRAM_END;
 
@@ -52,14 +52,14 @@ FLASH_SIZE      = 0x25ffc;
 
 MEMORY
 {
+    /* ram for diagnose buf */
+    RAM_DIAGNOSE_BUF(rw) : ORIGIN = RAM_DIAGNOSE_BUF_START, LENGTH = RAM_DIAGNOSE_BUF_SIZE
+
     /* ram for code */
     RAM_CODE(xr) : ORIGIN = RAM_CODE_START, LENGTH = RAM_CODE_SIZE
 
     /* ram for reserved data */
     RAM_RESERVE_DATA(rw) : ORIGIN = RAM_RESERVE_DATA_START, LENGTH = RAM_RESERVE_DATA_SIZE
-
-    /* ram for diagnose buf */
-    RAM_DIAGNOSE_BUF(rw) : ORIGIN = RAM_DIAGNOSE_BUF_START, LENGTH = RAM_DIAGNOSE_BUF_SIZE
 
     /* ram for common bss and data */
     RAM_DATA(xrw) : ORIGIN = RAM_START, LENGTH = RAM_SIZE
@@ -148,6 +148,7 @@ SECTIONS
         __data_load = LOADADDR(.data);
         __data_start = .;
         *(.data*)
+        *(.sdata*)
         . = ALIGN(4);
         __data_end = .;
     } > RAM_DATA AT> FLASH_CODE
@@ -162,7 +163,12 @@ SECTIONS
         __stack_sram_bound_data_end   = .;
     } > STACK_SRAM_BOUND AT> FLASH_CODE
 
-    .checkSum (NOLOAD) : ALIGN(4)
+    .ramBuf : ALIGN(4)
+    {
+        *(RAM_DIAGNOSE_BUF)
+    } > RAM_DIAGNOSE_BUF AT> FLASH_CODE
+
+    .checkSum : ALIGN(4)
     {
         __checksum_addr = .;
         *(CHECKSUM)
@@ -174,6 +180,7 @@ SECTIONS
     {
         __bss_begin__ = .;
         *(.bss*)
+        *(.sbss*)
         *(COMMON)
         . = ALIGN(4);
         __bss_end__ = .;
@@ -181,8 +188,7 @@ SECTIONS
     __bss_size__ = __bss_end__ - __bss_begin__;
     __global_pointer$ = __data_start + ((__data_size + __bss_size__) / 2);
 
-    .ramBuf (NOLOAD) : ALIGN(4)
-    {
-        *(RAM_DIAGNOSE_BUF)
-    } > RAM_DIAGNOSE_BUF
+/* USER CODE BEGIN 2 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 2 */
 }

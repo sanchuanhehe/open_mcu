@@ -24,8 +24,18 @@
 #define ENTRY_S
 
 #include "feature.h"
+#ifdef NOS_TASK_SUPPORT
+.extern OsHwiPostHandle
+.extern OsTaskTrueSwitch
+#define NOS_HwiPostDispatch OsHwiPostHandle
+#define NOS_TaskDispatch OsTaskTrueSwitch
+#define NOS_TASK_SWITCH_MAGIC_NUM 0xACBCCCDC
+#define TICK_IRQ_EN_BASE 0xBE0
+#define TICK_IRQ_EN_NUM 0x8
+#endif
 
 .extern __stack_top
+.extern __init_stack_top
 .extern __irq_stack_top
 .extern SysErrNmiEntry
 .extern SysErrExcEntry
@@ -51,10 +61,18 @@
 #define NESTED_IRQ_SUPPORT
 #define COMPILE_LDM         /**< Support stmia and ldmia instruction */
 
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs more stack to restore TickIRQEnable */
+#ifdef FLOAT_SUPPORT
+#define TOTAL_INT_SIZE_ON_STACK  (44 * REGBYTES)
+#else
+#define TOTAL_INT_SIZE_ON_STACK  (24 * REGBYTES)
+#endif
+#else
 #ifdef FLOAT_SUPPORT
 #define TOTAL_INT_SIZE_ON_STACK  (40 * REGBYTES)
 #else
 #define TOTAL_INT_SIZE_ON_STACK  (20 * REGBYTES)
+#endif
 #endif
 
 #define SYSERR_INT_SIZE_ON_STACK  (28 * REGBYTES)
@@ -87,18 +105,8 @@
 #define locipri15               0xBCF
 
 #define EFC_BASE_ADDR          0x14710000   /* efc base address */
-#define EFC_MAGIC_LOCK_RW      0x14710200   /* cmd operation magic word protection register */
-#define EFC_MAGIC_NUMBER       0xFEDCBA98   /* magic number */
 #define SYSRAM_ERROR           0x10108300
 #define SC_SYS_STAT_ADDR       0x10100018  /**< System state register address */
-#define TIMER0_CONTROL         0x14300008
-#define TIMER0_INTENABLE       (1 << 5)
-#define UART0_BASE_ADDR        0x14000000
-#define IBRD_OFFSET            0x24
-#define FBRD_OFFSET            0x28
-#define LCR_H_OFFSET           0x2C
-#define CR_OFFSET              0x30
-#define DMACR_OFFSET           0x48
 
 .equ cipri,  0x7ED
 .equ prithd, 0xBFE
@@ -371,9 +379,11 @@ IntHandler:
 
     li  a1, (3<<11)
     csrs  mstatus, a1
+#ifndef NOS_TASK_SUPPORT /* When using NOS_TASK_SUPPORT, enable gloal irq after change to irq stack */
     la    a1, custom_nested_irq_main_handler_entry
     csrw  mepc, a1
     mret
+#endif /* #ifndef NOS_TASK */
 #endif
 
 .align 2
@@ -392,8 +402,37 @@ custom_nested_irq_main_handler_entry:
     SREG  t4, 16 * REGBYTES(sp)
     SREG  t5, 17 * REGBYTES(sp)
     SREG  t6, 18 * REGBYTES(sp)
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs to save TickIRQEnable */
+    csrr  t0, TICK_IRQ_EN_BASE
+    andi  t0, t0, TICK_IRQ_EN_NUM
+    SREG  t0, 19 * REGBYTES(sp)
+#endif
 
 #ifdef FLOAT_SUPPORT
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs to save TickIRQEnable */
+    FSREG  f0, 23 * REGBYTES(sp)
+    FSREG  f1, 24 * REGBYTES(sp)
+    FSREG  f2, 25 * REGBYTES(sp)
+    FSREG  f3, 26 * REGBYTES(sp)
+    FSREG  f4, 27 * REGBYTES(sp)
+    FSREG  f5, 28 * REGBYTES(sp)
+    FSREG  f6, 29 * REGBYTES(sp)
+    FSREG  f7, 30 * REGBYTES(sp)
+    FSREG  f10, 31 * REGBYTES(sp)
+    FSREG  f11, 32 * REGBYTES(sp)
+    FSREG  f12, 33 * REGBYTES(sp)
+    FSREG  f13, 34 * REGBYTES(sp)
+    FSREG  f14, 35 * REGBYTES(sp)
+    FSREG  f15, 36 * REGBYTES(sp)
+    FSREG  f16, 37 * REGBYTES(sp)
+    FSREG  f17, 38 * REGBYTES(sp)
+    FSREG  f28, 39 * REGBYTES(sp)
+    FSREG  f29, 40 * REGBYTES(sp)
+    FSREG  f30, 41 * REGBYTES(sp)
+    FSREG  f31, 42 * REGBYTES(sp)
+    frcsr  t0
+    SREG   t0, 43 * REGBYTES(sp)
+#else
     FSREG  f0, 19 * REGBYTES(sp)
     FSREG  f1, 20 * REGBYTES(sp)
     FSREG  f2, 21 * REGBYTES(sp)
@@ -414,11 +453,41 @@ custom_nested_irq_main_handler_entry:
     FSREG  f29, 36 * REGBYTES(sp)
     FSREG  f30, 37 * REGBYTES(sp)
     FSREG  f31, 38 * REGBYTES(sp)
+    frcsr  t0
+    SREG   t0, 39 * REGBYTES(sp) /* save fcsr */
+#endif
 #endif
 
+#ifdef NOS_TASK_SUPPORT
+    LREG  a2, 6 * REGBYTES(sp)
+    bnez  a2, IrqCallback /* Should determine whether need to switch stack */
+    csrw  mscratch, sp
+    la  sp, __irq_stack_top - 16
+
+IrqCallback:
+    addi  sp, sp, -4 * REGBYTES
+    SREG  a2, 0 * REGBYTES(sp) /* save prithd in irq stack */
+    andi  a0, a0, MCAUSE_MASK_INT_NUM
+    la    a1, IrqCallbackNew /* When using NOS_TASK_SUPPORT, enable gloal irq after change to irq stack */
+    csrw  mepc, a1
+    mret
+ 
+IrqCallbackNew:
+    call  InterruptEntry
+    li      a2, 0x8
+    csrrc   zero, mstatus, a2 /* When using NOS_TASK_SUPPORT, disable gloal irq before any stack operation */
+    LREG  a2, 0 * REGBYTES(sp) /* restore prithd in irq stack */
+    addi  sp, sp, 4 * REGBYTES
+
+    bnez  a2, BacktoIrq
+    csrr  sp, mscratch
+    tail  NOS_HwiPostDispatch /* Should determine whether need to reschedule */
+#else
     andi  a0, a0, MCAUSE_MASK_INT_NUM
     call  InterruptEntry
+#endif
 
+BacktoIrq:
     LREG  t1, 1 * REGBYTES(sp)
     LREG  t2, 2 * REGBYTES(sp)
     LREG  a2, 5 * REGBYTES(sp)
@@ -432,8 +501,37 @@ custom_nested_irq_main_handler_entry:
     LREG  t4, 16 * REGBYTES(sp)
     LREG  t5, 17 * REGBYTES(sp)
     LREG  t6, 18 * REGBYTES(sp)
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs to restore TickIRQEnable */
+    LREG  t0, 19 * REGBYTES(sp)
+    andi  t0, t0, TICK_IRQ_EN_NUM
+    csrs TICK_IRQ_EN_BASE, t0
+#endif
 
 #ifdef FLOAT_SUPPORT
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs to save TickIRQEnable */
+    FLREG  f0, 23 * REGBYTES(sp)
+    FLREG  f1, 24 * REGBYTES(sp)
+    FLREG  f2, 25 * REGBYTES(sp)
+    FLREG  f3, 26 * REGBYTES(sp)
+    FLREG  f4, 27 * REGBYTES(sp)
+    FLREG  f5, 28 * REGBYTES(sp)
+    FLREG  f6, 29 * REGBYTES(sp)
+    FLREG  f7, 30 * REGBYTES(sp)
+    FLREG  f10, 31 * REGBYTES(sp)
+    FLREG  f11, 32 * REGBYTES(sp)
+    FLREG  f12, 33 * REGBYTES(sp)
+    FLREG  f13, 34 * REGBYTES(sp)
+    FLREG  f14, 35 * REGBYTES(sp)
+    FLREG  f15, 36 * REGBYTES(sp)
+    FLREG  f16, 37 * REGBYTES(sp)
+    FLREG  f17, 38 * REGBYTES(sp)
+    FLREG  f28, 39 * REGBYTES(sp)
+    FLREG  f29, 40 * REGBYTES(sp)
+    FLREG  f30, 41 * REGBYTES(sp)
+    FLREG  f31, 42 * REGBYTES(sp)
+    LREG   t0,  43 * REGBYTES(sp)
+    fscsr  t0
+#else
     FLREG  f0, 19 * REGBYTES(sp)
     FLREG  f1, 20 * REGBYTES(sp)
     FLREG  f2, 21 * REGBYTES(sp)
@@ -454,6 +552,9 @@ custom_nested_irq_main_handler_entry:
     FLREG  f29, 36 * REGBYTES(sp)
     FLREG  f30, 37 * REGBYTES(sp)
     FLREG  f31, 38 * REGBYTES(sp)
+    LREG   t0,  39 * REGBYTES(sp) /* restore fcsr */
+    fscsr  t0
+#endif
 #endif
 
 quit_int:
@@ -467,11 +568,13 @@ quit_int:
     LREG  t0, 0 * REGBYTES(sp)
 #else
     LREG  a0, 7 * REGBYTES(sp)  /* load mstatus */
-    csrr  t0, mstatus
     LREG  a1, 8 * REGBYTES(sp)  /* load mepc */
+#ifndef NOS_TASK_SUPPORT /* When using NOS_TASK_SUPPORT, don't check mstatus */
+    csrr  t0, mstatus
     andi  t0, t0, MSTATUS_MIE
     bnei  t0, 0, restore_mstatus
     andi  a0, a0, ~(MSTATUS_MIE | MSTATUS_MPIE)
+#endif
 restore_mstatus:
     csrw  mstatus, a0
 
@@ -498,6 +601,27 @@ restore_mstatus:
 
 .align 2
 TrapVector:
+
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs to check mcause == ecall and a0 = magic word for taskSwitch */
+    addi sp, sp, -8
+    SREG  a1, 0(sp)
+    SREG  a2, 4(sp)
+    csrr  a1, mcause
+    li    a2, MCAUSE_ECALL_FROM_MMODE
+    bne   a1, a2, IsTrap
+    li    a2, NOS_TASK_SWITCH_MAGIC_NUM
+    bne   a0, a2, IsTrap
+    LREG  a2, 4(sp)
+    LREG  a1, 0(sp)
+    addi  sp, sp, 8
+    tail  NOS_TaskDispatch
+
+IsTrap:
+    LREG  a2, 4(sp)
+    LREG  a1, 0(sp)
+    addi  sp, sp, 8
+#endif
+
     push_reg
     csrr  a0, mcause
     li    t1, MCAUSE_ECALL_FROM_MMODE
@@ -579,11 +703,6 @@ flash_init:
     ori t1, t1, 1
     sw  t1, 0x124(t0)
 
-/* enable flash cmd */
-    li t0, EFC_MAGIC_NUMBER
-    li t1, EFC_MAGIC_LOCK_RW
-    sw t0, (t1)
-
 /* initialize global pointer */
     .option push
     .option norelax
@@ -591,22 +710,11 @@ flash_init:
     .option pop
 
 /* initialize stack pointer */
+#ifdef NOS_TASK_SUPPORT /* Support Multi-task needs to use irq stack */
+    la sp, __init_stack_top
+#else
     la sp, __stack_top
-
-/* timer0 interrupt enable */
-    li t0, TIMER0_CONTROL
-    lw t1, (t0)
-    andi t1, t1, TIMER0_INTENABLE
-    sw t1, (t0)
-
-/* uart0 deinit */
-    li t0, 0x14000000
-    li t1, 0
-    sw t1, IBRD_OFFSET(t0)
-    sw t1, FBRD_OFFSET(t0)
-    sw t1, LCR_H_OFFSET(t0)
-    sw t1, CR_OFFSET(t0)
-    sw t1, DMACR_OFFSET(t0)
+#endif
 
 /* perform the rest of initialization in C */
 clear_sram:
@@ -643,6 +751,12 @@ start_coderom_data_copy:
     la t2, __data_end
     jal mem_cpy
 
+stack_sram_bound_data_copy:
+    la t0, __stack_sram_bound_data_start              /* SRAM addr */
+    la t1, __stack_sram_bound_data_load               /* ROM addr  */
+    la t2, __stack_sram_bound_data_end
+    jal mem_cpy
+
 pmp_init:
     li t0, 0xB00
     csrw pmpaddr0, t0
@@ -675,14 +789,6 @@ pmp_init:
     csrw pmpcfg1,t0
 #endif
 
-/* disable Icache */
-    csrwi  0x7C0, 0x0 /* disable ICACHE */
-    fence
-
-/* disable Dcache */
-    csrwi  0x7C1, 0x0 /* disable DCACHE */
-    fence
-
 /* support float and mie */
     li t0,0x2008
     csrs mstatus,t0
@@ -709,10 +815,15 @@ pmp_init:
     csrw locipri15, t0
 
     ecall
+
+#ifdef NOS_TASK_SUPPORT
+    jal Chip_Init
+#else
     jal Chip_Init
 
 /* jump to C func. */
     jal main
+#endif
 
 dead_loop:
     j dead_loop

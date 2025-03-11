@@ -77,24 +77,43 @@ typedef void (* CAN_CallbackType)(void *handle);
   */
 
 /**
-  * @defgroup CAN_API_Declaration CAN HAL API
+  * @defgroup CAN_API_Declaration
+  * @brief CAN HAL API.
   * @{
   */
+
 BASE_StatusType HAL_CAN_Init(CAN_Handle *canHandle);
 BASE_StatusType HAL_CAN_DeInit(CAN_Handle *canHandle);
 BASE_StatusType HAL_CAN_ReadIT(CAN_Handle *canHandle, CANFrame *data, CAN_FilterConfigure *filterConfigure);
 BASE_StatusType HAL_CAN_Write(CAN_Handle *canHandle, CANFrame *data);
+/**
+  * @defgroup CAN_API_Declaration
+  * @brief CAN status.
+  * @{
+  */
 
-/* CAN status */
 CAN_ErrorStatus HAL_CAN_GetErrorStatus(CAN_Handle *canHandle);
 unsigned int HAL_CAN_GetErrorStatusCode(CAN_Handle *canHandle);
 CAN_BusOffStatus HAL_CAN_GetBusOffStatus(CAN_Handle *canHandle);
 CAN_MessageReceiveStatus HAL_CAN_MessageReceiveStatus(CAN_Handle *canHandle);
 CAN_MessageSendStatus HAL_CAN_MessageSendStatus(CAN_Handle *canHandle);
-/* CAN interrupt service funciton. */
+/**
+  * @}
+  */
+
+/**
+  * @defgroup CAN_API_Declaration
+  * @brief CAN interrupt service funciton.
+  * @{
+  */
+
 void HAL_CAN_IrqHandler(void *handle);
 BASE_StatusType HAL_CAN_RegisterCallBack(CAN_Handle *canHandle, CAN_CallBackFunType typeID,
                                          CAN_CallbackType pCallback);
+
+/**
+  * @}
+  */
 
 /**
   * @}

@@ -59,7 +59,7 @@
 #endif /* NULL */
 
 #ifndef FLT_EPSILON
-#define FLT_EPSILON 0.000001
+#define FLT_EPSILON 0.000001f
 #endif /* float min error definition */
 
 #ifndef INT16_MAX

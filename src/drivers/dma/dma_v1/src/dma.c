@@ -151,6 +151,41 @@ BASE_StatusType HAL_DMA_InitChannel(DMA_Handle *dmaHandle, DMA_ChannelParam *cha
 }
 
 /**
+  * @brief Selecting the DMA request.
+  * @param dmaHandle DMA handle.
+  * @param periphNum Peripheral request ID.
+  * @param channel ID of the selected DMA channel @ref DMA_ChannelNum.
+  * @retval None.
+  */
+static void DMA_ReqSelect(DMA_Handle *dmaHandle, unsigned int periphNum, unsigned int channel)
+{
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+    DMA_Handle *pHandle = dmaHandle->DMA_Channels[channel].pHandle;
+    unsigned int reqSelVal = 0;
+    /* Obtains the address of the peripheral that invokes the DMA. */
+    unsigned int *baseAddress = (unsigned int *)pHandle->baseAddress;
+
+    /* Obtains the configuration value of the request line source register based on the peripheral type. */
+    if (baseAddress == UART3_BASE || baseAddress == UART4_BASE || baseAddress == ADC2_BASE) {
+        reqSelVal = 1;
+    }
+    /* Configuration request line source switching register。 */
+    if (periphNum >= DMA_REQUEST_SPI0_RX && periphNum <= DMA_REQUEST_CAPM0) {
+        if (reqSelVal & BASE_CFG_SET) {
+            SYSCTRL1->DMA_REQ_SEL.reg |= 1 << periphNum;
+        } else {
+            SYSCTRL1->DMA_REQ_SEL.reg &= ~(1 << periphNum);
+        }
+    }
+#else
+    BASE_FUNC_UNUSED(dmaHandle);
+    BASE_FUNC_UNUSED(periphNum);
+    BASE_FUNC_UNUSED(channel);
+#endif
+}
+
+/**
   * @brief Configuring the DMA source device.
   * @param dmaHandle DMA handle.
   * @param channel ID of the selected DMA channel @ref DMA_ChannelNum.
@@ -163,6 +198,7 @@ static void DMA_SetSrcPeriph(DMA_Handle *dmaHandle, unsigned int channel)
         return;
     }
     dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.BIT.src_periph = periphNum;
+    DMA_ReqSelect(dmaHandle, periphNum, channel);
 }
 
 /**
@@ -178,6 +214,7 @@ static void DMA_SetDestPeriph(DMA_Handle *dmaHandle, unsigned int channel)
         return;
     }
     dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.BIT.dest_periph = periphNum;
+    DMA_ReqSelect(dmaHandle, periphNum, channel);
 }
 
 /**
@@ -371,9 +408,11 @@ BASE_StatusType HAL_DMA_Start(DMA_Handle *dmaHandle, unsigned int srcAddr,
     dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.reg &= ~(0x0000C000);
     dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.BIT.ch_en = BASE_CFG_ENABLE;
 #ifdef BASE_DEFINE_DMA_QUICKSTART
-    dmaHandle->DMA_Channels[channel].srcAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_SRC_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].destAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_DEST_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].controlVal = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONTROL.reg;
+    dmaHandle->DMA_Channels[channel].srcAddr = srcAddr;
+    dmaHandle->DMA_Channels[channel].destAddr = destAddr;
+    unsigned int val = DMA_CalControlval(dmaHandle, channel);
+    val |= dataLength;
+    dmaHandle->DMA_Channels[channel].controlVal = val;
     dmaHandle->DMA_Channels[channel].configVal = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.reg;
 #endif
     return BASE_STATUS_OK;
@@ -402,9 +441,11 @@ BASE_StatusType HAL_DMA_StartIT(DMA_Handle *dmaHandle, unsigned int srcAddr,
     /* Set tc_int_msk, err_int_msk, ch_en */
     dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.reg |= 0xC001;
 #ifdef BASE_DEFINE_DMA_QUICKSTART
-    dmaHandle->DMA_Channels[channel].srcAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_SRC_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].destAddr = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_DEST_ADDR.reg;
-    dmaHandle->DMA_Channels[channel].controlVal = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONTROL.reg;
+    dmaHandle->DMA_Channels[channel].srcAddr = srcAddr;
+    dmaHandle->DMA_Channels[channel].destAddr = destAddr;
+    unsigned int val = DMA_CalControlval(dmaHandle, channel);
+    val |= dataLength;
+    dmaHandle->DMA_Channels[channel].controlVal = val;
     dmaHandle->DMA_Channels[channel].configVal = dmaHandle->DMA_Channels[channel].channelAddr->DMA_Cn_CONFIG.reg;
 #endif
     return BASE_STATUS_OK;

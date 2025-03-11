@@ -46,8 +46,8 @@ extern DMA_Handle g_dmac;
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
-void Stlm75TxSampleHandle(I2C_Handle *handle);
-void Stlm75RxSampleHandle(I2C_Handle *handle);
-void Stlm75ErrSampleHandle(I2C_Handle *handle);
+void Stlm75TxSampleHandle(void *handle);
+void Stlm75RxSampleHandle(void *handle);
+void Stlm75ErrSampleHandle(void *handle);
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

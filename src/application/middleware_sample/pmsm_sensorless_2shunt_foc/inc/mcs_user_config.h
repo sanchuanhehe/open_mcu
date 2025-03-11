@@ -27,14 +27,14 @@
 
 #define SMO4TH
 
-#define SYSTICK_PERIOD_US                 500u /* systick period */
+#define SYSTICK_PERIOD_US                 500u /* systick period. */
 
-#define INV_CAP_CHARGE_MS                 3u
+#define INV_CAP_CHARGE_MS                 3u  /* Capacitor charging time. */
 
-#define INV_VOLTAGE_BUS                   12.0f   /* Bus voltage, V */
+#define INV_VOLTAGE_BUS                   12.0f   /* Bus voltage, V. */
 
-#define CTRL_CURR_PERIOD                  0.0001f /* carrier ISR period, 100us */
-#define CTRL_SYSTICK_PERIOD               0.0005f /* systick control period, 500us */
+#define CTRL_CURR_PERIOD                  0.0001f /* carrier ISR period, 100us. */
+#define CTRL_SYSTICK_PERIOD               0.0005f /* systick control period, 500us. */
 
 /* Duty of sample window, the real time is 0.06*50us = 3us. */
 #define SAMPLE_WINDOW_DUTY                0.06f
@@ -43,53 +43,53 @@
 #define SAMPLE_POINT_SHIFT                0.008f
 
 /* Sampling resistance 200mOhm 0.0013295 */
-#define ADC_CURR_COFFI                    0.0013295f   /* 3.3/4096/3.03/0.2     pga: 3.03, 200mohm */
-/* APT */
-#define APT_SYNC_IN_SRC                   APT_SYNCIN_SRC_APT0_SYNCOUT
+#define ADC_CURR_COFFI                    0.0013295f   /* 3.3/4096/3.03/0.2     pga: 3.03, 200mohm. */
 
-#define APT_U                             APT0_BASE /* Base address of U phase APT module */
-#define APT_V                             APT1_BASE /* Base address of V phase APT module */
-#define APT_W                             APT2_BASE /* Base address of W phase APT module */
+#define APT_U                             APT0_BASE /* Base address of U phase APT module. */
+#define APT_V                             APT1_BASE /* Base address of V phase APT module. */
+#define APT_W                             APT2_BASE /* Base address of W phase APT module. */
 
 /* FOSMO */
 #define FOSMO_GAIN                        4.0f    /* SMO gain */
-#define FOSMO_LAMBDA                      2.0f    /* SMO coefficient of cut-off frequency, its value = lambda * we */
+#define FOSMO_LAMBDA                      2.0f    /* SMO coefficient of cut-off frequency, its value = lambda * we. */
 #define FOSMO_EMF_CUTOFF_FREQ             2.0f    /* SMO back emf cutoff frequency. */
-#define SPEED_FILTER_CUTOFF_FREQUENCY     40.0f   /* SMO speed cutoff frequency. of speed filter. */
+#define SPEED_FILTER_CUTOFF_FREQUENCY     40.0f   /* SMO speed cutoff frequency of speed filter. */
 #define FOSMO_PLL_BDW                     30.0f   /* SMO PLL bandwidth. */
 
 /* SMO4TH */
-#define SMO4TH_PLL_BDW                    30.0f
-#define SMO4TH_KD                         300.0f
-#define SMO4TH_KQ                         600.0f
-#define SMO4TH_SPD_FILTER_CUTOFF_FREQ     40.0f
+#define SMO4TH_PLL_BDW                    30.0f   /* SMO4TH PLL Bandwidth. */
+#define SMO4TH_KD                         300.0f  /* SMO4TH parameters KD. */
+#define SMO4TH_KQ                         600.0f  /* SMO4TH parameters KQ. */
+#define SMO4TH_SPD_FILTER_CUTOFF_FREQ     40.0f   /* SMO4TH speed cutoff frequency of speed filter. */
 
 /* User_Commond */
-#define CTRL_IF_CURR_AMP_A                0.07f       /* IF control current amplitude */
-#define USER_TARGET_SPD_HZ                100.0f      /* Parentheses are used to enter negative instructions */
-#define USER_SWITCH_SPDBEGIN_HZ           30.0f       /* Start of handover interval */
-#define USER_SWITCH_SPDEND_HZ             (USER_SWITCH_SPDBEGIN_HZ + 3.0f)   /* End of handover period */
-#define USER_MAX_SPD_HZ                   180.25f
-#define USER_MIN_SPD_HZ                   35.0f
-#define USER_SPD_SLOPE                    50.0f                         /* slope of velocity change */
-#define USER_CURR_SLOPE                   (CTRL_IF_CURR_AMP_A * 10.0f)  /* Current change slope  */
+#define CTRL_IF_CURR_AMP_A                0.07f   /* IF control current amplitude. */
+#define USER_TARGET_SPD_HZ                100.0f  /* User-defined target speed value. */
+#define USER_SWITCH_SPDBEGIN_HZ           30.0f   /* Start of handover interval. */
+#define USER_SWITCH_SPDEND_HZ             (USER_SWITCH_SPDBEGIN_HZ + 3.0f)   /* End of handover period. */
+#define USER_MAX_SPD_HZ                   180.25f /* User-defined maximum speed value. */
+#define USER_MIN_SPD_HZ                   35.0f   /* User-defined minimum speed value. */
+#define USER_SPD_SLOPE                    50.0f                         /* slope of velocity change. */
+#define USER_CURR_SLOPE                   (CTRL_IF_CURR_AMP_A * 10.0f)  /* Current change slope.  */
 
 /* PID PARAMS */
-#define CURRQAXIS_KP                      5.023202f
-#define CURRQAXIS_KI                      20612.84f
-#define CURRDAXIS_KP                      3.477114f
-#define CURRDAXIS_KI                      20612.84f
-#define CURR_LOWERLIM                     (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
-#define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
+#define CURRQAXIS_KP                      5.023202f  /* Current loop Q axis Kp. */
+#define CURRQAXIS_KI                      20612.84f  /* Current loop Q axis Ki. */
+#define CURRDAXIS_KP                      3.477114f  /* Current loop D axis Kp. */
+#define CURRDAXIS_KI                      20612.84f  /* Current loop D axis Ki. */
+/* Current loop PID output lower limit. */
+#define CURR_LOWERLIM                     (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.98f)
+/* Current loop PID output upper limit. */
+#define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.98f)
 
-#define SPD_KP                            0.00505f
-#define SPD_KI                            0.012f
-#define SPD_LOWERLIM                      -0.105f
-#define SPD_UPPERLIM                      0.105f
+#define SPD_KP                            0.00505f  /* Speed loop Kp. */
+#define SPD_KI                            0.012f    /* Speed loop Ki. */
+#define SPD_LOWERLIM                      (-0.105f) /* Speed loop PID output lower limit. */
+#define SPD_UPPERLIM                      0.105f    /* Speed loop PID output upper limit. */
 
 /* MOTOR PARAMS */
-/* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift */
-/* mtrPsif & mtrJ parameter is not used in this project, temporarily set to 0 */
+/* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift. */
+/* mtrPsif & mtrJ parameter is not used in this project, temporarily set to 0. */
 #define MOTORPARAM_DEFAULTS  { \
     .mtrNp = 7, \
     .mtrRs = 5.1f, \
@@ -99,8 +99,10 @@
     .mtrJ = 0.0f, \
     .maxElecSpd = 180.25f, \
     .maxCurr = 0.105f, \
+    .busVolt = INV_VOLTAGE_BUS, \
 }
 
-#define ADC_UDC_COFFI                     0.01289f      /* 0.01289 = 3.3/4096*192/12 */
+/* Bus voltage sampling conversion factor. */
+#define ADC_UDC_COFFI                     0.01289f      /* 0.01289 = 3.3/4096*192/12. */
 
 #endif

@@ -82,59 +82,59 @@ typedef enum {
   * @brief Motor control data structure
   */
 typedef struct {
-    unsigned char motorStateFlag;
-    float spdCmdHz;                     /**< External input speed command value */
-    float axisAngle;                    /**< Angle of the synchronous coordinate system */
-    float spdRefHz;                     /**< Command value after speed ramp management */
-    float currCtrlPeriod;               /**< current loop control period */
-    float adc0Compensate;               /**< ADC0 softwaretrim compensate value */
-    float adc1Compensate;               /**< ADC1 softwaretrim compensate value */
-    float udc;                          /**< Bus voltage */
-    float powerBoardTemp;               /**< Power boart surface temperature */
-    unsigned short aptMaxcntCmp;        /**< Apt Maximum Comparison Count */
-    float adcCurrCofe;                  /**< Adc current sampling cofeature */
+    unsigned char motorStateFlag;       /**< Motor start/stop status flag. */
+    float spdCmdHz;                     /**< External input speed command value. */
+    float axisAngle;                    /**< Angle of the synchronous coordinate system. */
+    float spdRefHz;                     /**< Command value after speed ramp management. */
+    float currCtrlPeriod;               /**< current loop control period. */
+    float adc0Compensate;               /**< ADC0 softwaretrim compensate value. */
+    float adc1Compensate;               /**< ADC1 softwaretrim compensate value. */
+    float udc;                          /**< Bus voltage. */
+    float powerBoardTemp;               /**< Power boart surface temperature. */
+    unsigned short aptMaxcntCmp;        /**< Apt Maximum Comparison Count. */
+    float adcCurrCofe;                  /**< Adc current sampling cofeature. */
 
-    unsigned short sysTickCnt;          /**< System Timer Tick Count */
-    unsigned short capChargeTickNum;    /**< Bootstrap Capacitor Charge Tick Count */
+    unsigned short sysTickCnt;          /**< System Timer Tick Count. */
+    unsigned short capChargeTickNum;    /**< Bootstrap Capacitor Charge Tick Count. */
     volatile unsigned int msTickCnt;    /**< Millisecond-level counter, which can be used in 1-ms and 5-ms tasks. */
-    unsigned short msTickNum;           /**< Number of ticks corresponding to 1 ms */
-    char obserType;                     /**< Set Observer Type */
-    char controlMode;                   /**< Set foc control or sixstep bldc control mode or others */
-    char spdAdjustMode;                 /**< Set speed adjust mode */
-    char uartConnectFlag;               /**< Uart connect success flag */
-    short uartHeartDetCnt;              /**< Uart connect heart detect count */
-    float uartTimeStamp;                /**< Uart data time stamp */
-    SysStatusReg statusReg;             /**< System status */
-    FsmState stateMachine;              /**< Motor Control State Machine */
+    unsigned short msTickNum;           /**< Number of ticks corresponding to 1 ms. */
+    char obserType;                     /**< Set Observer Type. */
+    char controlMode;                   /**< Set foc control or sixstep bldc control mode or others. */
+    char spdAdjustMode;                 /**< Set speed adjust mode. */
+    char uartConnectFlag;               /**< Uart connect success flag. */
+    short uartHeartDetCnt;              /**< Uart connect heart detect count. */
+    float uartTimeStamp;                /**< Uart data time stamp. */
+    SysStatusReg statusReg;             /**< System status. */
+    FsmState stateMachine;              /**< Motor Control State Machine. */
 
-    SampleMode sampleMode;              /**< sample mode */
-    MOTOR_Param mtrParam;               /**< Motor parameters */
-    FOSMO_Handle smo;                   /**< SMO observer handle */
-    SMO4TH_Handle smo4th;               /**< SMO 4th observer handle */
-    IF_Handle ifCtrl;                   /**< I/F control handle */
-    SVPWM_Handle sv;                    /**< SVPWM Handle */
-    R1SVPWM_Handle r1Sv;                /**< Single-resistance phase-shifted SVPWM handld */
-    RMG_Handle spdRmg;                  /**< Ramp management struct for the speed controller input reference */
-    SPDCTRL_Handle spdCtrl;             /**< Speed loop Control Handle */
-    CURRCTRL_Handle currCtrl;           /**< Current loop control handle */
-    STARTUP_Handle startup;             /**< Startup Switch Handle */
-    FW_Handle fw;                       /**< Flux-Weakening Handle */
+    SampleMode sampleMode;              /**< Current sampling mode setting: single resistor, double resistor. */
+    MOTOR_Param mtrParam;               /**< Motor parameters. */
+    FOSMO_Handle smo;                   /**< SMO observer handle. */
+    SMO4TH_Handle smo4th;               /**< SMO 4th observer handle. */
+    IF_Handle ifCtrl;                   /**< I/F control handle. */
+    SVPWM_Handle sv;                    /**< Dual-resistance/three-resistance sampling SVPWM Handle. */
+    R1SVPWM_Handle r1Sv;                /**< Single-resistance phase-shifted SVPWM handle. */
+    RMG_Handle spdRmg;                  /**< Ramp management struct for the speed controller input reference. */
+    SPDCTRL_Handle spdCtrl;             /**< Speed loop Control Handle. */
+    CURRCTRL_Handle currCtrl;           /**< Current loop control handle. */
+    STARTUP_Handle startup;             /**< Startup Switch Handle. */
+    FW_Handle fw;                       /**< Flux-Weakening Handle. */
 
-    DqAxis idqRef;                      /**< Command value of the dq axis current */
-    UvwAxis currUvw;                    /**< Three-phase current sampling value */
-    AlbeAxis iabFbk;                    /**< αβ-axis current feedback value */
-    DqAxis idqFbk;                      /**< Current feedback value of the dq axis */
-    DqAxis vdqRef;                      /**< Current loop output dq voltage */
-    AlbeAxis vabRef;                    /**< Current loop output voltage αβ */
-    UvwAxis  dutyUvw;                   /**< UVW three-phase duty cycle */
-    UvwAxis  dutyUvwLeft;               /**< Single Resistor UVW Three-Phase Left Duty Cycle */
-    UvwAxis  dutyUvwRight;              /**< Single Resistor UVW Three-Phase Right Duty Cycle*/
+    DqAxis idqRef;                      /**< Command value of the dq axis current. */
+    UvwAxis currUvw;                    /**< Three-phase current sampling value. */
+    AlbeAxis iabFbk;                    /**< αβ-axis current feedback value. */
+    DqAxis idqFbk;                      /**< Current feedback value of the dq axis. */
+    DqAxis vdqRef;                      /**< Current loop output dq voltage. */
+    AlbeAxis vabRef;                    /**< Current loop output voltage αβ. */
+    UvwAxis  dutyUvw;                   /**< UVW three-phase duty cycle. */
+    UvwAxis  dutyUvwLeft;               /**< Single Resistor UVW Three-Phase Left Duty Cycle. */
+    UvwAxis  dutyUvwRight;              /**< Single Resistor UVW Three-Phase Right Duty Cycle. */
 
-    MCS_ReadCurrUvwCb readCurrUvwCb;                /**< Read current callback function */
+    MCS_ReadCurrUvwCb readCurrUvwCb;                /**< Read current callback function. */
     MCS_SetPwmDutyCb setPwmDutyCb;	                /**< Set the duty cycle callback function. */
     MCS_SetADCTriggerTimeCb setADCTriggerTimeCb;    /**< Sets the ADC trigger point callback function. */
 
-    MotorProtStatus_Handle prot;                    /**< Protection handle. */
+    MotorProtStatus_Handle prot;                    /**< Motor protect status detection flag bit handle. */
 } MTRCTRL_Handle;
 
 void MCS_CarrierProcess(MTRCTRL_Handle *mtrCtrl);

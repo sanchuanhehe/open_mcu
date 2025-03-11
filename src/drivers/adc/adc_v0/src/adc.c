@@ -215,7 +215,7 @@ BASE_StatusType HAL_ADC_StartDma(ADC_Handle *adcHandle, unsigned int startSoc,
     ADC_PARAM_CHECK_WITH_RET(IsDmaChannelNum(adcHandle->adcDmaChn) == true, BASE_STATUS_ERROR);
     unsigned int dmaSOCx = 0;
     unsigned int dataLength = endSoc - startSoc + 1;
-    for (int i = 0; i < SOC_MAX_NUM; i++) {
+    for (unsigned int i = 0; i < SOC_MAX_NUM; i++) {
         if (adcHandle->ADC_SOCxParam[i].finishMode == ADC_SOCFINISH_DMA) {
             dmaSOCx = i;
         }

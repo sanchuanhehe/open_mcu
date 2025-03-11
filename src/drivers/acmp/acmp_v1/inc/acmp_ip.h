@@ -140,9 +140,9 @@ typedef enum {
 /**
   * @brief ACMP output selection
   * @details Description:
-  *          + ACMP_RESULT_SIMULATION       ----     Simulate the original comparison result.
-  *          + ACMP_RESULT_FILTER           ----     Digital Filtering Comparison Results.
-  *          + ACMP_RESULT_FILTER_BLOCK     ----     Digital Filtering and Blocking Comparison Results.
+  *          + ACMP_RESULT_SIMULATION       ----     Original comparison results.
+  *          + ACMP_RESULT_FILTER           ----     Resulter after filtering.
+  *          + ACMP_RESULT_FILTER_BLOCK     ----     Result after masking.
   */
 typedef enum {
     ACMP_RESULT_SIMULATION       = 0x00000000U,

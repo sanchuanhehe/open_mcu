@@ -29,16 +29,16 @@
   * @param vdqFf DQ axis volt feedforward compensation value.
   * @param idqFbk DQ axis feedback current value.
   * @param param Motor parameters.
-  * @param spd Speed (Hz).
+  * @param spdRef Speed reference (Hz).
   * @param enable Whether to enable feedforward compensation.
   * @retval None.
   */
-void CURRFF_Exec(DqAxis *vdqFf, DqAxis idqFbk, MOTOR_Param *param, float spd, int enable)
+void CURRFF_Exec(DqAxis *vdqFf, DqAxis idqFbk, MOTOR_Param *param, float spdRef, int enable)
 {
     MCS_ASSERT_PARAM(vdqFf != NULL);
     MCS_ASSERT_PARAM(param != NULL);
     /* The unit is converted from Hz to rad. */
-    float we = spd * DOUBLE_PI;
+    float we = spdRef * DOUBLE_PI;
     if (enable) {
         /* Calculate the feedforward compensation value. */
         vdqFf->d = -param->mtrLq * we * idqFbk.q;

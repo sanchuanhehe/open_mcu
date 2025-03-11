@@ -1331,6 +1331,19 @@ typedef union {
     } BIT;
 } volatile ADC_ANA_CTRL0_REG;
 
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+/**
+  * @brief Define the union ADC_ANA_CK_REG
+  */
+typedef union {
+    unsigned int reg;
+    struct {
+        unsigned int cfg_sar_cksel  : 8;
+        unsigned int reserved0 : 24;
+    } BIT;
+} volatile ADC_ANA_CK_REG;
+#endif
 /**
   * @brief Define the union ADC_AVDD_EN_REG
   */
@@ -1367,108 +1380,108 @@ typedef union {
 } volatile ADC_OEGE_TRIM_REG;
 
 /**
-  * @brief Define the union ADC_PGA0_OEGE_TRIM0_REG
+  * @brief Define the union ADC_AIN0_OEGE_TRIM0_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga0_ofst_trim2 : 12; /**< Gain calibration trim value */
+        unsigned int cfg_ain0_ofst_trim2 : 12; /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga0_gain_trim2 : 13; /**< Offset calibration trim value */
+        unsigned int cfg_ain0_gain_trim2 : 13; /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA0_OEGE_TRIM0_REG;
+} volatile ADC_AIN0_OEGE_TRIM0_REG;
 
 /**
-  * @brief Define the union ADC_PGA0_OEGE_TRIM1_REG
+  * @brief Define the union ADC_AIN0_OEGE_TRIM1_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga0_ofst_trim4 : 12; /**< Gain calibration trim value */
+        unsigned int cfg_ain0_ofst_trim4 : 12; /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga0_gain_trim4 : 13; /**< Offset calibration trim value */
+        unsigned int cfg_ain0_gain_trim4 : 13; /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA0_OEGE_TRIM1_REG;
+} volatile ADC_AIN0_OEGE_TRIM1_REG;
 
 /**
-  * @brief Define the union ADC_PGA0_OEGE_TRIM2_REG
+  * @brief Define the union ADC_AIN0_OEGE_TRIM2_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga0_ofst_trim8 : 12;  /**< Gain calibration trim value */
+        unsigned int cfg_ain0_ofst_trim8 : 12;  /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga0_gain_trim8 : 13;  /**< Offset calibration trim value */
+        unsigned int cfg_ain0_gain_trim8 : 13;  /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA0_OEGE_TRIM2_REG;
+} volatile ADC_AIN0_OEGE_TRIM2_REG;
 
 /**
-  * @brief Define the union ADC_PGA0_OEGE_TRIM3_REG
+  * @brief Define the union ADC_AIN0_OEGE_TRIM3_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga0_ofst_trim16 : 12; /**< Gain calibration trim value */
+        unsigned int cfg_ain0_ofst_trim16 : 12; /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga0_gain_trim16 : 13; /**< Offset calibration trim value */
+        unsigned int cfg_ain0_gain_trim16 : 13; /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA0_OEGE_TRIM3_REG;
+} volatile ADC_AIN0_OEGE_TRIM3_REG;
 
 /**
-  * @brief Define the union ADC_PGA1_OEGE_TRIM0_REG
+  * @brief Define the union ADC_AIN1_OEGE_TRIM0_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga1_ofst_trim2 : 12;  /**< Gain calibration trim value */
+        unsigned int cfg_ain1_ofst_trim2 : 12;  /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga1_gain_trim2 : 13;  /**< Offset calibration trim value */
+        unsigned int cfg_ain1_gain_trim2 : 13;  /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA1_OEGE_TRIM0_REG;
+} volatile ADC_AIN1_OEGE_TRIM0_REG;
 
 /**
-  * @brief Define the union ADC_PGA1_OEGE_TRIM1_REG
+  * @brief Define the union ADC_AIN1_OEGE_TRIM1_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga1_ofst_trim4 : 12;  /**< Gain calibration trim value */
+        unsigned int cfg_ain1_ofst_trim4 : 12;  /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga1_gain_trim4 : 13;  /**< Offset calibration trim value */
+        unsigned int cfg_ain1_gain_trim4 : 13;  /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA1_OEGE_TRIM1_REG;
+} volatile ADC_AIN1_OEGE_TRIM1_REG;
 
 /**
-  * @brief Define the union ADC_PGA1_OEGE_TRIM2_REG
+  * @brief Define the union ADC_AIN1_OEGE_TRIM2_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga1_ofst_trim8 : 12;  /**< Gain calibration trim value */
+        unsigned int cfg_ain1_ofst_trim8 : 12;  /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga1_gain_trim8 : 13;  /**< Offset calibration trim value */
+        unsigned int cfg_ain1_gain_trim8 : 13;  /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA1_OEGE_TRIM2_REG;
+} volatile ADC_AIN1_OEGE_TRIM2_REG;
 
 /**
-  * @brief Define the union ADC_PGA1_OEGE_TRIM3_REG
+  * @brief Define the union ADC_AIN1_OEGE_TRIM3_REG
   */
 typedef union {
     unsigned int reg;
     struct {
-        unsigned int cfg_pga1_ofst_trim16 : 12; /**< Gain calibration trim value */
+        unsigned int cfg_ain1_ofst_trim16 : 12; /**< Offset calibration trim value */
         unsigned int reserved0 : 4;
-        unsigned int cfg_pga1_gain_trim16 : 13; /**< Offset calibration trim value */
+        unsigned int cfg_ain1_gain_trim16 : 13; /**< Gain calibration trim value */
         unsigned int reserved1 : 3;
     } BIT;
-} volatile ADC_PGA1_OEGE_TRIM3_REG;
+} volatile ADC_AIN1_OEGE_TRIM3_REG;
 
 /**
   * @brief Define the union ADC_ANA_TRIM_REG
@@ -1596,21 +1609,27 @@ typedef struct {
     ADC_CAP_TRG_REG ADC_CAP_TRG;                 /**< Offset address: 0x00000540U, Calibration enable register */
     unsigned int space17[3];
     ADC_CAP_M1_REG ADC_CAP_M1;                   /**< Offset address: 0x00000550U, Capacitor calibration register */
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+    unsigned int space18[63];
+    ADC_ANA_CK_REG  ADC_ANA_CK;                        /**< Offset address: 0x00000650U, ADC clock init register */
+    #else
     unsigned int space18[64];
+    #endif
     ADC_ANA_CTRL0_REG ADC_ANA_CTRL0;             /**< Offset address: 0x00000654U, Analog register0 */
     ADC_AVDD_EN_REG   ADC_AVDD_EN;               /**< Offset address: 0x00000658U, AVDD/3 enable register0 */
-    unsigned int space19[106];
+    unsigned int space19[105];
     ADC_TSENSOR_TRIM_REG ADC_TSENSOR_TRIM;       /**< Offset address: 0x00000800U, Tsensor trim register */
     ADC_OEGE_TRIM_REG ADC_OEGE_TRIM;             /**< Offset address: 0x00000804U, OE and GE common trim register */
     unsigned int space20[2];
-    ADC_PGA0_OEGE_TRIM0_REG ADC_PGA0_OEGE_TRIM0; /**< Offset address: 0x00000810U, PGA0 OE and GE trim register0 */
-    ADC_PGA0_OEGE_TRIM1_REG ADC_PGA0_OEGE_TRIM1; /**< Offset address: 0x00000814U, PGA0 OE and GE trim register1 */
-    ADC_PGA0_OEGE_TRIM2_REG ADC_PGA0_OEGE_TRIM2; /**< Offset address: 0x00000818U, PGA0 OE and GE trim register2 */
-    ADC_PGA0_OEGE_TRIM3_REG ADC_PGA0_OEGE_TRIM3; /**< Offset address: 0x0000081CU, PGA0 OE and GE trim register3 */
-    ADC_PGA1_OEGE_TRIM0_REG ADC_PGA1_OEGE_TRIM0; /**< Offset address: 0x00000820U, PGA1 OE and GE trim register0 */
-    ADC_PGA1_OEGE_TRIM1_REG ADC_PGA1_OEGE_TRIM1; /**< Offset address: 0x00000824U, PGA1 OE and GE trim register1 */
-    ADC_PGA1_OEGE_TRIM2_REG ADC_PGA1_OEGE_TRIM2; /**< Offset address: 0x00000828U, PGA1 OE and GE trim register2 */
-    ADC_PGA1_OEGE_TRIM3_REG ADC_PGA1_OEGE_TRIM3; /**< Offset address: 0x0000082CU, PGA1 OE and GE trim register3 */
+    ADC_AIN0_OEGE_TRIM0_REG ADC_AIN0_OEGE_TRIM0; /**< Offset address: 0x00000810U, PGA0 OE and GE trim register0 */
+    ADC_AIN0_OEGE_TRIM1_REG ADC_AIN0_OEGE_TRIM1; /**< Offset address: 0x00000814U, PGA0 OE and GE trim register1 */
+    ADC_AIN0_OEGE_TRIM2_REG ADC_AIN0_OEGE_TRIM2; /**< Offset address: 0x00000818U, PGA0 OE and GE trim register2 */
+    ADC_AIN0_OEGE_TRIM3_REG ADC_AIN0_OEGE_TRIM3; /**< Offset address: 0x0000081CU, PGA0 OE and GE trim register3 */
+    ADC_AIN1_OEGE_TRIM0_REG ADC_AIN1_OEGE_TRIM0; /**< Offset address: 0x00000820U, PGA1 OE and GE trim register0 */
+    ADC_AIN1_OEGE_TRIM1_REG ADC_AIN1_OEGE_TRIM1; /**< Offset address: 0x00000824U, PGA1 OE and GE trim register1 */
+    ADC_AIN1_OEGE_TRIM2_REG ADC_AIN1_OEGE_TRIM2; /**< Offset address: 0x00000828U, PGA1 OE and GE trim register2 */
+    ADC_AIN1_OEGE_TRIM3_REG ADC_AIN1_OEGE_TRIM3; /**< Offset address: 0x0000082CU, PGA1 OE and GE trim register3 */
     unsigned int space21[4];
     ADC_ANA_TRIM_REG ADC_ANA_TRIM;               /**< Offset address: 0x00000840U, Analog trim register */
 } volatile ADC_RegStruct;
@@ -1712,27 +1731,61 @@ typedef enum {
  * @brief ADC supports peripherals trigger source.
  */
 typedef enum {
-    ADC_TRIGSOC_SOFT = 0x00000000U,
-    ADC_TRIGSOC_APT0_SOCA = 0x00000001U,
-    ADC_TRIGSOC_APT0_SOCB = 0x00000002U,
-    ADC_TRIGSOC_APT1_SOCA = 0x00000003U,
-    ADC_TRIGSOC_APT1_SOCB = 0x00000004U,
-    ADC_TRIGSOC_APT2_SOCA = 0x00000005U,
-    ADC_TRIGSOC_APT2_SOCB = 0x00000006U,
-    ADC_TRIGSOC_APT3_SOCA = 0x00000007U,
-    ADC_TRIGSOC_APT3_SOCB = 0x00000008U,
-    ADC_TRIGSOC_GPT0 = 0x00000009U,
-    ADC_TRIGSOC_GPT1 = 0x0000000AU,
-    ADC_TRIGSOC_GPT2 = 0x0000000BU,
-    ADC_TRIGSOC_GPT3 = 0x0000000CU,
-    ADC_TRIGSOC_TIMER0 = 0x000000DU,
-    ADC_TRIGSOC_TIMER1 = 0x000000EU,
-    ADC_TRIGSOC_TIMER2 = 0x000000FU,
-    ADC_TRIGSOC_TIMER3 = 0x00000010U,
-    ADC_TRIGSOC_GPIOPD5 = 0x00000011U,
-    ADC_TRIGSOC_GPIOPF3 = 0x00000012U,
-    ADC_TRIGSOC_GPIOPF2 = 0x00000013U,
-    ADC_TRIGSOC_GPIOPF1 = 0x00000014U,
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+        ADC_TRIGSOC_SOFT = 0x00000000U,
+        ADC_TRIGSOC_APT0_SOCA = 0x00000001U,
+        ADC_TRIGSOC_APT0_SOCB = 0x00000002U,
+        ADC_TRIGSOC_APT1_SOCA = 0x00000003U,
+        ADC_TRIGSOC_APT1_SOCB = 0x00000004U,
+        ADC_TRIGSOC_APT2_SOCA = 0x00000005U,
+        ADC_TRIGSOC_APT2_SOCB = 0x00000006U,
+        ADC_TRIGSOC_APT3_SOCA = 0x00000007U,
+        ADC_TRIGSOC_APT3_SOCB = 0x00000008U,
+        ADC_TRIGSOC_APT4_SOCA = 0x00000009U,
+        ADC_TRIGSOC_APT4_SOCB = 0x0000000AU,
+        ADC_TRIGSOC_APT5_SOCA = 0x0000000BU,
+        ADC_TRIGSOC_APT5_SOCB = 0x0000000CU,
+        ADC_TRIGSOC_APT6_SOCA = 0x0000000DU,
+        ADC_TRIGSOC_APT6_SOCB = 0x0000000EU,
+        ADC_TRIGSOC_APT7_SOCA = 0x0000000FU,
+        ADC_TRIGSOC_APT7_SOCB = 0x00000010U,
+        ADC_TRIGSOC_APT8_SOCA = 0x00000011U,
+        ADC_TRIGSOC_APT8_SOCB = 0x00000012U,
+        ADC_TRIGSOC_TIMER0    = 0x00000013U,
+        ADC_TRIGSOC_TIMER1    = 0x00000014U,
+        ADC_TRIGSOC_TIMER2    = 0x00000015U,
+        ADC_TRIGSOC_TIMER3    = 0x00000016U,
+        ADC_TRIGSOC_GPT0      = 0x00000017U,
+        ADC_TRIGSOC_GPT1      = 0x00000018U,
+        ADC_TRIGSOC_GPIOK22   = 0x00000019U,
+        ADC_TRIGSOC_GPIOX4    = 0x0000001AU,
+        ADC_TRIGSOC_GPIOA15   = 0x0000001BU,
+        ADC_TRIGSOC_GPIOK1    = 0x0000001CU,
+    #else
+        ADC_TRIGSOC_SOFT = 0x00000000U,
+        ADC_TRIGSOC_APT0_SOCA = 0x00000001U,
+        ADC_TRIGSOC_APT0_SOCB = 0x00000002U,
+        ADC_TRIGSOC_APT1_SOCA = 0x00000003U,
+        ADC_TRIGSOC_APT1_SOCB = 0x00000004U,
+        ADC_TRIGSOC_APT2_SOCA = 0x00000005U,
+        ADC_TRIGSOC_APT2_SOCB = 0x00000006U,
+        ADC_TRIGSOC_APT3_SOCA = 0x00000007U,
+        ADC_TRIGSOC_APT3_SOCB = 0x00000008U,
+        ADC_TRIGSOC_GPT0 = 0x00000009U,
+        ADC_TRIGSOC_GPT1 = 0x0000000AU,
+        ADC_TRIGSOC_GPT2 = 0x0000000BU,
+        ADC_TRIGSOC_GPT3 = 0x0000000CU,
+        ADC_TRIGSOC_TIMER0 = 0x000000DU,
+        ADC_TRIGSOC_TIMER1 = 0x000000EU,
+        ADC_TRIGSOC_TIMER2 = 0x000000FU,
+        ADC_TRIGSOC_TIMER3 = 0x00000010U,
+        ADC_TRIGSOC_GPIOPD5 = 0x00000011U,
+        ADC_TRIGSOC_GPIOPF3 = 0x00000012U,
+        ADC_TRIGSOC_GPIOPF2 = 0x00000013U,
+        ADC_TRIGSOC_GPIOPF1 = 0x00000014U,
+    #endif
+        ADC_TRIGSOC_MAX
 } ADC_TrigSource;
 
 /**
@@ -1901,11 +1954,11 @@ typedef enum {
     ADC_CALLBACK_INT1 = 0x00000001U,
     ADC_CALLBACK_INT2 = 0x00000002U,
     ADC_CALLBACK_INT3 = 0x00000003U,
-    ADC_CALLBACK_DMA = 0x000000004U,
-    ADC_CALLBACK_DMAERROR = 0x000000005U,
+    ADC_CALLBACK_DMA =  0x00000004U,
+    ADC_CALLBACK_DMAERROR = 0x00000005U,
     ADC_CALLBACK_DMAOVER = 0x00000006U,
     ADC_CALLBACK_TRIGOVER = 0x00000007U,
-    ADC_CALLBACK_EVENT_OVERSAMPLING = 0x000000008U,
+    ADC_CALLBACK_EVENT_OVERSAMPLING = 0x00000008U,
     ADC_CALLBACK_EVENT_PPB0_ZERO = 0x00000010U,
     ADC_CALLBACK_EVENT_PPB0_UP = 0x00000011U,
     ADC_CALLBACK_EVENT_PPB0_DOWN = 0x00000012U,
@@ -2093,7 +2146,7 @@ static inline bool IsADCIntx(ADC_IntNumber intx)
  */
 static inline bool IsADCTrigSource(ADC_TrigSource trig)
 {
-    return (trig >= ADC_TRIGSOC_SOFT) && (trig <= ADC_TRIGSOC_GPIOPF1);
+    return (trig >= ADC_TRIGSOC_SOFT) && (trig < ADC_TRIGSOC_MAX);
 }
 
 /**
@@ -2335,9 +2388,6 @@ static inline void DCL_ADC_SOCxSelectChannel(ADC_RegStruct * const adcx, ADC_SOC
     unsigned int addr = ADC_GetCTRLAddr(adcx, socx); /* Get the Address After Translation */
     soc = (ADC_SOC0_CFG_REG *)(void *)(uintptr_t)addr;
     soc->BIT.cfg_soc0_ch_sel = (unsigned int)input;
-    if (input == ADC_CH_ADCINA18) {
-        DCL_ADC_EnableAvddChannel(adcx);
-    }
 }
 
 /**
@@ -2437,7 +2487,7 @@ static inline void DCL_ADC_ResetPollPoint(ADC_RegStruct * const adcx)
 }
 
 /**
- * @brief Set the specified SOC as the DAM request trigger source.
+ * @brief Set the specified SOC as the DMA request trigger source.
  * @param adcx ADC register base address.
  * @param socx Number of SOC, @ref ADC_SOCNumber.
  * @retval None.
@@ -2759,7 +2809,7 @@ static inline void DCL_ADC_SetOversamplingParam(ADC_RegStruct * const adcx, ADC_
 {
     ADC_ASSERT_PARAM(IsADCInstance(adcx));
     ADC_PARAM_CHECK_NO_RET(IsADCOversamplingMultiple(multiple));
-    ADC_PARAM_CHECK_NO_RET(IsADCOversamplingMultiple(rightShift));
+    ADC_PARAM_CHECK_NO_RET(IsADCOversamplingRightShift(rightShift));
     adcx->ADC_OVERSAMP.BIT.cfg_oversamp_n = multiple;   /* Configuring the Oversampling Multiple */
     adcx->ADC_OVERSAMP.BIT.cfg_oversamp_m = rightShift; /* Configuring the Bits Shifted Right in Oversampling */
 }

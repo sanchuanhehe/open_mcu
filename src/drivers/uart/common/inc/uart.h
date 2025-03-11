@@ -86,17 +86,39 @@ typedef void (* UART_CallbackType)(void *handle);
   */
 
 /**
-  * @defgroup UART_API_Declaration UART HAL API
+  * @defgroup UART_API_Declaration
+  * @brief UART HAL API.
   * @{
   */
-/*  Peripheral initialization and deinitialize functions */
+/**
+  * @defgroup UART_API_Declaration
+  * @brief Peripheral initialization and deinitialize functions.
+  * @{
+  */
+
 BASE_StatusType HAL_UART_Init(UART_Handle *uartHandle);
 BASE_StatusType HAL_UART_DeInit(UART_Handle *uartHandle);
+/**
+  * @}
+  */
 
-/* Peripheral querying the state functions */
+/**
+  * @defgroup UART_API_Declaration
+  * @brief Peripheral querying the state functions.
+  * @{
+  */
+
 UART_State_Type HAL_UART_GetState(UART_Handle *uartHandle);
+/**
+  * @}
+  */
 
-/* Peripheral transmit and abort functions */
+/**
+  * @defgroup UART_API_Declaration
+  * @brief Peripheral transmit and abort functions.
+  * @{
+  */
+
 BASE_StatusType HAL_UART_WriteBlocking(UART_Handle *uartHandle, unsigned char *srcData,
                                        unsigned int dataLength, unsigned int blockingTime);
 BASE_StatusType HAL_UART_WriteIT(UART_Handle *uartHandle, unsigned char *srcData, unsigned int dataLength);
@@ -109,16 +131,35 @@ BASE_StatusType HAL_UART_ReadDMA(UART_Handle *uartHandle, unsigned char *saveDat
                                  unsigned int dataLength);
 BASE_StatusType HAL_UART_StopRead(UART_Handle *uartHandle);
 BASE_StatusType HAL_UART_StopWrite(UART_Handle *uartHandle);
+/**
+  * @}
+  */
 
-/* brief Peripheral interrupt service and callback registration functions */
+/**
+  * @defgroup UART_API_Declaration
+  * @brief brief Peripheral interrupt service and callback registration functions.
+  * @{
+  */
+
 void HAL_UART_IrqHandler(void *handle);
 BASE_StatusType HAL_UART_RegisterCallBack(UART_Handle *uartHandle, UART_CallbackFun_Type typeID,
                                           UART_CallbackType pCallback);
+/**
+  * @}
+  */
 
-/* UART read using DMA cyclically stored function */
+/**
+  * @defgroup UART_API_Declaration
+  * @brief UART read using DMA cyclically stored function.
+  * @{
+  */
+
 BASE_StatusType HAL_UART_ReadDMAAndCyclicallyStored(UART_Handle *uartHandle, unsigned char *saveData,
                                                     DMA_LinkList *tempNode, unsigned int dataLength);
 unsigned int HAL_UART_ReadDMAGetPos(UART_Handle *uartHandle);
+/**
+  * @}
+  */
 
 /**
   * @}

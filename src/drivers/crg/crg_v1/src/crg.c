@@ -291,9 +291,9 @@ static inline unsigned int CRG_GetVcoFreq(void)
     CRG_ASSERT_PARAM((XTRAIL_FREQ <= 30000000U)); /* The maximum of the external clock source is 30000000U. */
 
     freq = CRG_GetPllRefIni(crg->PERI_CRG0.BIT.pll_ref_cksel);
-    freq /= CRG_GetPreDivValue(crg->PERI_CRG1.BIT.pll_prediv);
     regFbdiv = CRG_GetPllFbDivValue(crg->PERI_CRG2.BIT.pll_fbdiv); /* Get the value of the fbdiv register. */
     freq *= (regFbdiv >= 0x06) ? regFbdiv : 0x06; /* 0x0-0x6: divided by 0x6 */
+    freq /= CRG_GetPreDivValue(crg->PERI_CRG1.BIT.pll_prediv);
     return freq;
 }
 
@@ -475,14 +475,14 @@ BASE_StatusType HAL_CRG_IpClkSelectSet(const void *baseAddress, unsigned int sel
 /**
   * @brief Get clock select of ip
   * @param baseAddress Ip base address
-  * @param clkSel Get clkSet value
+  * @param select Get clkSet value
   * @retval BASE_STATUS_OK
   * @retval BASE_STATUS_ERROR  Match Fail or Not support
   */
-BASE_StatusType HAL_CRG_IpClkSelectGet(const void *baseAddress, unsigned int *clkSel)
+BASE_StatusType HAL_CRG_IpClkSelectGet(const void *baseAddress, unsigned int *select)
 {
     CRG_ASSERT_PARAM(baseAddress != NULL);
-    CRG_ASSERT_PARAM(clkSel != NULL);
+    CRG_ASSERT_PARAM(select != NULL);
     CRG_ASSERT_PARAM(IsCRGInstance(g_crgBaseAddr));
     /* Get the CRG type of the target IP. */
     CHIP_CrgIpMatchInfo *p = GetCrgIpMatchInfo(baseAddress);
@@ -492,7 +492,7 @@ BASE_StatusType HAL_CRG_IpClkSelectGet(const void *baseAddress, unsigned int *cl
     if (g_ipClkProc[p->type].clkSelGet == NULL) {
         return BASE_STATUS_ERROR;
     }
-    *clkSel = g_ipClkProc[p->type].clkSelGet(p); /* Obtains the module clock selection. */
+    *select = g_ipClkProc[p->type].clkSelGet(p); /* Obtains the module clock selection. */
     return BASE_STATUS_OK;
 }
 

@@ -60,15 +60,17 @@
 #define MOTOR_PARAM_ENCODER_ZSHIFT   (1)          /* Pulse Z shift. */
 
 /* ----------------------------PI parameters----------------------------------- */
-#define CURR_KP            (0.07414f)
-#define CURR_KI            (1200.0f)
+#define CURR_KP            (0.07414f) /* Current loop Kp. */
+#define CURR_KI            (1200.0f)  /* Current loop Ki. */
+/* Current loop PID output lower limit. */
 #define CURR_LOWERLIM      (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.92f)
+/* Current loop PID output upper limit. */
 #define CURR_UPPERLIM      (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.92f)
 
-#define SPD_KP            (0.05f)
-#define SPD_KI            (0.5f)
-#define SPD_LOWERLIM      (-MOTOR_PARAM_MAX_CURR)
-#define SPD_UPPERLIM      (MOTOR_PARAM_MAX_CURR)
+#define SPD_KP            (0.01f)                  /* Speed loop Kp. */
+#define SPD_KI            (0.5f)                   /* Speed loop Ki. */
+#define SPD_LOWERLIM      (-MOTOR_PARAM_MAX_CURR)  /* Speed loop PID output lower limit. */
+#define SPD_UPPERLIM      (MOTOR_PARAM_MAX_CURR)   /* Speed loop PID output upper limit. */
 
 /** Duty of sample window, the real time is 0.06 *100us / 2 = 3us. */
 #define SAMPLE_WINDOW_DUTY 0.06f

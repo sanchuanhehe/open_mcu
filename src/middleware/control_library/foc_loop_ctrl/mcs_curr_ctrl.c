@@ -30,11 +30,11 @@
 /**
   * @brief Initialzer of Current controller.
   * @param currHandle Current control handle.
-  * @param pidTable Motor control handle.
   * @param mtrParam Motor parameters.
   * @param idqRef idqRef.
   * @param idqFbk idqFbk.
-  * @param busVolt Bus voltage.
+  * @param dAxisPi PI parameter table of d axis.
+  * @param qAxisPi PI parameter table of q axis.
   * @param ts control period.
   * @retval None.
   */
@@ -89,7 +89,7 @@ void CURRCTRL_Reset(CURRCTRL_Handle *currHandle)
     currHandle->mtrParam   = NULL;
     currHandle->outLimit   = 0.0f;
     currHandle->ts = 0.0f;
-    /* Reset Dq axis PID current control */
+    /* Reset Dq axis PID current control. */
     PID_Reset(&currHandle->dAxisPi);
     PID_Reset(&currHandle->qAxisPi);
 }
@@ -111,11 +111,11 @@ void CURRCTRL_Clear(CURRCTRL_Handle *currHandle)
   * @brief Simplified current controller PI calculation.
   * @param currHandle Current controller struct handle.
   * @param voltRef Dq-axis voltage reference which is the output of current controller.
-  * @param spd speed (Hz).
+  * @param spdRef Speed reference (Hz).
   * @param ffEnable Feedforward compensation enable.
   * @retval None.
   */
-void CURRCTRL_Exec(CURRCTRL_Handle *currHandle, DqAxis *vdqRef, float spd, int ffEnable)
+void CURRCTRL_Exec(CURRCTRL_Handle *currHandle, DqAxis *vdqRef, float spdRef, int ffEnable)
 {
     MCS_ASSERT_PARAM(currHandle != NULL);
     MCS_ASSERT_PARAM(vdqRef != NULL);
@@ -124,7 +124,7 @@ void CURRCTRL_Exec(CURRCTRL_Handle *currHandle, DqAxis *vdqRef, float spd, int f
     /* Calculate the current error of the dq axis. */
     currHandle->dAxisPi.error = currHandle->idqRef->d - currHandle->idqFbk->d;
     currHandle->qAxisPi.error = currHandle->idqRef->q - currHandle->idqFbk->q;
-    CURRFF_Exec(&vdqFf, *currHandle->idqFbk, currHandle->mtrParam, spd, ffEnable);
+    CURRFF_Exec(&vdqFf, *currHandle->idqFbk, currHandle->mtrParam, spdRef, ffEnable);
     currHandle->dAxisPi.feedforward = vdqFf.d;
     currHandle->qAxisPi.feedforward = vdqFf.q;
     /* Calculation of the PI of the Dq axis current. */

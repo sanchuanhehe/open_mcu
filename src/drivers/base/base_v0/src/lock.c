@@ -64,7 +64,7 @@ void BASE_FUNC_SoftwareUnLock(unsigned int * const addr)
   * @retval true, Succeeded in obtaining the Hardware Resource lock.
   * @retval false, Failed to obtain the Hardware Resource lock. The resource has been locked.
   */
-bool BASE_FUNC_HardwareLock(CHIP_LockType const hwIndex)
+bool BASE_FUNC_HardwareLock(const CHIP_LockType hwIndex)
 {
     BASE_FUNC_PARAMCHECK_WITH_RET((hwIndex >= 0 && hwIndex < CHIP_LOCK_TOTAL), false);
     return BASE_FUNC_SoftwareLock(&g_baseLock[hwIndex]);
@@ -75,7 +75,7 @@ bool BASE_FUNC_HardwareLock(CHIP_LockType const hwIndex)
   * @param hwIndex Hardware Resource ID.
   * @retval None.
   */
-void BASE_FUNC_HardwareUnLock(CHIP_LockType const hwIndex)
+void BASE_FUNC_HardwareUnLock(const CHIP_LockType hwIndex)
 {
     BASE_FUNC_PARAMCHECK_NO_RET(hwIndex >= 0 && hwIndex < CHIP_LOCK_TOTAL);
     BASE_FUNC_SoftwareUnLock(&g_baseLock[hwIndex]);

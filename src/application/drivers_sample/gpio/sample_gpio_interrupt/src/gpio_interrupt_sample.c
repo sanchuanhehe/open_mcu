@@ -109,6 +109,7 @@ static void GPIO_InterruptTest(void)
     HAL_GPIO_SetValue(&TRIG_HANDLE, TRIG_PIN, GPIO_LOW_LEVEL); /* Provide rise level trig condition */
     BASE_FUNC_DELAY_MS(GPIO_LEVEL_SHIFT_SAFE_TIME);
     HAL_GPIO_SetValue(&TRIG_HANDLE, TRIG_PIN, GPIO_HIGH_LEVEL);
+    BASE_FUNC_DELAY_MS(GPIO_LEVEL_SHIFT_SAFE_TIME);
     CheckGpioIntState();
     /* Test fall level interrupt type */
     DBG_PRINTF(" Test fall level interrupt type : trig GPIO -> int GPIO falling edge-------------------- ");

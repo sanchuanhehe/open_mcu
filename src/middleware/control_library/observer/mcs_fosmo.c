@@ -25,16 +25,27 @@
 #include "mcs_math.h"
 #include "mcs_assert.h"
 
+#define LIMIT_TIMES       10.0f
 
-void FOSMO_Init(FOSMO_Handle *fosmo, const FOSMO_Param foSmoParam, const MOTOR_Param mtrParam, float ts)
+/**
+  * @brief Init parameters for fosmo.
+  * @param fosmo The SMO handle.
+  * @param foSmoParam First order smo parameters.
+  * @param mtrParam Motor parameters.
+  * @param ts Control period (s).
+  * @retval None.
+  */
+void FOSMO_Init(FOSMO_Handle *fosmo, FOSMO_Param foSmoParam, MOTOR_Param *mtrParam, float ts)
 {
     MCS_ASSERT_PARAM(fosmo != NULL);
     MCS_ASSERT_PARAM(ts > 0.0f);
     /* time sample, unit: s */
     fosmo->ts = ts;
+    /* Motor parameter */
+    fosmo->mtrParam = mtrParam;
     /* filter coefficient */
-    fosmo->a1 = 1.0f - (fosmo->ts * mtrParam.mtrRs / mtrParam.mtrLd);
-    fosmo->a2 = fosmo->ts / mtrParam.mtrLd;
+    fosmo->a1 = 1.0f - (fosmo->ts * mtrParam->mtrRs / mtrParam->mtrLd);
+    fosmo->a2 = fosmo->ts / mtrParam->mtrLd;
 
     fosmo->kSmo = foSmoParam.gain;
     fosmo->lambda = foSmoParam.lambda; /* SMO coefficient of cut-off frequency = lambda * we, unit: rad/2. */
@@ -47,7 +58,7 @@ void FOSMO_Init(FOSMO_Handle *fosmo, const FOSMO_Param foSmoParam, const MOTOR_P
 
     fosmo->emfLpfMinFreq = foSmoParam.fcEmf; /* The minimum cutoff frequency of the back EMF filter is 2.0. */
 
-    PLL_Init(&fosmo->pll, fosmo->ts, fosmo->pllBdw); // bdw
+    PLL_Init(&fosmo->pll, fosmo->ts, fosmo->pllBdw); /* bdw */
 
     /* low pass filter cutoff freqency for speed estimation is 40Hz */
     FOLPF_Init(&fosmo->spdFilter, fosmo->ts, fosmo->fcLpf);
@@ -120,7 +131,6 @@ void FOSMO_Exec(FOSMO_Handle *fosmo, const AlbeAxis *ialbeFbk, const AlbeAxis *v
     MCS_ASSERT_PARAM(fosmo != NULL);
     MCS_ASSERT_PARAM(ialbeFbk != NULL);
     MCS_ASSERT_PARAM(valbeRef != NULL);
-    float err;
     float wcTs;
     float fcAbs = Abs(refHz);
     float filCompAngle; /* Compensation angle (rad) */
@@ -128,20 +138,24 @@ void FOSMO_Exec(FOSMO_Handle *fosmo, const AlbeAxis *ialbeFbk, const AlbeAxis *v
     float currBeta  = fosmo->ialbeEstLast.beta;
     float emfUnAlpha = fosmo->emfEstUnFil.alpha;
     float emfUnBeta  = fosmo->emfEstUnFil.beta;
+    float iEstLimit = LIMIT_TIMES * fosmo->mtrParam->maxCurr;
+    float emfEstLimit = LIMIT_TIMES * fosmo->mtrParam->busVolt;
     /* Alpha beta current observation value */
-    fosmo->ialbeEst.alpha =
-        (fosmo->a1 * currAlpha) + (fosmo->a2 * (valbeRef->alpha - emfUnAlpha));
-    fosmo->ialbeEst.beta =
-        (fosmo->a1 * currBeta) + (fosmo->a2 * (valbeRef->beta - emfUnBeta));
+    float ialEst = (fosmo->a1 * currAlpha) + (fosmo->a2 * (valbeRef->alpha - emfUnAlpha));
+    float ibeEst  = (fosmo->a1 * currBeta) + (fosmo->a2 * (valbeRef->beta - emfUnBeta));
+    /* Amplitude limit */
+    fosmo->ialbeEst.alpha = Clamp(ialEst, iEstLimit, -iEstLimit);
+    fosmo->ialbeEst.beta  = Clamp(ibeEst, iEstLimit, -iEstLimit);
 
     fosmo->ialbeEstLast.alpha = fosmo->ialbeEst.alpha;
     fosmo->ialbeEstLast.beta   = fosmo->ialbeEst.beta;
 
     /* Estmated back EMF by sign function. */
-    err = fosmo->ialbeEst.alpha - ialbeFbk->alpha;
-    fosmo->emfEstUnFil.alpha = fosmo->kSmo * ((err > 0.0f) ? 1.0f : -1.0f);
-    err = fosmo->ialbeEst.beta - ialbeFbk->beta;
-    fosmo->emfEstUnFil.beta  = fosmo->kSmo * ((err > 0.0f) ? 1.0f : -1.0f);
+    float emfAlEst = fosmo->kSmo * ((fosmo->ialbeEst.alpha - ialbeFbk->alpha > 0.0f) ? 1.0f : -1.0f);
+    float emfBeEst = fosmo->kSmo * ((fosmo->ialbeEst.beta - ialbeFbk->beta > 0.0f) ? 1.0f : -1.0f);
+    /* Amplitude limit */
+    fosmo->emfEstUnFil.alpha = Clamp(emfAlEst, emfEstLimit, -emfEstLimit);
+    fosmo->emfEstUnFil.beta  = Clamp(emfBeEst, emfEstLimit, -emfEstLimit);
 
     /* Estmated back EMF is filtered by first-order LPF. */
     if (fcAbs <= fosmo->emfLpfMinFreq) {

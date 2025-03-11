@@ -25,7 +25,9 @@
 
 #include "feature.h"
 
-#ifdef CHIP_3061MNPICA
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA) || defined (CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8) || \
+    defined (CHIP_3061MNPIK8) || defined (CHIP_3061MNNIK8)
     /* 3061m */
     #define ADC_U_HANDLE         g_adc0   // ibus
     #define ADC_U_SOC_NUM        ADC_SOC_NUM0
@@ -46,7 +48,8 @@
     #define LED2_PIN             GPIO_PIN_3
 #endif
 
-#if defined CHIP_3065HRPIRZ || defined CHIP_3065ARPIRZ
+#if defined CHIP_3065HRPIRZ || defined CHIP_3065ARPIRZ || defined CHIP_3066MNPIRH || \
+    defined CHIP_3065PNPIRH || defined CHIP_3065PNPIRE || defined CHIP_3065PNPIRA
     /* 3065h */
     #define ADC_U_HANDLE         g_adc0   // ibus
     #define ADC_U_SOC_NUM        ADC_SOC_NUM0

@@ -85,9 +85,9 @@ void ConsolePutc(const char c)
  * @param str: string to be output.
  * @retval None
  */
-int ConsolePuts(const char *str)
+unsigned int ConsolePuts(const char *str)
 {
-    int cnt = 0;
+    unsigned int cnt = 0;
     /* decompose a string into a single character output */
     while (*str != '\0') {
         ConsolePutc(*str);
@@ -340,10 +340,10 @@ static unsigned int ParseSpecifier(const char ch, va_list *paramList)
  * @param *paramList: Number of digits to be printed
  * @retval returns the number of digits of the output number
  */
-static unsigned int DBG_PrintIntWithField(int intNum, int fieldWidth)
+static unsigned int DBG_PrintIntWithField(int intNum, unsigned int fieldWidth)
 {
-    int zeroCnt = 0;
-    int digitsCnt = 0;
+    unsigned int zeroCnt = 0;
+    unsigned int digitsCnt = 0;
     unsigned int cnt = 0;
 
     if (intNum == 0) {
@@ -356,7 +356,7 @@ static unsigned int DBG_PrintIntWithField(int intNum, int fieldWidth)
         intNum = -intNum;
         digitsCnt = DBG_CountDigits(intNum, DECIMAL); /* get int value's width */
         zeroCnt = fieldWidth - digitsCnt;
-        for (int i = 0; i < zeroCnt; i++) {
+        for (unsigned int i = 0; i < zeroCnt; i++) {
             ConsolePutc('0'); /* add '0' */
             cnt++;
         }
@@ -365,7 +365,7 @@ static unsigned int DBG_PrintIntWithField(int intNum, int fieldWidth)
         digitsCnt = DBG_CountDigits(intNum, DECIMAL); /* get int value's width */
         cnt = digitsCnt;
         zeroCnt = fieldWidth - digitsCnt;
-        for (int i = 0; i < zeroCnt; i++) {
+        for (unsigned int i = 0; i < zeroCnt; i++) {
             ConsolePutc('0'); /* add '0' */
             cnt++;
         }
@@ -394,10 +394,10 @@ static int DBG_Atoi(const char **s)
  * @param *format: thing need to print
  * @retval returns the number of digits of the output number
  */
-int UartPrintf(const char *format, ...)
+unsigned int UartPrintf(const char *format, ...)
 {
     /* Define Value Initialization */
-    int cnt = 0;
+    unsigned int cnt = 0;
     int fieldWidth = 0;
     int floatPrecision = 0;
     float fltVal = 0;

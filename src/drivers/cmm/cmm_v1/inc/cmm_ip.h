@@ -102,7 +102,6 @@ typedef enum {
     CMM_INT_COUNTER_OVERFLOW_MASK = 0x00000001U,
     CMM_INT_CHECK_END_MASK = 0x00000002U,
     CMM_INT_FREQ_ERR_MASK = 0x00000004U,
-    CMM_INT_CLOCK_FAIL_MASK = 0x00000008U,
     CMM_INT_MAX
 } CMM_Interrupt_Type;
 
@@ -501,7 +500,6 @@ static inline bool IsCMMInterruptType(CMM_Interrupt_Type type)
 {
     return (type == CMM_INT_COUNTER_OVERFLOW_MASK || \
             type == CMM_INT_CHECK_END_MASK || \
-            type == CMM_INT_CLOCK_FAIL_MASK || \
             type == CMM_INT_FREQ_ERR_MASK);
 }
 

@@ -16,3 +16,7 @@
 
 **【注意事项】**
 + 目前CRC算法只支持CRC8_ROHC、CRC16_IBM、CRC16_MODBUS、CRC16_CCITT_FALSE、CRC16_XMODEM、CRC32算法，且只有算法初始值可配置，其余配置项均已硬件固化。
+
++ 此示例init文件夹下的工程初始化配置是基于3065HRPIRZ芯片工程生成的。
++ 不通过IDE创建生成场景：初始化配置请参考sample下的init文件内容。
++ 通过IDE创建生成场景：初始化配置请参考user/generatecode下的文件内容。

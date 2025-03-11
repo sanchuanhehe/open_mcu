@@ -626,8 +626,8 @@ static inline void DCL_SYSCTRL_ScWriteProtectionDisable(void)
 static inline void DCL_SYSCTRL_ScWriteProtectionEnable(void)
 {
     /* Set the corresponding bit without affecting the other bits and set the high 16 bits to EA51 to write to */
-    SYSCTRL0->SC_LOCKEN.reg =
-        ((SYSCTRL0->SC_LOCKEN.reg & SC_LOW_BIT_MASK) | SC_LOCKEN_SC_ENABLE_MASK) + SC_LOCKEN_VALID_HIGH_BIT;
+    SYSCTRL0->SC_LOCKEN.reg = ((SYSCTRL0->SC_LOCKEN.reg & SC_LOW_BIT_MASK) | SC_LOCKEN_SC_ENABLE_MASK) +
+                              SC_LOCKEN_VALID_HIGH_BIT;
 }
 
 /**
@@ -661,6 +661,15 @@ static inline void DCL_SYSCTRL_CrgWriteProtectionEnable(void)
 static inline void DCL_SYSCTRL_GenerateSoftInterrupt(void)
 {
     SYSCTRL0->SC_SOFT_INT.BIT.software_int = 1;
+}
+/**
+  * @brief Clear software interrupt register, writing 0 clear software interrupt.
+  * @param None.
+  * @retval None.
+  */
+static inline void DCL_SYSCTRL_ClearSoftInterrupt(void)
+{
+    SYSCTRL0->SC_SOFT_INT.BIT.software_int = 0;
 }
 
 /**

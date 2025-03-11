@@ -26,7 +26,6 @@
 
 #include "uart.h"
 #include "i2c.h"
-#include "i2c_ex.h"
 #include "crg.h"
 
 #define    IO_SPEED_FAST     0x00U
@@ -42,8 +41,8 @@
 #define    XTAL_DRV_LEVEL2   0x01U
 #define    XTAL_DRV_LEVEL1   0x00U
 
-extern UART_Handle g_uart0;
 extern I2C_Handle g_i2c0;
+extern UART_Handle g_uart0;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
@@ -51,5 +50,9 @@ void SystemInit(void);
 void I2C0TxCallback(void *handle);
 void I2C0RxCallback(void *handle);
 void I2C0ErrorCallback(void *handle);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

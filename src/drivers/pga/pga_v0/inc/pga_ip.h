@@ -109,7 +109,7 @@ typedef union {
         unsigned int pga_ana_en   : 1;  /**< Overall enable of the PGA. */
         unsigned int pga_en_ext0  : 1;  /**< PGA external output enable. */
         unsigned int pga_en_out   : 1;  /**< PGA output enable. */
-        unsigned int reserved_0   : 29;
+        unsigned int reserved0    : 29;
     } BIT;
 } volatile PGA_CTRL0_REG;
 
@@ -121,7 +121,7 @@ typedef union {
     struct {
         unsigned int pga_trim_ofstp  : 5;   /**< PGA trim PMOS offset. */
         unsigned int pga_trim_ofstn  : 5;   /**< PGA trim NMOS offset. */
-        unsigned int reserved_0      : 22;
+        unsigned int reserved0       : 22;
     } BIT;
 } volatile PGA_CTRL1_REG;
 
@@ -133,7 +133,7 @@ typedef union {
     struct {
         unsigned int pga_smux   : 3;  /**< PGA input channel select. */
         unsigned int pga_gain   : 3;  /**< PGA gain. */
-        unsigned int reserved_0 : 26;
+        unsigned int reserved0  : 26;
     } BIT;
 } volatile PGA_CTRL2_REG;
 
@@ -146,7 +146,7 @@ typedef union {
         unsigned int pga_sw_enlv_n    : 4;  /**< PGA N input SW enable, configured together with channel select. */
         unsigned int pga_sw_enlv_p    : 4;  /**< PGA P input SW enable, configured together with channel select. */
         unsigned int pga_ext_loopback : 2;  /**< PGA loopback switch. */
-        unsigned int reserved_0       : 22;
+        unsigned int reserved0        : 22;
     } BIT;
 } volatile PGA_CTRL3_REG;
 

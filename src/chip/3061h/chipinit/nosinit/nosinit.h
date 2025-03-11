@@ -21,6 +21,15 @@
   * @details   nos initialization function during startup
   */
   
+#ifndef NOS_INIT_H
+#define NOS_INIT_H
+
+#include "feature.h"
+
 #ifdef NOS_TASK_SUPPORT
-int main(void);
+extern int main(void);
+extern void OsHwiDispatchTick(void);
+void NOS_Init(void);
+#endif
+
 #endif

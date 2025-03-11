@@ -71,12 +71,16 @@ typedef void (* GPT_CallBackFunc)(void *handle);
   */
 
 /**
-  * @defgroup GPT_API_Declaration GPT HAL API
+  * @defgroup GPT_API_Declaration
+  * @brief GPT HAL API.
   * @{
   */
 /**
- * GPT Control functions
- */
+  * @defgroup GPT_API_Declaration
+  * @brief GPT Control functions.
+  * @{
+  */
+
 BASE_StatusType HAL_GPT_Init(GPT_Handle *handle);
 
 void HAL_GPT_Start(GPT_Handle *handle);
@@ -86,13 +90,29 @@ void HAL_GPT_Stop(GPT_Handle *handle);
 BASE_StatusType HAL_GPT_Config(GPT_Handle *handle);
 
 BASE_StatusType HAL_GPT_GetConfig(GPT_Handle *handle);
+/**
+  * @}
+  */
 
-/* Setting PWM reference points and corresponding actions */
+/**
+  * @defgroup GPT_API_Declaration
+  * @brief Setting PWM reference points and corresponding actions.
+  * @{
+  */
+
 BASE_StatusType HAL_GPT_SetReferCounterAndAction(GPT_Handle *handle, const GPT_ReferCfg *refer);
 
 void HAL_GPT_GetReferCounterAndAction(GPT_Handle *handle, GPT_ReferCfg *refer);
+/**
+  * @}
+  */
 
-/* GPT frequency divider and period. */
+/**
+  * @defgroup GPT_API_Declaration
+  * @brief GPT frequency divider and period.
+  * @{
+  */
+
 BASE_StatusType HAL_GPT_SetCountPeriod(GPT_Handle *handle, unsigned int period);
 
 unsigned int HAL_GPT_GetCountPeriod(GPT_Handle *handle);
@@ -100,25 +120,60 @@ unsigned int HAL_GPT_GetCountPeriod(GPT_Handle *handle);
 BASE_StatusType HAL_GPT_SetDivFactor(GPT_Handle *handle, unsigned int div);
 
 unsigned int HAL_GPT_GetDivFactor(GPT_Handle *handle);
+/**
+  * @}
+  */
 
-/* GPT cache loading settings and cache status. */
+/**
+  * @defgroup GPT_API_Declaration
+  * @brief GPT cache loading settings and cache status.
+  * @{
+  */
+
 BASE_StatusType HAL_GPT_SetBufferLoad(GPT_Handle *handle, GPT_SetOption bufferLoad);
 
 unsigned int HAL_GPT_GetBufferLoadStatus(GPT_Handle *handle);
+/**
+  * @}
+  */
 
-/* Output completion interrupt configuration for the GPT channel. */
+/**
+  * @defgroup GPT_API_Declaration
+  * @brief Output completion interrupt configuration for the GPT channel.
+  * @{
+  */
+
 BASE_StatusType HAL_GPT_SetOutFinishInt(GPT_Handle *handle, GPT_SetOption outFinishInt);
+/**
+  * @}
+  */
 
-/* GPT period interrupt configuration. */
+/**
+  * @defgroup GPT_API_Declaration
+  * @brief GPT period interrupt configuration.
+  * @{
+  */
+
 BASE_StatusType HAL_GPT_SetPeriodInt(GPT_Handle *handle, GPT_SetOption periodInt);
+/**
+  * @}
+  */
 
-/* GPT interrupt service and callback registration functions */
+/**
+  * @defgroup GPT_API_Declaration
+  * @brief GPT interrupt service and callback registration functions.
+  * @{
+  */
+
 void HAL_GPT_IrqOutFinishHandler(void *handle);
 
 void HAL_GPT_IrqPeriodHandler(void *handle);
 
 BASE_StatusType HAL_GPT_RegisterCallBack(GPT_Handle *gptHandle, GPT_CallBackFunType typeID,
                                          GPT_CallBackFunc pCallback);
+/**
+  * @}
+  */
 
 /**
   * @}

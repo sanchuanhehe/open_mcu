@@ -25,8 +25,11 @@
 #define McuMagicTag_SYSTEM_INIT_H
 
 #include "uart.h"
+#include "uart_ex.h"
 #include "spi.h"
+#include "spi_ex.h"
 #include "crg.h"
+#include "iocmg.h"
 
 #define    IO_SPEED_FAST     0x00U
 #define    IO_SPEED_SLOW     0x01U
@@ -46,5 +49,9 @@ extern SPI_Handle g_spiSampleHandle;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

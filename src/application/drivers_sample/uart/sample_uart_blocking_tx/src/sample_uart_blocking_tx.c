@@ -36,7 +36,7 @@
   * @param None.
   * @retval None.
   */
-void UART_BlcokingTX(void)
+void UART_BlockingTX(void)
 {
     SystemInit();
     DBG_PRINTF("TX: UART Init finish\r\n");

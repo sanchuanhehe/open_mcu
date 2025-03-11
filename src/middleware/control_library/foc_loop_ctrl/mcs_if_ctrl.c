@@ -73,7 +73,7 @@ float IF_CurrAmpCalc(IF_Handle *ifHandle)
     if (ifHandle->curAmp < ifHandle->targetAmp) {
         ifHandle->curAmp += ifHandle->stepAmp;
     } else {
-        ifHandle->curAmp = ifHandle->targetAmp;
+        ifHandle->curAmp -= ifHandle->stepAmp;
     }
 
     return ifHandle->curAmp;

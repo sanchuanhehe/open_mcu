@@ -24,40 +24,8 @@
 #include "sample_dma_per_to_mem.h"
 
 #define NUM 10
-static UART_Handle g_uart;
 static unsigned char g_str2[NUM] = {0};
-static DMA_Handle g_dmac;
-static DMA_ChannelParam g_param;
-
-/**
-  * @brief DMA controller initialization.
-  * @param None.
-  * @retval None.
-  */
-static void DMA_ControllerInit(void)
-{
-    g_dmac.baseAddress = DMA;
-    g_dmac.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.irqNumTc = IRQ_DMA_TC;
-    g_dmac.irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_Init(&g_dmac);
-}
-
-/**
-  * @brief DMA interrupt initialization.
-  * @param handle DMA handle.
-  * @retval None.
-  */
-static void DMA_InterruptInit(DMA_Handle *handle)
-{
-    IRQ_Enable();
-    handle->irqNumTc = IRQ_DMA_TC;
-    handle->irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_IRQService(handle);
-    IRQ_EnableN(IRQ_DMA_TC);
-    IRQ_EnableN(IRQ_DMA_ERR);
-}
+unsigned int g_channel = 1;  /* select transfer channel 1 */
 
 /**
   * @brief User-defined callback function for completing the transfer of peripheral to the memory.
@@ -66,17 +34,18 @@ static void DMA_InterruptInit(DMA_Handle *handle)
   */
 static void DMA_PeriphToMemFinish(void *handle)
 {
-    DMA_Handle *dmaHandle = (DMA_Handle *)handle;
+    UART_Handle *uart = (UART_Handle *)handle;
+    DMA_Handle *dmaHandle = uart->dmaHandle;
     DBG_PRINTF("Interrupt Finish!\r\n");
     DBG_PRINTF("g_str2:%s\r\n", g_str2);
-    DBG_PRINTF("Process channel: %d\r\n", dmaHandle->currentChannel);
+    DBG_PRINTF("Process channel: %d\r\n", g_channel);
     unsigned int ret;
-    ret = HAL_DMA_StartIT(dmaHandle, (uintptr_t)(void *)&(g_uart.baseAddress->UART_DR),
-                          (uintptr_t)(void *)g_str2, 8, dmaHandle->currentChannel);  /* Transmission length is 8 */
+    ret = HAL_DMA_StartIT(dmaHandle, (uintptr_t)(void *)&(g_uart0.baseAddress->UART_DR),
+                          (uintptr_t)(void *)g_str2, 8, g_channel);  /* Transmission length is 8 */
     if (ret == BASE_STATUS_ERROR) {
         DBG_PRINTF("HAL_DMA_StartIT: BASE_STATUS_ERROR\r\n");
     } else {
-        g_uart.baseAddress->UART_DMACR.BIT.rxdmae = BASE_CFG_ENABLE;
+        g_uart0.baseAddress->UART_DMACR.BIT.rxdmae = BASE_CFG_ENABLE;
     }
 }
 
@@ -87,42 +56,18 @@ static void DMA_PeriphToMemFinish(void *handle)
   */
 int DMA_PeriphToMemoryIT(void)
 {
-    g_uart.baseAddress = UART0;
-    g_uart.baudRate = 115200;  /* baud rate is 115200 */
-    g_uart.dataLength = UART_DATALENGTH_8BIT;
-    g_uart.stopBits = UART_STOPBITS_ONE;
-    g_uart.parity = UART_PARITY_NONE;
-    g_uart.fifoMode = true;
-    g_uart.fifoTxThr = UART_FIFOFULL_ONE_TWO;
-    g_uart.fifoRxThr = UART_FIFOFULL_ONE_TWO;
-    g_uart.hwFlowCtr = UART_HW_FLOWCTR_DISABLE;
-    g_uart.baseAddress = UART0;
-    HAL_UART_Init(&g_uart);
-
+    SystemInit();
     DBG_PRINTF("PeriphToMemory Begin: \r\n");
     DBG_PRINTF("Please enter a string to the peripheral\r\n");
-    unsigned int channel = 1;  /* select transfer channel 1 */
-
-    DMA_ControllerInit();
-    DMA_InterruptInit(&g_dmac);
-    HAL_DMA_RegisterCallback(&g_dmac, DMA_CHANNEL_FINISH, channel, DMA_PeriphToMemFinish);
-    g_param.direction = DMA_PERIPH_TO_MEMORY_BY_DMAC;
-    g_param.srcAddrInc = DMA_ADDR_UNALTERED;
-    g_param.destAddrInc = DMA_ADDR_INCREASE;
-    g_param.srcPeriph = DMA_REQUEST_UART0_RX;
-    g_param.srcWidth = DMA_TRANSWIDTH_BYTE;
-    g_param.destWidth = DMA_TRANSWIDTH_BYTE;
-    g_param.srcBurst = DMA_BURST_LENGTH_1;
-    g_param.destBurst = DMA_BURST_LENGTH_4;
-    g_param.pHandle = &g_dmac;
-    HAL_DMA_InitChannel(&g_dmac, &g_param, channel);
+    
+    HAL_DMA_RegisterCallback(&g_dmac, DMA_CHANNEL_FINISH, g_channel, DMA_PeriphToMemFinish);
     unsigned int ret;
-    ret = HAL_DMA_StartIT(&g_dmac, (uintptr_t)(void *)&(g_uart.baseAddress->UART_DR),
-                          (uintptr_t)(void *)g_str2, 8, channel);  /* The transmission length is defined as 8 */
+    ret = HAL_DMA_StartIT(&g_dmac, (uintptr_t)(void *)&(g_uart0.baseAddress->UART_DR),
+                          (uintptr_t)(void *)g_str2, 8, g_channel);  /* The transmission length is defined as 8 */
     if (ret == BASE_STATUS_ERROR) {
         DBG_PRINTF("HAL_DMA_StartIT: BASE_STATUS_ERROR\r\n");
     } else {
-        g_uart.baseAddress->UART_DMACR.BIT.rxdmae = BASE_CFG_ENABLE;
+        g_uart0.baseAddress->UART_DMACR.BIT.rxdmae = BASE_CFG_ENABLE;
     }
     return 0;
 }

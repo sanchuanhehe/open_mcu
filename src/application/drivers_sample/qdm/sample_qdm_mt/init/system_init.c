@@ -22,13 +22,13 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
 #define QDM_MOTOR_LINE_NUMBER   1000
 #define QDM_INPUT_FILTER_VALUE 0
-#define QDM_INPUT_PALORITY     0x0 /**< bit0~2: A B Z phase, bit value: 0--direct input, 1--invert input */
-#define INTERUPT_ENABLE_BITS 0x304
+#define QDM_INPUT_PALORITY     0x0
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 {
@@ -39,6 +39,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -46,40 +47,138 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     return BASE_STATUS_OK;
 }
 
+__weak void PtuCycleTrgCallback(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_TSU_CYCLE */
+    /* USER CODE END QDM_TSU_CYCLE */
+}
+
+__weak void SpeedLoseCallback(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_SPEED_LOSE */
+    /* USER CODE END QDM_SPEED_LOSE */
+}
+
+__weak void ZIndexLockedCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_INDEX_LOCKED */
+    /* USER CODE END QDM_INDEX_LOCKED */
+}
+
+__weak void PositionCompareMatchCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_POS_MATCH */
+    /* USER CODE END QDM_POS_MATCH */
+}
+
+__weak void PositionCompareReadyCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_POS_READY */
+    /* USER CODE END QDM_POS_READY */
+}
+
+__weak void PositionCounterOverflowCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_POS_CNT_OVERFLOW */
+    /* USER CODE END QDM_POS_CNT_OVERFLOW */
+}
+
+__weak void PositionCounterUnderflowCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE QDM_POS_CNT_UNDERFLOW */
+    /* USER CODE QDM_POS_CNT_UNDERFLOW */
+}
+
+__weak void OrthogonalDirectionChangeCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_DIR_CHANGE */
+    /* USER CODE END QDM_DIR_CHANGE */
+}
+
+__weak void OrthogonalPhaseErrorCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE QDM_PHASE_ERROR */
+    /* USER CODE QDM_PHASE_ERROR */
+}
+
+__weak void PositionCounterErrorCallBack(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN QDM_POS_CNT_ERROR */
+    /* USER CODE END QDM_POS_CNT_ERROR */
+}
+
 static void QDM_Init(void)
 {
-    HAL_CRG_IpEnableSet(QDM0_BASE, IP_CLK_ENABLE);
-
+    HAL_CRG_IpEnableSet(QDM0_BASE, IP_CLK_ENABLE); /* IP enable. */
     g_qdmHandle.baseAddress = QDM0_BASE;
-    g_qdmHandle.irqNum = IRQ_QDM0;
 
     /* emulation config */
     g_qdmHandle.emuMode = QDM_EMULATION_MODE_STOP_IMMEDIATELY;
     /* input config */
     g_qdmHandle.ctrlConfig.decoderMode = QDM_QUADRATURE_COUNT;
+
+    g_qdmHandle.motorLineNum = 1000; /* 1000: line number */
+
+    g_qdmHandle.inputFilter.qdmAFilterLevel = 0;
+    g_qdmHandle.inputFilter.qdmBFilterLevel = 0;
+    g_qdmHandle.inputFilter.qdmZFilterLevel = 0;
     g_qdmHandle.ctrlConfig.polarity = 0;
-    g_qdmHandle.ctrlConfig.resolution = QDM_4X_RESOLUTION;
-    g_qdmHandle.ctrlConfig.trgLockMode = QDM_TRG_BY_CYCLE;
     g_qdmHandle.ctrlConfig.swap = QDM_SWAP_DISABLE;
-    g_qdmHandle.ctrlConfig.ptuMode = QDM_PTU_MODE_CYCLE;
-    /* filter config */
-    g_qdmHandle.inputFilter.qdmAFilterLevel = 0; /* filter level */
-    g_qdmHandle.inputFilter.qdmBFilterLevel = 0; /* filter level */
-    g_qdmHandle.inputFilter.qdmZFilterLevel = 0; /* filter level */
-    /* other config */
+    g_qdmHandle.ctrlConfig.resolution = QDM_4X_RESOLUTION;
+
     g_qdmHandle.pcntMode = QDM_PCNT_MODE_BY_DIR;
     g_qdmHandle.pcntRstMode = QDM_PCNT_RST_AUTO;
-    g_qdmHandle.pcntIdxInitMode = QDM_IDX_INIT_DISABLE;
-    g_qdmHandle.qcMax = 0xffffffff; /* 0xffffffff: QDM TSU Counter Maximum Value */
-    g_qdmHandle.subModeEn = true;
-    g_qdmHandle.tsuPrescaler = 8; /* 8: TSU prescaler */
-    g_qdmHandle.cevtPrescaler = 11; /* 11: cevt prescaler */
-    g_qdmHandle.posMax = 0xffffffff; /* 0xffffffff: QDM PPU Position Counter Maximum Value */
     g_qdmHandle.posInit = 0;
+    g_qdmHandle.pcntIdxInitMode = QDM_IDX_INIT_DISABLE;
+    g_qdmHandle.lock_mode = QDM_LOCK_RESERVE;
+    g_qdmHandle.posMax = 4294967295; /* 4294967295 is max count */
 
-    g_qdmHandle.period = 200000000; /* 200000000: QDM PTU Period Value */
-    g_qdmHandle.motorLineNum = 1000; /* 1000: line number */
-    HAL_QDM_Init(&g_qdmHandle);
+    g_qdmHandle.tsuPrescaler = 8;  /* 8 is tsu prescaler */
+    g_qdmHandle.cevtPrescaler = QDM_CEVT_PRESCALER_DIVI2048;
+    g_qdmHandle.qcMax = 4294967295; /* 4294967295 is max count */
+
+    g_qdmHandle.ctrlConfig.ptuMode = QDM_PTU_MODE_CYCLE;
+    g_qdmHandle.period = 25000000; /* 25000000 is period count */
+    g_qdmHandle.ctrlConfig.trgLockMode = QDM_TRG_BY_CYCLE;
+    g_qdmHandle.subModeEn = true;
+
+    g_qdmHandle.interruptEn = QDM_INT_POS_CNT_ERROR |
+        QDM_INT_PHASE_ERROR |
+        QDM_INT_WATCHDOG |
+        QDM_INT_DIR_CHANGE |
+        QDM_INT_UNDERFLOW |
+        QDM_INT_OVERFLOW |
+        QDM_INT_POS_COMP_READY |
+        QDM_INT_POS_COMP_MATCH |
+        QDM_INT_INDEX_EVNT_LATCH |
+        QDM_INT_UNIT_TIME_OUT;
+
+    HAL_QDM_Init(&g_qdmHandle); /* Init QDM. */
+
+    /* Register callback function. */
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_TSU_CYCLE, PtuCycleTrgCallback);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_SPEED_LOSE, SpeedLoseCallback);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_INDEX_LOCKED, ZIndexLockedCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_POS_MATCH, PositionCompareMatchCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_POS_READY, PositionCompareReadyCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_POS_CNT_OVERFLOW, PositionCounterOverflowCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_POS_CNT_UNDERFLOW, PositionCounterUnderflowCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_DIR_CHANGE, OrthogonalDirectionChangeCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_PHASE_ERROR, OrthogonalPhaseErrorCallBack);
+    HAL_QDM_RegisterCallback(&g_qdmHandle, QDM_POS_CNT_ERROR, PositionCounterErrorCallBack);
+    IRQ_Register(IRQ_QDM0, HAL_QDM_IrqHandler, &g_qdmHandle);
+    IRQ_SetPriority(IRQ_QDM0, 1); /* 1 is priority value */
+    IRQ_EnableN(IRQ_QDM0);
 }
 
 static void UART0_Init(void)
@@ -88,7 +187,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
@@ -105,42 +203,32 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
-
-    iconfig->iocmg_11.BIT.func = 0x1; /* 0x1 is QDM_A */
-    iconfig->iocmg_11.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_11.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_11.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_11.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_11.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_12.BIT.func = 0x1; /* 0x1 is QDM_B */
-    iconfig->iocmg_12.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_12.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_12.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_12.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_12.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_17.BIT.func = 0x1; /* 0x1 is QDM_INDEX */
-    iconfig->iocmg_17.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_17.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_17.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_17.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_17.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO57_AS_QDM_A);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO57_AS_QDM_A, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO57_AS_QDM_A, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO57_AS_QDM_A, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO57_AS_QDM_A, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO58_AS_QDM_B);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO58_AS_QDM_B, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO58_AS_QDM_B, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO58_AS_QDM_B, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO58_AS_QDM_B, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO1_AS_QDM_INDEX);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO1_AS_QDM_INDEX, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO1_AS_QDM_INDEX, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO1_AS_QDM_INDEX, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO1_AS_QDM_INDEX, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

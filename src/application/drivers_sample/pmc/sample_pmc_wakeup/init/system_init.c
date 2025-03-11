@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg_ip.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -31,9 +32,14 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.baseAddress     = CRG;
     crg.pllRefClkSelect = CRG_PLL_REF_CLK_SELECT_HOSC;
     crg.pllPreDiv       = CRG_PLL_PREDIV_4;
-    crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
-    crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
+    crg.pllFbDiv        = 48; /* PLL Multiplier 48 */
+    crg.pllPostDiv      = CRG_PLL_POSTDIV_2;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+    crg.handleEx.pllPostDiv2   = CRG_PLL_POSTDIV2_3;
+    crg.handleEx.clk1MSelect   = CRG_1M_CLK_SELECT_HOSC;
+    /* The 1 MHz freq is equal to the input clock frequency / (clk_1m_div + 1). */
+    crg.handleEx.clk1MDiv = (25 - 1); /* 25 is the div of the clk_1m in CLOCK. */
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -44,25 +50,17 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 static void PMC_Init(void)
 {
     HAL_CRG_IpEnableSet(PMC_BASE, IP_CLK_ENABLE);
-
     g_pmc.baseAddress = PMC_BASE;
-    g_pmc.irqNumPvd = IRQ_PVD;
-
-    g_pmc.wakeupSrc = PMC_WAKEUP_CNT; /* wakeup from timer */
-    g_pmc.wakeupActMode = PMC_WAKEUP_ACT_UP_EDGE; /* wakeup at up edge */
-    g_pmc.wakeupTime = 9600; /* 9600: wakeup after about 3s */
-    g_pmc.pvdEnable = BASE_CFG_DISABLE; /* disable PVD */
-    g_pmc.pvdThreshold = PMC_PVD_THRED_LEVEL2;
+    g_pmc.wakeupSrc = PMC_WAKEUP_CNT; /* Set cnt32 as wakeup mode. */
+    g_pmc.wakeupTime = 100000; /* Wakeup time, 100000 count about 3.125s */
+    g_pmc.pvdEnable = BASE_CFG_DISABLE;
     HAL_PMC_Init(&g_pmc);
 }
 
 static void UART0_Init(void)
 {
-    HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
-    HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
-
+    HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);  /* UART0 clock enable. */
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
@@ -71,29 +69,27 @@ static void UART0_Init(void)
     g_uart0.txMode = UART_MODE_BLOCKING;
     g_uart0.rxMode = UART_MODE_BLOCKING;
     g_uart0.fifoMode = BASE_CFG_ENABLE;
-    g_uart0.fifoTxThr = UART_FIFOFULL_ONE_TWO;
-    g_uart0.fifoRxThr = UART_FIFOFULL_ONE_TWO;
+    g_uart0.fifoTxThr = UART_FIFODEPTH_SIZE8;
+    g_uart0.fifoRxThr = UART_FIFODEPTH_SIZE8;
     g_uart0.hwFlowCtr = BASE_CFG_DISABLE;
+    g_uart0.handleEx.overSampleMultiple = UART_OVERSAMPLING_16X;
+    g_uart0.handleEx.msbFirst = BASE_CFG_DISABLE;
     HAL_UART_Init(&g_uart0);
 }
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    HAL_IOCMG_SetPinAltFuncMode(GPIO0_3_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO0_3_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO0_3_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO0_3_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO0_3_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(GPIO0_4_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO0_4_AS_UART0_RXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO0_4_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO0_4_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO0_4_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

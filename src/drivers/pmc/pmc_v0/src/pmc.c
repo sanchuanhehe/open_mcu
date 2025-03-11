@@ -29,6 +29,7 @@
 
 #define WAKEUP_ENABLE_OFFSET    0x8
 #define WAKE_ACT_MODE_REG_WIDTH 0x2
+#define WAKEUP_CNT_OFFSET_BIT   16
 
 /**
   * @brief Setting deepsleep wakeup source.
@@ -39,17 +40,22 @@ static void PMC_SetDeepSleepWakeupSrc(PMC_Handle *pmcHandle)
 {
     PMC_ASSERT_PARAM(pmcHandle != NULL);
     PMC_ASSERT_PARAM(IsPMCInstance(pmcHandle->baseAddress));
+    unsigned int wakeupConfig = 0;
+
     if (pmcHandle->wakeupSrc == PMC_WAKEUP_NONE) { /* No wakeup source. */
         return;
     }
+
     if (pmcHandle->wakeupSrc == PMC_WAKEUP_CNT) {
         pmcHandle->baseAddress->CNT32K_WAKE_CYC = pmcHandle->wakeupTime; /* Set wakeup time */
-        pmcHandle->baseAddress->WAKEUP_CTRL.BIT.cnt32k_wakeup_en = BASE_CFG_ENABLE; /* Enable wakeup from timer */
-    } else {
-        pmcHandle->baseAddress->WAKEUP_CTRL.reg |= (pmcHandle->wakeupActMode) \
+        wakeupConfig = (BASE_CFG_ENABLE << WAKEUP_CNT_OFFSET_BIT); /* Enable CNT_32K wakeup. */
+    } else if (pmcHandle->wakeupSrc <= PMC_WAKEUP_3) {
+        PMC_PARAM_CHECK_NO_RET(IsActiveMode(pmcHandle->wakeupActMode));
+        wakeupConfig = (pmcHandle->wakeupActMode) \
                                                     << (pmcHandle->wakeupSrc * WAKE_ACT_MODE_REG_WIDTH);
-        pmcHandle->baseAddress->WAKEUP_CTRL.reg |= ((0x1 << pmcHandle->wakeupSrc) << WAKEUP_ENABLE_OFFSET);
+        wakeupConfig |= ((0x1 << pmcHandle->wakeupSrc) << WAKEUP_ENABLE_OFFSET);  /* Enable wakeup IO. */
     }
+    pmcHandle->baseAddress->WAKEUP_CTRL.reg = wakeupConfig; /* Config register. */
 }
 
 /**
@@ -127,7 +133,11 @@ void HAL_PMC_EnterDeepSleepMode(PMC_Handle *handle)
 {
     PMC_ASSERT_PARAM(handle != NULL);
     PMC_ASSERT_PARAM(IsPMCInstance(handle->baseAddress));
+    IRQ_Disable(); /* Disable global interrupt, prevent from being interrupted. */
     handle->baseAddress->LOWPOWER_MODE.BIT.deepsleep_req = BASE_CFG_ENABLE;
+    while (true) {
+        ; /* Wait for enter deepsleep. */
+    }
 }
 
 /**
@@ -139,7 +149,11 @@ void HAL_PMC_EnterShutdownMode(PMC_Handle *handle)
 {
     PMC_ASSERT_PARAM(handle != NULL);
     PMC_ASSERT_PARAM(IsPMCInstance(handle->baseAddress));
+    IRQ_Disable(); /* Disable global interrupt, prevent from being interrupted. */
     handle->baseAddress->LOWPOWER_MODE.BIT.shutdown_req = BASE_CFG_ENABLE;
+    while (true) {
+        ; /* Wait for enter shutdown. */
+    }
 }
 
 /**

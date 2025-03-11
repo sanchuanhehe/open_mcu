@@ -34,34 +34,36 @@
 /* Motor parameters */
 /* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift */
 static MOTOR_Param g_motorParamCp = {
-    MOTOR_PARAM_NP,
-    MOTOR_PARAM_RS,
-    MOTOR_PARAM_LD,
-    MOTOR_PARAM_LQ,
-    MOTOR_PARAM_LS,
-    MOTOR_PARAM_PSIF,
-    MOTOR_PARAM_JS,
-    MOTOR_PARAM_MAX_SPD,
-    MOTOR_PARAM_MAX_CURR,
-    MOTOR_PARAM_MAX_TRQ,
-    MOTOR_PARAM_ENCODER_PPMR,
-    MOTOR_PARAM_ENCODER_ZSHIFT
+    .mtrNp      = MOTOR_PARAM_NP,
+    .mtrRs      = MOTOR_PARAM_RS,
+    .mtrLd      = MOTOR_PARAM_LD,
+    .mtrLq      = MOTOR_PARAM_LQ,
+    .mtrLs      = MOTOR_PARAM_LS,
+    .mtrPsif    = MOTOR_PARAM_PSIF,
+    .mtrJ       = MOTOR_PARAM_JS,
+    .maxElecSpd = MOTOR_PARAM_MAX_SPD,
+    .maxCurr    = MOTOR_PARAM_MAX_CURR,
+    .maxTrq     = MOTOR_PARAM_MAX_TRQ,
+    .mtrPPMR    = MOTOR_PARAM_ENCODER_PPMR,
+    .zShift     = MOTOR_PARAM_ENCODER_ZSHIFT,
+    .busVolt    = INV_VOLTAGE_BUS
 };
 
 /* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift */
 static MOTOR_Param g_motorParamFan = {
-    MOTOR_PARAM_NP,
-    MOTOR_PARAM_RS,
-    MOTOR_PARAM_LD,
-    MOTOR_PARAM_LQ,
-    MOTOR_PARAM_LS,
-    MOTOR_PARAM_PSIF,
-    MOTOR_PARAM_JS,
-    MOTOR_PARAM_MAX_SPD,
-    MOTOR_PARAM_MAX_CURR,
-    MOTOR_PARAM_MAX_TRQ,
-    MOTOR_PARAM_ENCODER_PPMR,
-    MOTOR_PARAM_ENCODER_ZSHIFT
+    .mtrNp      = MOTOR_PARAM_NP,
+    .mtrRs      = MOTOR_PARAM_RS,
+    .mtrLd      = MOTOR_PARAM_LD,
+    .mtrLq      = MOTOR_PARAM_LQ,
+    .mtrLs      = MOTOR_PARAM_LS,
+    .mtrPsif    = MOTOR_PARAM_PSIF,
+    .mtrJ       = MOTOR_PARAM_JS,
+    .maxElecSpd = MOTOR_PARAM_MAX_SPD,
+    .maxCurr    = MOTOR_PARAM_MAX_CURR,
+    .maxTrq     = MOTOR_PARAM_MAX_TRQ,
+    .mtrPPMR    = MOTOR_PARAM_ENCODER_PPMR,
+    .zShift     = MOTOR_PARAM_ENCODER_ZSHIFT,
+    .busVolt    = INV_VOLTAGE_BUS
 };
 
 static APT_RegStruct *g_aptCp[PHASE_MAX_NUM] = {APT_U_CP, APT_V_CP, APT_W_CP};
@@ -101,7 +103,7 @@ static void FOSMO_InitWrapper(FOSMO_Handle *fosmo, float ts)
         .fcLpf = FOSMO_SPD_CUTOFF_FREQ,
         .pllBdw = FOSMO_PLL_BDW,
     };
-    FOSMO_Init(fosmo, fosmoParam, g_motorParamCp, ts);
+    FOSMO_Init(fosmo, fosmoParam, &g_motorParamCp, ts);
 }
 
 /**
@@ -195,7 +197,7 @@ static void FOSMO_InitWrapperFan(FOSMO_Handle *fosmo, float ts)
         .fcLpf = FOSMO_SPD_CUTOFF_FREQ_FAN,
         .pllBdw = FOSMO_PLL_BDW_FAN,
     };
-    FOSMO_Init(fosmo, fosmoParam, g_motorParamFan, ts);
+    FOSMO_Init(fosmo, fosmoParam, &g_motorParamFan, ts);
 }
 
 /**
@@ -841,10 +843,6 @@ void Timer1ITCallBack(void *param)
     OverTempProtProcess();
 }
 
-/* global variables for variable trace */
-volatile float g_mc_u, g_mc_v, g_mc_w;
-volatile float g_fan_u, g_fan_v, g_fan_w;
-volatile float g_currLoopExeTime;
 /**
   * @brief The carrier ISR wrapper function, entry for both compressor and fan.
   * @param aptHandle The APT handle.
@@ -852,21 +850,12 @@ volatile float g_currLoopExeTime;
   */
 void APT3TimerCallback(void *aptHandle)
 {
-    unsigned int start = SYSTICK_GetTimeStampUs();
     MCS_ASSERT_PARAM(aptHandle != NULL);
     /* the carrierprocess of comp */
     MCS_CarrierProcess(&g_mc);
-    g_mc_u = g_mc.iuvw.u;
-    g_mc_v = g_mc.iuvw.v;
-    g_mc_w = g_mc.iuvw.w;
-    
     /* the carrierprocess of fan */
     MCS_CarrierProcess(&g_fan);
-    g_fan_u = g_fan.iuvw.u;
-    g_fan_v = g_fan.iuvw.v;
-    g_fan_w = g_fan.iuvw.w;
     BASE_FUNC_UNUSED(aptHandle);
-    g_currLoopExeTime = (float)(SYSTICK_GetTimeStampUs() - start);
 }
 
 /**
@@ -893,7 +882,7 @@ int MotorMain(void)
 
     BASE_FUNC_DELAY_S(PTC_RELAY_DELAY);
     /* Open PTC relay */
-    HAL_GPIO_SetValue(&g_gpio2, GPIO_PIN_0, GPIO_HIGH_LEVEL);
+    HAL_GPIO_SetValue(&PW_ON_HANDLE, PW_ON_PIN, GPIO_HIGH_LEVEL);
 
     BASE_FUNC_DELAY_S(MOTOR_START_DELAY);
     /* Starting motor. */
@@ -904,9 +893,9 @@ int MotorMain(void)
         if (g_mc.msTickCnt - tickCnt500Ms >= tickNum500Ms) {
             if (SysIsError(&g_mc.statusReg) != true && SysIsError(&g_fan.statusReg) != true) {
                /* The LED blinks when no status is not error. */
-                HAL_GPIO_TogglePin(&g_gpio0, GPIO_PIN_5);
+                HAL_GPIO_TogglePin(&LED_HANDLE, LED_PIN);
             } else {
-                HAL_GPIO_SetValue(&g_gpio0, GPIO_PIN_5, GPIO_LOW_LEVEL);
+                HAL_GPIO_SetValue(&LED_HANDLE, LED_PIN, GPIO_LOW_LEVEL);
             }
             tickCnt500Ms = g_mc.msTickCnt;
         }

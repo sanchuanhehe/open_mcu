@@ -32,6 +32,8 @@
 #define IWDG_LOAD_VALUE_LIMIT     255
 #define IWDG_WINDOW_VALUE_UPPER_LIMIT  255
 #define IWDG_WINDOW_VALUE_LOWER_LIMIT  5
+#define IWDG_COUNT_MAX 0xFF
+#define TIME_CHANGE_NUM 1000
 static unsigned int IWDG_CalculateRegTimeout(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType);
 
 /**
@@ -44,8 +46,6 @@ BASE_StatusType HAL_IWDG_Init(IWDG_Handle *handle)
     IWDG_ASSERT_PARAM(handle != NULL);
     IWDG_ASSERT_PARAM(IsIWDGInstance(handle->baseAddress));
     IWDG_PARAM_CHECK_WITH_RET(IsIwdgTimeType(handle->timeType), BASE_STATUS_ERROR);
-    IWDG_PARAM_CHECK_WITH_RET(IsIwdgTimeValue(handle->baseAddress, handle->timeValue, handle->timeType),
-        BASE_STATUS_ERROR);
     BASE_FUNC_DELAY_US(200); /* IWDG need delay 200 us */
     /* IWDG frequency division value less than 256 */
     unsigned int freqDivVal = (handle->freqDivValue > IWDG_FREQ_DIV_256) ? IWDG_FREQ_DIV_256 : handle->freqDivValue;
@@ -85,6 +85,33 @@ static unsigned int IWDG_CalculateRegTimeout(IWDG_RegStruct *baseAddress, float 
 }
 
 /**
+  * @brief check iwdg time value parameter.
+  * @param baseAddress Value of @ref IWDG_RegStruct
+  * @param timeValue time value
+  * @param timeType Value of @ref IWDG_TimeType.
+  * @retval Bool.
+  */
+static bool IsIwdgTimeValue(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType)
+{
+    unsigned int clockFreq = HAL_CRG_GetIpFreq((void *)baseAddress); /* Get IWDG clock freq. */
+    IWDG_RegStruct *iwdgx = (IWDG_RegStruct *)baseAddress;
+    if (clockFreq == 0) {
+        return false;
+    }
+    /* Get IWDG clock prediv. */
+    unsigned int preDiv = iwdgx->IWDOG_PRE_DIV.BIT.iwdg_pre_div;
+    preDiv = IWDG_COUNT_MAX * (BASE_CFG_SET << preDiv);
+    float maxSecValue = ((float)(preDiv) / (float)clockFreq);
+    float maxMsValue = maxSecValue * TIME_CHANGE_NUM;
+    float maxUsValue = maxMsValue * TIME_CHANGE_NUM;
+    /* Check iwdg time value parameter. */
+    return ((timeType == IWDG_TIME_UNIT_TICK && timeValue <= (float)IWDG_COUNT_MAX) ||
+            (timeType == IWDG_TIME_UNIT_S && maxSecValue >= timeValue) ||
+            (timeType == IWDG_TIME_UNIT_MS && maxMsValue >= timeValue) ||
+            (timeType == IWDG_TIME_UNIT_US && maxUsValue >= timeValue));
+}
+
+/**
   * @brief Setting the load value of the IWDG counter.
   * @param handle Value of @ref IWDG_handle.
   * @param timeValue Load value of the IWDG counter.
@@ -96,7 +123,10 @@ void HAL_IWDG_SetTimeValue(IWDG_Handle *handle, unsigned int timeValue, IWDG_Tim
     IWDG_ASSERT_PARAM(handle != NULL);
     IWDG_ASSERT_PARAM(IsIWDGInstance(handle->baseAddress));
     IWDG_PARAM_CHECK_NO_RET(IsIwdgTimeType(timeType));
-    IWDG_PARAM_CHECK_NO_RET(IsIwdgTimeValue(handle->baseAddress, timeValue, timeType));
+    /* Check iwdg time value parameter. */
+    if (IsIwdgTimeValue(handle->baseAddress, timeValue, timeType) == false) {
+        return;
+    }
     /* handle->baseAddress only could be configed IWDG or IWDG */
     unsigned int value = IWDG_CalculateRegTimeout(handle->baseAddress, timeValue, timeType);
     unsigned int freqDiv = DCL_IWDG_GetFreqDivValue(handle->baseAddress);

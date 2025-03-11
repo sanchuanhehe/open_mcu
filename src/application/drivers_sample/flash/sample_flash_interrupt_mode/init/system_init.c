@@ -33,12 +33,14 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.baseAddress     = CRG;
     crg.pllRefClkSelect = CRG_PLL_REF_CLK_SELECT_HOSC;
     crg.pllPreDiv       = CRG_PLL_PREDIV_4;
-    crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
-    crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
-    crg.coreClkSelect   = CRG_CORE_CLK_SELECT_HOSC;
+    crg.pllFbDiv        = 48; /* PLL Multiplier 48 */
+    crg.pllPostDiv      = CRG_PLL_POSTDIV_2;
+    crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+    crg.handleEx.pllPostDiv2   = CRG_PLL_POSTDIV2_3;
     crg.handleEx.clk1MSelect   = CRG_1M_CLK_SELECT_HOSC;
-    crg.handleEx.pllPostDiv2   = CRG_PLL_POSTDIV2_1;
-    /* Initialize the clock configuration. */
+    /* The 1 MHz freq is equal to the input clock frequency / (clk_1m_div + 1). */
+    crg.handleEx.clk1MDiv = (25 - 1); /* 25 is the div of the clk_1m in CLOCK. */
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -48,9 +50,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 
 static void UART0_Init(void)
 {
-    HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
-    HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
-    /* UART-related parameter configuration. */
+    HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);  /* UART0 clock enable. */
     g_uart0.baseAddress = UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;  /* Setting the UART Baud Rate. */
@@ -71,17 +71,17 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    HAL_IOCMG_SetPinAltFuncMode(GPIO2_2_AS_UART0_TXD);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_2_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO2_2_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO2_2_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO2_2_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO0_3_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO0_3_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO0_3_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO0_3_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO0_3_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    HAL_IOCMG_SetPinAltFuncMode(GPIO2_3_AS_UART0_RXD);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_3_AS_UART0_RXD, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO2_3_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO2_3_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO2_3_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO0_4_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO0_4_AS_UART0_RXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO0_4_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO0_4_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO0_4_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

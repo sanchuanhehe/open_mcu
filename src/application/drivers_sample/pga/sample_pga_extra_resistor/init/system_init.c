@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 {
@@ -32,6 +33,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -41,41 +43,37 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 
 static void PGA1_Init(void)
 {
-    HAL_CRG_IpEnableSet(PGA1_BASE, IP_CLK_ENABLE);
+    HAL_CRG_IpEnableSet(PGA1_BASE, IP_CLK_ENABLE); /* Enbale PGA ip */
 
-    g_pgaExt.baseAddress = PGA1_BASE; /* pga1 */
-    g_pgaExt.enable = BASE_CFG_ENABLE;
-    g_pgaExt.extLoopbackEn = BASE_CFG_DISABLE;
-    g_pgaExt.pgaMux = PGA_EXT_RES_VI0; /* use external resistor */
+    g_pgaExt.baseAddress = PGA1_BASE; /* Base address */
+    g_pgaExt.externalResistorMode = BASE_CFG_ENABLE; /* Enable external resisitance */
+    g_pgaExt.handleEx.pgaMux = PGA_EXT_RES_VI0;
     g_pgaExt.gain = PGA_GAIN_1X;
 
     HAL_PGA_Init(&g_pgaExt);
+    DCL_PGA_EnableOut(g_pgaExt.baseAddress);
+    DCL_PGA_EnableExtOut(g_pgaExt.baseAddress);
 }
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    HAL_IOCMG_SetPinAltFuncMode(IO6_AS_PGA1_ANA_P0);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO6_AS_PGA1_ANA_P0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO6_AS_PGA1_ANA_P0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO6_AS_PGA1_ANA_P0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO6_AS_PGA1_ANA_P0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_22.BIT.func = 0x9; /* 0x9 is PGA1_ANA_P */
-    iconfig->iocmg_22.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_22.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_22.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_22.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_22.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO7_AS_PGA1_ANA_N0);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO7_AS_PGA1_ANA_N0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO7_AS_PGA1_ANA_N0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO7_AS_PGA1_ANA_N0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO7_AS_PGA1_ANA_N0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_23.BIT.func = 0x9; /* 0x9 is PGA1_ANA_N */
-    iconfig->iocmg_23.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_23.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_23.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_23.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_23.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_24.BIT.func = 0x8; /* 0x8 is PGA1_ANA_EXT */
-    iconfig->iocmg_24.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_24.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_24.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_24.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_24.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO8_AS_PGA1_ANA_EXT0);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO8_AS_PGA1_ANA_EXT0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO8_AS_PGA1_ANA_EXT0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO8_AS_PGA1_ANA_EXT0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO8_AS_PGA1_ANA_EXT0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

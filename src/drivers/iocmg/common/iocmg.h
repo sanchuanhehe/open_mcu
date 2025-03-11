@@ -59,6 +59,7 @@ typedef struct {
   * @{
   */
 /* Exported global functions ------------------------------------------------- */
+
 IOCMG_Status HAL_IOCMG_Init(IOCMG_Handle* handle);
 IOCMG_Status HAL_IOCMG_SetPinAltFuncMode(unsigned int pinTypedef);
 IOCMG_Status HAL_IOCMG_SetPinPullMode(unsigned int pinTypedef, IOCMG_PullMode pullMode);

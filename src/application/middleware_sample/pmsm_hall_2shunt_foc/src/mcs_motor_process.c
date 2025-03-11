@@ -510,6 +510,9 @@ static void TrimInitAdcShiftValue(MTRCTRL_Handle *mtrCtrl)
             adc1TempSum += adc1SampleTemp;
         }
     }
+    if (adcSampleTimes < 1.0f) {
+        adcSampleTimes = 1.0f; /* Prevent divide-by-zero errors */
+    }
     adc0SampleTemp = adc0TempSum / adcSampleTimes;
     adc1SampleTemp = adc1TempSum / adcSampleTimes;
     /* Force convert to float */
@@ -767,6 +770,13 @@ static unsigned int GetHallValue(void)
     unsigned int hallB = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
     unsigned int hallC = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
 #endif
+
+#if defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+    /* Get three hall values. */
+    unsigned int hallA = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
+    unsigned int hallB = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
+    unsigned int hallC = HAL_CAPM_GetCrtEdge(&g_capm2) & 0x01;
+#endif
     /* WVU-+  -->  H3H2H1-+ */
     unsigned int retValue = (hallC << 2) + (hallB << 1) + (hallA << 0);
     return retValue;
@@ -786,47 +796,6 @@ static void InitSoftware(void)
     g_hall.getHallValue = GetHallValue;
     /* Initializing motor control param */
     TSK_Init();
-}
-
-/**
-  * @brief Config the master APT.
-  * @param aptx The master APT handle.
-  * @retval None.
-  */
-static void AptMasterSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    /* Config the master APT. */
-    HAL_APT_MasterSyncInit(aptx, APT_SYNC_OUT_ON_CNTR_ZERO);
-}
-
-/**
-  * @brief Config the slave APT.
-  * @param aptx The slave APT handle.
-  * @retval None.
-  */
-static void AptSalveSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    APT_SlaveSyncIn slave;
-    /* Config the slave APT. */
-    slave.divPhase = 0;
-    slave.cntPhase = 0;
-    slave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
-    slave.syncInSrc = APT_SYNC_IN_SRC;
-    slave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
-    HAL_APT_SlaveSyncInit(aptx, &slave);
-}
-/**
-  * @brief Configuring Master and Slave APTs.
-  * @retval None.
-  */
-static void AptMasterSalveSet(void)
-{
-    /* motor fan APT master/slave synchronization */
-    AptMasterSet(&g_apt0);
-    AptSalveSet(&g_apt1);
-    AptSalveSet(&g_apt2);
 }
 
 /**
@@ -880,7 +849,6 @@ int MotorMainProcess(void)
     HAL_TIMER_Start(&g_timer0);
     HAL_TIMER_Start(&g_timer1);
 
-    AptMasterSalveSet();
     /* Disable PWM output before startup. */
     MotorPwmOutputDisable(g_apt);
     /* Software initialization. */

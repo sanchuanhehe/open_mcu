@@ -111,6 +111,7 @@ typedef struct _I2C_Handle {
 typedef void (*I2C_CallbackFunType)(void *handle);
 
 /* Function Interface Definition -------------------------------------------------------*/
+
 BASE_StatusType HAL_I2C_Init(I2C_Handle *handle);
 BASE_StatusType HAL_I2C_Deinit(I2C_Handle *handle);
 BASE_StatusType HAL_I2C_RegisterCallback(I2C_Handle *handle, I2C_CallbackId callbackID, I2C_CallbackFunType pcallback);

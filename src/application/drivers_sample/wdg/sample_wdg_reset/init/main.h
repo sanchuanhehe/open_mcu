@@ -36,6 +36,11 @@
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
 
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
+
 extern WDG_Handle g_resetWdgHandler;
 
 extern UART_Handle g_uart0;

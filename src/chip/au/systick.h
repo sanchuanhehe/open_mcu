@@ -29,7 +29,7 @@
 #define McuMagicTag_SYSTICK_H
 
 /* Includes ------------------------------------------------------------------*/
-
+#include "feature.h"
 /**
   * @addtogroup SYSTICK
   * @{

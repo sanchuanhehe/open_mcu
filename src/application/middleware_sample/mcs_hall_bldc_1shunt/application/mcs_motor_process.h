@@ -40,12 +40,6 @@ typedef enum {
     KEY_UP = 1,
 } KEY_State;
 
-typedef enum {
-    APT_CHA_PWM_CHB_LOW,
-    APT_CHA_LOW_CHB_HIGH,
-    APT_CHA_LOW_CHB_LOW
-} APT_Act;
-
 int MotorMain(void);
 
 #endif

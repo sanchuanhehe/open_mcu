@@ -16,7 +16,7 @@
         "chip/au/systick.h",
         "chip/au/flash.lds",
         "chip/au/startup.S",
-        "chip/target",
+        "chip/target/userconfig_for_306xh.json",
         "drivers/debug",
         "generatecode",
         "middleware/control_library",

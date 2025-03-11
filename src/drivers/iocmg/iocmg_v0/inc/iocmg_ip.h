@@ -136,6 +136,7 @@ typedef struct {
   */
 static inline void DCL_IOCMG_SetRegValue(IOCMG_REG *iocmgRegx, unsigned int regValue)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     iocmgRegx->reg = regValue;
 }
@@ -147,6 +148,7 @@ static inline void DCL_IOCMG_SetRegValue(IOCMG_REG *iocmgRegx, unsigned int regV
   */
 static inline unsigned int DCL_IOCMG_GetRegValue(IOCMG_REG *iocmgRegx)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return iocmgRegx->reg;
 }
@@ -159,6 +161,7 @@ static inline unsigned int DCL_IOCMG_GetRegValue(IOCMG_REG *iocmgRegx)
   */
 static inline void DCL_IOCMG_SetFuncNum(IOCMG_REG *iocmgRegx, IOCMG_FuncMode funcnum)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     IOCMG_PARAM_CHECK_NO_RET(funcnum < FUNC_MODE_MAX && funcnum >= FUNC_MODE_0);
     iocmgRegx->BIT.func = funcnum;
@@ -171,6 +174,7 @@ static inline void DCL_IOCMG_SetFuncNum(IOCMG_REG *iocmgRegx, IOCMG_FuncMode fun
   */
 static inline IOCMG_FuncMode DCL_IOCMG_GetFuncMode(IOCMG_REG *iocmgRegx)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return iocmgRegx->BIT.func;
 }
@@ -183,6 +187,7 @@ static inline IOCMG_FuncMode DCL_IOCMG_GetFuncMode(IOCMG_REG *iocmgRegx)
   */
 static inline void DCL_IOCMG_SetDriveRate(IOCMG_REG *iocmgRegx, IOCMG_DriveRate driveRate)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     IOCMG_PARAM_CHECK_NO_RET(driveRate < DRIVER_RATE_MAX && driveRate >= DRIVER_RATE_4);
     iocmgRegx->BIT.ds = driveRate;
@@ -195,6 +200,7 @@ static inline void DCL_IOCMG_SetDriveRate(IOCMG_REG *iocmgRegx, IOCMG_DriveRate 
   */
 static inline IOCMG_DriveRate DCL_IOCMG_GetDriveRate(IOCMG_REG *iocmgRegx)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return iocmgRegx->BIT.ds;
 }
@@ -207,6 +213,7 @@ static inline IOCMG_DriveRate DCL_IOCMG_GetDriveRate(IOCMG_REG *iocmgRegx)
   */
 static inline void DCL_IOCMG_SetPullMode(IOCMG_REG *iocmgRegx, IOCMG_PullMode pullMode)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     IOCMG_PARAM_CHECK_NO_RET(pullMode < PULL_MODE_MAX && pullMode >= PULL_NONE);
     iocmgRegx->BIT.pu = (pullMode & 0x02) >> 1; /* 10b: pull up mode */
@@ -220,6 +227,7 @@ static inline void DCL_IOCMG_SetPullMode(IOCMG_REG *iocmgRegx, IOCMG_PullMode pu
   */
 static inline IOCMG_PullMode DCL_IOCMG_GetPullMode(IOCMG_REG *iocmgRegx)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     unsigned int pullUpMode = iocmgRegx->BIT.pu;
     unsigned int pullDownMode = iocmgRegx->BIT.pd;
@@ -234,6 +242,7 @@ static inline IOCMG_PullMode DCL_IOCMG_GetPullMode(IOCMG_REG *iocmgRegx)
   */
 static inline void DCL_IOCMG_SetLevelShiftRate(IOCMG_REG *iocmgRegx, IOCMG_LevelShiftRate levelShiftRate)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     IOCMG_PARAM_CHECK_NO_RET(levelShiftRate < LEVEL_SHIFT_RATE_MAX && levelShiftRate >= LEVEL_SHIFT_RATE_FAST);
     iocmgRegx->BIT.sr = levelShiftRate;
@@ -246,6 +255,7 @@ static inline void DCL_IOCMG_SetLevelShiftRate(IOCMG_REG *iocmgRegx, IOCMG_Level
   */
 static inline IOCMG_LevelShiftRate DCL_IOCMG_GetLevelShiftRate(IOCMG_REG *iocmgRegx)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return iocmgRegx->BIT.sr;
 }
@@ -258,6 +268,7 @@ static inline IOCMG_LevelShiftRate DCL_IOCMG_GetLevelShiftRate(IOCMG_REG *iocmgR
   */
 static inline void DCL_IOCMG_SetSchmidtMode(IOCMG_REG *iocmgRegx, IOCMG_SchmidtMode schmidtMode)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     IOCMG_PARAM_CHECK_NO_RET(schmidtMode <= SCHMIDT_ENABLE && schmidtMode >= SCHMIDT_DISABLE);
     iocmgRegx->BIT.se = schmidtMode;
@@ -270,6 +281,7 @@ static inline void DCL_IOCMG_SetSchmidtMode(IOCMG_REG *iocmgRegx, IOCMG_SchmidtM
   */
 static inline IOCMG_SchmidtMode DCL_IOCMG_GetSchmidtMode(IOCMG_REG *iocmgRegx)
 {
+    IOCMG_ASSERT_PARAM(iocmgRegx != NULL);
     IOCMG_ASSERT_PARAM(IsIOCMGInstance((void *)((uintptr_t)(void *)iocmgRegx & IOCMG_BASE_ADDR_MASK)));
     return iocmgRegx->BIT.se;
 }
@@ -330,9 +342,9 @@ static inline void DCL_IOCMG_SetOscClkDriveRate(IOCMG_OscClkDriveRate oscClkDriv
 /**
   * @brief Get iocmg OSC drive rate mode.
   * @param None.
-  * @retval oscClkDriveRate value of @ref IOCMG_DriveRate.
+  * @retval oscClkDriveRate value of @ref IOCMG_OscClkDriveRate.
   */
-static inline IOCMG_DriveRate DCL_IOCMG_GetOscClkDriveRate(void)
+static inline IOCMG_OscClkDriveRate DCL_IOCMG_GetOscClkDriveRate(void)
 {
     return IOCMG->iocmg_6.BIT.osc_ds;
 }

@@ -94,6 +94,11 @@ float BASE_FUNC_GetSlipAverageVal(unsigned int index, float val);
 void BASE_FUNC_AverageDeInit(unsigned int index);
 void BASE_FSM_FunRegister(BASE_FSM_Status index, FunType funAddress);
 void BASE_FSM_Run(unsigned int delayTime, BASE_DelayUnit delayUnit);
+
+#ifdef MEASURE_SUPPORT
+void BASE_FUNC_MeasurementStart(unsigned int id);
+void BASE_FUNC_MeasurementStop(unsigned int id);
+#endif
 /**
   * @}
   */

@@ -393,15 +393,15 @@ typedef union {
         unsigned int reserved2 : 1;
         unsigned int txfeim    : 1;  /**< Mask status of the TX FIFO empty interrupt. */
         unsigned int txfneim   : 1;  /**< Mask status of the TX FIFO non-empt interrupt. */
-        unsigned int txtcim    : 1;  /**< Mask status of the TX completion interrupt. */
         unsigned int reserved3 : 1;
+        unsigned int reserved4 : 1;
         unsigned int rxfeim    : 1;  /**< Mask status of the RX FIFO empty interrupt. */
         unsigned int rxfneim   : 1;  /**< Mask status of the RX FIFO non-empt interrupt. */
         unsigned int rxffim    : 1;  /**< Mask status of the RX FIFO full interrupt. */
         unsigned int abdcim    : 1;  /**< Mask status of the auto-baud check completion interrupt. */
         unsigned int abdeim    : 1;  /**< Mask status of auto-baud detection error interrupts. */
         unsigned int cmim      : 1;  /**< Mask status of the character match success interrupt. */
-        unsigned int reserved4 : 10;
+        unsigned int reserved5 : 10;
     } BIT;
 } volatile UART_IMSC_REG;
 
@@ -692,7 +692,7 @@ static inline bool IsUartSequenceMode(UART_SequenceMode mode)
 static inline void DCL_UART_WriteData(UART_RegStruct * const uartx, unsigned char data)
 {
     UART_ASSERT_PARAM(IsUARTInstance(uartx));
-    uartx->UART_DR.BIT.data = data;
+    uartx->UART_DR.reg = (unsigned int)data;
 }
 
 /**
@@ -703,7 +703,7 @@ static inline void DCL_UART_WriteData(UART_RegStruct * const uartx, unsigned cha
 static inline unsigned char DCL_UART_ReadData(const UART_RegStruct *uartx)
 {
     UART_ASSERT_PARAM(IsUARTInstance(uartx));
-    return uartx->UART_DR.BIT.data;
+    return uartx->UART_DR.reg;
 }
 
 /**

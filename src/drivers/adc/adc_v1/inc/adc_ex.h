@@ -26,6 +26,7 @@
 #define McuMagicTag_ADC_EX_H
 
 #include "adc.h"
+#define ANA_RSV_REG0_ADDR   0x18600008
 #define ADC_ANA_MUX ((ADC_ANA_MUX_APB_RegStruct *)0x18003000)
 
 /**

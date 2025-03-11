@@ -34,7 +34,7 @@
   * @param None.
   * @retval None.
   */
-void UART_BlcokingRX(void)
+void UART_BlockingRX(void)
 {
     SystemInit();
     unsigned char rxStr[20] = {0};  /* rxStr[20], Receive memory address */

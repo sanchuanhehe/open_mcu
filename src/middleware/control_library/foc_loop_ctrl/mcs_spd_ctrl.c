@@ -27,7 +27,8 @@
 /**
   * @brief Initialzer of speed control struct handle.
   * @param spdHandle Speed control struct handle.
-  * @param PID_Param PI controller parameter table.
+  * @param mtrParam Motor parameter struct handle.
+  * @param piParam PI controller parameter table.
   * @param ts Speed control period.
   * @retval None.
   */

@@ -106,7 +106,6 @@ typedef enum {
     CAPM_REG3CAP = 0x00000004U,
     CAPM_REG4CAP = 0x00000008U,
     CAPM_TSROVF  = 0x00000010U,
-    CAPM_ECROVF  = 0x00000020U,
     CAPM_EARCMPMATCH = 0x00000040U,
     CAPM_EAROVF = 0x00000080U,
     CAPM_DMAREQOVF = 0x00000100U,
@@ -318,11 +317,11 @@ typedef union {
         unsigned int evt3_en : 1;             /**< Event3 interrupt enable. */
         unsigned int evt4_en : 1;             /**< Event4 interrupt enable. */
         unsigned int tsr_ovf_en : 1;          /**< TSR overflow interrupt enable. */
-        unsigned int ecr_ovf_en : 1;          /**< Capture overflow interrupt enable. */
+        unsigned int reserved0 : 1;
         unsigned int earcmp_match_en : 1;     /**< Edge count compare match interrupt enable. */
         unsigned int ear_ovf_en : 1;          /**< Edge count overflow interrupt enable. */
         unsigned int dmareq_ovf_en : 1;       /**< DMA request overflow interrupt enable. */
-        unsigned int reserved : 23;
+        unsigned int reserved1 : 23;
     } BIT;
 } volatile INTENR_REG;
 
@@ -337,11 +336,11 @@ typedef union {
         unsigned int evt3_raw : 1;            /**< Event3 initial interrupt. */
         unsigned int evt4_raw : 1;            /**< Event4 initial interrupt. */
         unsigned int tsr_ovf_raw : 1;         /**< TSR overflow initial interrupt. */
-        unsigned int ecr_ovf_raw : 1;         /**< Capture overflow initial interrupt. */
+        unsigned int reserved0 : 1;
         unsigned int earcmp_match_raw : 1;    /**< Edge count compare match initial interrupt. */
         unsigned int ear_ovf_raw : 1;         /**< Edge count overflow initial interrupt. */
         unsigned int dmareq_ovf_raw : 1;      /**< DMA request overflow initial interrupt. */
-        unsigned int reserved : 23;
+        unsigned int reserved1 : 23;
     } BIT;
 } volatile INTRAWR_REG;
 
@@ -356,11 +355,11 @@ typedef union {
         unsigned int evt3_inj : 1;          /**< Event3 interrupt injection. */
         unsigned int evt4_inj : 1;          /**< Event4 interrupt injection. */
         unsigned int tsr_ovf_inj : 1;       /**< TSR overflow interrupt injection. */
-        unsigned int ecr_ovf_inj : 1;       /**< Capture overflow interrupt injection. */
+        unsigned int reserved0 : 1;
         unsigned int earcmp_match_inj : 1;  /**< Edge count compare match interrupt injection. */
         unsigned int ear_ovf_inj : 1;       /**< Edge count overflow interrupt injection. */
         unsigned int dmareq_ovf_inj : 1;    /**< DMA request overflow interrupt injection. */
-        unsigned int reserved : 23;
+        unsigned int reserved1 : 23;
     } BIT;
 } volatile INTINJR_REG;
 
@@ -375,11 +374,11 @@ typedef union {
         unsigned int evt3_int : 1;            /**< Event3 interrupt status. */
         unsigned int evt4_int : 1;            /**< Event4 interrupt status. */
         unsigned int tsr_ovf_int : 1;         /**< TSR overflow interrupt status. */
-        unsigned int ecr_ovf_int : 1;         /**< Capture overflow interrupt status. */
+        unsigned int reserved0 : 1;
         unsigned int earcmp_match_int : 1;    /**< Edge count compare match interrupt status. */
         unsigned int ear_ovf_int : 1;         /**< Edge count overflow interrupt status. */
         unsigned int dmareq_ovf_int : 1;      /**< DMA request overflow interrupt status. */
-        unsigned int reserved : 23;
+        unsigned int reserved1 : 23;
     } BIT;
 } volatile INTFLGR_REG;
 
@@ -392,7 +391,6 @@ typedef enum {
     CAPM_INTREG3CAP = 0x00000002U,
     CAPM_INTREG4CAP = 0x00000003U,
     CAPM_INTTSROVF = 0x00000004U,
-    CAPM_INTECROVF = 0x00000005U,
     CAPM_INTEARCMPMATCH = 0x00000006U,
     CAPM_INTEAROVF = 0x00000007U,
     CAPM_INTDMAREQOVF = 0x00000008U,
@@ -1534,30 +1532,6 @@ static inline void DCL_CAPM_DisableTsrovfInter(CAPM_RegStruct * const capmx)
 }
 
 /**
-  * @brief Enable ECR overflow interrupt.
-  * @param capmx: CAPM register base address.
-  * @retval None.
-  */
-static inline void DCL_CAPM_EnableEcrovfInter(CAPM_RegStruct * const capmx)
-{
-    CAPM_ASSERT_PARAM(IsCAPMInstance(capmx));
-    capmx->INTENR.BIT.ecr_ovf_en = BASE_CFG_ENABLE;
-    return;
-}
-
-/**
-  * @brief Disable ECR overflow interrupt.
-  * @param capmx: CAPM register base address.
-  * @retval None.
-  */
-static inline void DCL_CAPM_DisableEcrovfInter(CAPM_RegStruct * const capmx)
-{
-    CAPM_ASSERT_PARAM(IsCAPMInstance(capmx));
-    capmx->INTENR.BIT.ecr_ovf_en = BASE_CFG_DISABLE;
-    return;
-}
-
-/**
   * @brief Enable EAR compare match interrupt.
   * @param capmx: CAPM register base address.
   * @retval None.
@@ -1710,18 +1684,6 @@ static inline void DCL_CAPM_IngectTsrovfInter(CAPM_RegStruct * const capmx)
 {
     CAPM_ASSERT_PARAM(IsCAPMInstance(capmx));
     capmx->INTINJR.BIT.tsr_ovf_inj |= 0x01;
-    return;
-}
-
-/**
-  * @brief Inject ECR overflow interrupt.
-  * @param capmx: CAPM register base address.
-  * @retval None.
-  */
-static inline void DCL_CAPM_InjectEcrovfInter(CAPM_RegStruct * const capmx)
-{
-    CAPM_ASSERT_PARAM(IsCAPMInstance(capmx));
-    capmx->INTINJR.BIT.ecr_ovf_inj |= 0x01;
     return;
 }
 

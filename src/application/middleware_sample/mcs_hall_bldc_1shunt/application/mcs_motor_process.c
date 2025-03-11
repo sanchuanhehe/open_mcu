@@ -54,13 +54,6 @@
 #define HALL_VALUE_5            5
 #define HALL_VALUE_6            6
 
-#define SECTOR1                 1
-#define SECTOR2                 2
-#define SECTOR3                 3
-#define SECTOR4                 4
-#define SECTOR5                 5
-#define SECTOR6                 6
-
 #define US_PER_MS               1000
 #define APT_FULL_DUTY           1.0f
 /*------------------------------- Param Definition -----------------------------------------------*/
@@ -76,203 +69,134 @@ static HALL_Handle g_hall;
 
 /*------------------------------- Function Definition -----------------------------------------------*/
 /**
- * @brief Get the encoder speed and angle.
- * @param speed electricity speed.
- * @param angle electricity angle.
- * @retval None.
- */
-static void GetHallAngSpd(float* speed, float* angle)
-{
-    static TrigVal localTrigVal;
-    /* QDM uses algorithm-driven acquisition speed and angle */
-    HALL_AngSpdCalcExec(&g_hall);
-
-    TrigCalc(&localTrigVal, g_hall.angle);
-    PLL_Exec(&g_mc.hallAnglePll, localTrigVal.sin, localTrigVal.cos);
-    
-    *speed = FOLPF_Exec(&g_mc.hallSpdFilter, g_hall.spd);
-    *angle = g_mc.hallAnglePll.angle;
-}
-
-
-/**
-  * @brief Configure three kinds of APT action, H_PWM_L_ON mode.
-  * @param aptAddr APT base address.
-  * @param aptAct The APT action.
+  * @brief Receive hall signal.
+  * @retval Hall value.
   */
-static void SIXSTEP_ForcePwmOut(APT_RegStruct* aptAddr, APT_Act aptAct)
+static unsigned int GetHallValue(void)
 {
-    switch (aptAct) {
-        case APT_CHA_PWM_CHB_LOW:
-            /* Channel A: 0 means not force output enable, channel A output PWM. */
-            DCL_APT_DisableSwContPWMAction(aptAddr, APT_PWM_CHANNEL_A);
-            /* Channel B: 1 means force output enable. */
-            DCL_APT_EnableSwContPWMAction(aptAddr, APT_PWM_CHANNEL_B);
-            /* Channel B: 2 means channel B force output LOW due to the A_H_B_L invert. */
-            DCL_APT_SetSwContPWMAction(aptAddr, APT_PWM_CHANNEL_B, APT_PWM_OUT_ALWAYS_HIGH);
-            break;
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA) || defined (CHIP_3061MNPIC8) || defined(CHIP_3061MNNIC8) || \
+    defined (CHIP_3061MNPIK8) || defined (CHIP_3061MNNIK8)
+    /* Get three hall values. */
+    unsigned int h1 = HAL_CAPM_GetCrtEdge(&g_capm2) & 0x01;
+    unsigned int h2 = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
+    unsigned int h3 = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
+#endif
 
-        case APT_CHA_LOW_CHB_HIGH:
-            /* Channel A: 1 means force output enable. */
-            /* Channel A: 1 means channel A force output LOW. */
-            DCL_APT_EnableSwContPWMAction(aptAddr, APT_PWM_CHANNEL_A);
-            DCL_APT_SetSwContPWMAction(aptAddr, APT_PWM_CHANNEL_A, APT_PWM_OUT_ALWAYS_LOW);
-            /* Channel B: 1 means force output enable. */
-            /* Channel B: 1 means channel A force output HIGH due to the A_H_B_L invert. */
-            DCL_APT_EnableSwContPWMAction(aptAddr, APT_PWM_CHANNEL_B);
-            DCL_APT_SetSwContPWMAction(aptAddr, APT_PWM_CHANNEL_B, APT_PWM_OUT_ALWAYS_LOW);
-            break;
+#if defined (CHIP_3065HRPIRZ) || defined (CHIP_3065ARPIRZ)
+    /* Get three hall values. */
+    unsigned int h1 = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
+    unsigned int h2 = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
+    unsigned int h3 = HAL_CAPM_GetCrtEdge(&g_capm2) & 0x01;
+#endif
 
-        case APT_CHA_LOW_CHB_LOW:
-            /* Channel A: 1 means force output enable. */
-            /* Channel A: 1 means channel A force output LOW. */
-            DCL_APT_EnableSwContPWMAction(aptAddr, APT_PWM_CHANNEL_A);
-            DCL_APT_SetSwContPWMAction(aptAddr, APT_PWM_CHANNEL_A, APT_PWM_OUT_ALWAYS_LOW);
-            /* Channel B: 1 means force output enable. */
-            /* Channel B: 2 means channel A force output LOW due to the A_H_B_L invert. */
-            DCL_APT_EnableSwContPWMAction(aptAddr, APT_PWM_CHANNEL_B);
-            DCL_APT_SetSwContPWMAction(aptAddr, APT_PWM_CHANNEL_B, APT_PWM_OUT_ALWAYS_HIGH);
-            break;
-        default:
-            break;
-    }
+#if defined CHIP_3066MNPIRH || defined CHIP_3065PNPIRH || defined CHIP_3065PNPIRE || defined CHIP_3065PNPIRA
+    /* Get three hall values. */
+    unsigned int h1 = HAL_CAPM_GetCrtEdge(&g_capm2) & 0x01;
+    unsigned int h2 = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
+    unsigned int h3 = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
+#endif
+
+    /* Terminal connection sequence: WVU-+  -->  H3H2H1-+ */
+    unsigned int retValue = (h1 << 2) + (h2 << 1) + (h3 << 0);
+    return retValue;
 }
 
-/**
-  * @brief Configure the APT action mode for six sectors.
-  * @param aptUvw APT base address of U V W.
-  * @param sector Sector.
-  */
-static void SIXSTEP_AptConfig(APT_RegStruct **aptUvw, unsigned int sector)
-{
-    APT_RegStruct *aptU = aptUvw[0];
-    APT_RegStruct *aptV = aptUvw[1];
-    APT_RegStruct *aptW = aptUvw[2]; /* index 2. */
-    switch (sector) {
-        case SECTOR1: /* A+, C- */
-            SIXSTEP_ForcePwmOut(aptU, APT_CHA_PWM_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptV, APT_CHA_LOW_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptW, APT_CHA_LOW_CHB_HIGH);
-            break;
-        case SECTOR2: /* B+, C- */
-            SIXSTEP_ForcePwmOut(aptU, APT_CHA_LOW_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptV, APT_CHA_PWM_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptW, APT_CHA_LOW_CHB_HIGH);
-            break;
-        case SECTOR3: /* B+, A- */
-            SIXSTEP_ForcePwmOut(aptU, APT_CHA_LOW_CHB_HIGH);
-            SIXSTEP_ForcePwmOut(aptV, APT_CHA_PWM_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptW, APT_CHA_LOW_CHB_LOW);
-            break;
-        case SECTOR4: /* C+, A- */
-            SIXSTEP_ForcePwmOut(aptU, APT_CHA_LOW_CHB_HIGH);
-            SIXSTEP_ForcePwmOut(aptV, APT_CHA_LOW_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptW, APT_CHA_PWM_CHB_LOW);
-            break;
-        case SECTOR5: /* C+, B- */
-            SIXSTEP_ForcePwmOut(aptU, APT_CHA_LOW_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptV, APT_CHA_LOW_CHB_HIGH);
-            SIXSTEP_ForcePwmOut(aptW, APT_CHA_PWM_CHB_LOW);
-            break;
-        case SECTOR6: /* A+, B- */
-            SIXSTEP_ForcePwmOut(aptU, APT_CHA_PWM_CHB_LOW);
-            SIXSTEP_ForcePwmOut(aptV, APT_CHA_LOW_CHB_HIGH);
-            SIXSTEP_ForcePwmOut(aptW, APT_CHA_LOW_CHB_LOW);
-            break;
-        default:
-            break;
-    }
-}
 
 /**
   * @brief CW: Matching sector corresponding to the hall value.
   * @param hallValue Sum of hallC << 2, hallB << 1 and hallA << 1.
-  * @param sector Generate pwm sector.
+  * @retval Motor sector.
   */
-static void MatchCw(unsigned int hallValue, unsigned int *sector)
+static HALL_SECTOR MatchCw(unsigned int hallValue)
 {
+    HALL_SECTOR sector = SECTOR1;
     switch (hallValue) {
         case HALL_VALUE_3:
             /* B+, A- */
-            *sector = SECTOR3;
+            sector = SECTOR3;
             break;
         case HALL_VALUE_2:
             /* B+, C- */
-            *sector = SECTOR2;
+            sector = SECTOR2;
             break;
         case HALL_VALUE_6:
             /* A+, C- */
-            *sector = SECTOR1;
+            sector = SECTOR1;
             break;
         case HALL_VALUE_4:
             /* A+, B- */
-            *sector = SECTOR6;
+            sector = SECTOR6;
             break;
         case HALL_VALUE_5:
             /* C+, B- */
-            *sector = SECTOR5;
+            sector = SECTOR5;
             break;
         case HALL_VALUE_1:
             /* C+, A- */
-            *sector = SECTOR4;
+            sector = SECTOR4;
             break;
         default:
             break;
     }
+    return sector;
 }
 
 /**
   * @brief CCW: Matching sector corresponding to the hall value.
   * @param hallValue Sum of hallC << 2, hallB << 1 and hallA << 1.
-  * @param sector Generate pwm sector.
+  * @retval Motor sector.
   */
-static void MatchCcw(unsigned int hallValue, unsigned int *sector)
+static HALL_SECTOR MatchCcw(unsigned int hallValue)
 {
+    HALL_SECTOR sector = SECTOR1;
     switch (hallValue) {
         case HALL_VALUE_3:
             /* A+, B- */
-            *sector = SECTOR6;
+            sector = SECTOR6;
             break;
         case HALL_VALUE_2:
             /* C+, B- */
-            *sector = SECTOR5;
+            sector = SECTOR5;
             break;
         case HALL_VALUE_6:
             /* C+, A- */
-            *sector = SECTOR4;
+            sector = SECTOR4;
             break;
         case HALL_VALUE_4:
             /* B+, A- */
-            *sector = SECTOR3;
+            sector = SECTOR3;
             break;
         case HALL_VALUE_5:
             /* B+, C- */
-            *sector = SECTOR2;
+            sector = SECTOR2;
             break;
         case HALL_VALUE_1:
             /* A+, C- */
-            *sector = SECTOR1;
+            sector = SECTOR1;
             break;
         default:
             break;
     }
+    return sector;
 }
 
 /**
   * @brief Matching sector corresponding to the hall value.
   * @param hallValue Sum of hallC << 2, hallB << 1 and hallA << 1.
-  * @param sector Generate pwm sector.
-  * @param dir Rotate direction.
+  * @retval Motor sector.
   */
-static void SIXSTEP_Match(unsigned int hallValue, unsigned int *sector, int dir)
+static HALL_SECTOR SectorMatch(unsigned int hallValue)
 {
+    int dir = g_hall.dir;
     if (dir == 1) { /* Clock Wise rotation: sector increase direction. */
-        MatchCw(hallValue, sector);
+        return MatchCw(hallValue);
     } else if (dir == -1) { /* Counter Clock Wise rotation: sector decrease direction. */
-        MatchCcw(hallValue, sector);
+        return MatchCcw(hallValue);
+    } else {
+        return SECTOR1;
     }
 }
-
 
 /**
   * @brief Set pwm duty.
@@ -281,61 +205,18 @@ static void SIXSTEP_Match(unsigned int hallValue, unsigned int *sector, int dir)
   * @param duty Pwm duty: 0 ~ 1.
   * @retval None.
   */
-static void SIXSTEP_SetPwmDuty(APT_RegStruct **aptUvw, unsigned short maxDutyCnt, float duty)
+static void SetPwmDuty(APT_RegStruct **aptUvw, unsigned short maxDutyCnt, float duty)
 {
     MCS_ASSERT_PARAM(aptUvw != NULL);
     MCS_ASSERT_PARAM(duty >= 0.0f);
     MCS_ASSERT_PARAM(duty <= 1.0f);
-    unsigned short dutyCnt = (unsigned short)Clamp((float)maxDutyCnt * (1.0f - duty), (float)maxDutyCnt, 1.0f);
+    unsigned short dutyCnt = (unsigned short)Clamp((float)maxDutyCnt * (1.0f - duty), (float)maxDutyCnt, 0.0f);
     /* Set three phase duty. */
     for (int i = 0; i < PHASE_MAX_NUM; i++) {
         APT_RegStruct *aptx = aptUvw[i];
         DCL_APT_SetCounterCompare(aptx, APT_COMPARE_REFERENCE_C, dutyCnt);
         DCL_APT_SetCounterCompare(aptx, APT_COMPARE_REFERENCE_D, dutyCnt);
     }
-}
-
-
-/**
-  * @brief Config the master APT.
-  * @param aptx The master APT handle.
-  * @retval None.
-  */
-static void AptMasterSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    /* Config the master APT. */
-    HAL_APT_MasterSyncInit(aptx, APT_SYNC_OUT_ON_CNTR_ZERO);
-}
-
-/**
-  * @brief Config the slave APT.
-  * @param aptx The slave APT handle.
-  * @retval None.
-  */
-static void AptSalveSet(APT_Handle *aptx)
-{
-    MCS_ASSERT_PARAM(aptx != NULL);
-    APT_SlaveSyncIn slave;
-    /* Config the slave APT. */
-    slave.divPhase = 0;
-    slave.cntPhase = 0;
-    slave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
-    slave.syncInSrc = APT_SYNC_IN_SRC;
-    slave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
-    HAL_APT_SlaveSyncInit(aptx, &slave);
-}
-
-/**
-  * @brief Configuring Master and Slave APTs.
-  * @retval None.
-  */
-static void AptMasterSalveSet(void)
-{
-    /* motor fan APT master/slave synchronization */
-    AptMasterSet(&g_apt0);
-    AptSalveSet(&g_apt1);
-    AptSalveSet(&g_apt2);
 }
 
 /**
@@ -370,6 +251,26 @@ static void SpdCtrlInit(MTRCTRL_Handle *mtrCtrl, float ts)
     mtrCtrl->spdPi.ts = ts;
 }
 
+/**
+  * @brief Initialzer of under and over voltage fault detection.
+  * @param uovd Under and over voltage struct handle.
+  * @param ts Speed control period (s).
+  * @retval None.
+  */
+static void FP_UOVD_InitWrapper(FP_UOVD_Handle *uovd, float ts)
+{
+    /* Parameter init. */
+    /* Include under and over voltage detection parameter. */
+    FP_UOVD_Param param = {
+        .overProThr = OVD_MAX_VOLT_V,
+        .overRecThr = OVD_REC_VOLT_V,
+        .underProThr = LVD_MIN_VOLT_V,
+        .underRecThr = LVD_REC_VOLT_V,
+        .detWindow = VOLT_DET_WINDOW_S,
+        .recWindow = VOLT_REC_WINDOW_S,
+    };
+    FP_UOVD_Init(uovd, &param, ts);
+}
 
 /**
   * @brief Init motor control task.
@@ -377,20 +278,29 @@ static void SpdCtrlInit(MTRCTRL_Handle *mtrCtrl, float ts)
   */
 static void TSK_InitCp(void)
 {
-    g_mc.dir = 1;
     g_mc.stateMachine = FSM_IDLE;
-    g_mc.aptMaxcntCmp = g_apt0.waveform.timerPeriod;
+    g_mc.aptMaxCntCmp = g_apt0.waveform.timerPeriod;
+    g_mc.hall = &g_hall;
 
     RMG_Init(&g_mc.spdRmg, CTRL_SYSTICK_PERIOD, USER_SPD_SLOPE); /* Init speed slope */
+
     MtrParamInit(&g_mc.mtrParam, g_motorParam);
+
     TimerTickInit(&g_mc);
+
     SpdCtrlInit(&g_mc, CTRL_SYSTICK_PERIOD); /* Init speed controller */
 
-    HALL_Init(&g_hall, HALL_PHASESHIFT, CTRL_CURR_PERIOD);
-    PLL_Init(&g_mc.hallAnglePll, CTRL_CURR_PERIOD, HALL_ANGLE_PLL_BDW);
-    FOLPF_Init(&g_mc.hallSpdFilter, CTRL_CURR_PERIOD, HALL_SPD_FILTER_FC);
+    HALL_Init(&g_hall, HALL_DIR, HALL_ANGLE_PLL_BDW, HALL_SPD_FILTER_FC, CTRL_CURR_PERIOD);
     /* Protection. */
-    FaultDetect_Init(&g_mc.faultDet);
+    FP_UOVD_InitWrapper(&g_mc.uovd, CTRL_SYSTICK_PERIOD);
+
+    FP_OTD_Init(&g_mc.otd, OTD_MAX_TEMP_MTR, OTD_MAX_TEMP_BRD, OTD_MTR_WINDOW_S, OTD_BRD_WINDOW_S, CTRL_SYSTICK_PERIOD);
+
+    FP_OCD_Init(&g_mc.ocd, OCD_MAX_CURR_A, OCD_WINDOW_S, CTRL_CURR_PERIOD);
+
+    FP_STD_Init(&g_mc.std, STD_LOSESPD_LOWER_HZ, STD_LOSESPD_UPPER_HZ, STD_DET_WINDOW_S, CTRL_CURR_PERIOD);
+
+    FP_OPD_Init(&g_mc.opd, OPD_MIN_CURR_A, OPD_WINDOW_S, CTRL_CURR_PERIOD);
 }
 
 /**
@@ -406,12 +316,23 @@ static void ClearBeforeStartup(MTRCTRL_Handle *mtrCtrl)
     mtrCtrl->pwmDuty = 0.0f;
     /* Clear the history value of speed slope control */
     RMG_Clear(&mtrCtrl->spdRmg);
+
     PID_Clear(&mtrCtrl->spdPi);
-    PLL_Clear(&mtrCtrl->hallAnglePll);
-    FOLPF_Clear(&mtrCtrl->hallSpdFilter);
+
     HALL_Clear(&g_hall);
     /* Clear protection history value. */
-    FaultDetect_Clear(&mtrCtrl->faultDet);
+
+    Fault_Clear(&mtrCtrl->faultStatus);
+
+    FP_UOVD_Clear(&mtrCtrl->uovd);
+
+    FP_OTD_Clear(&mtrCtrl->otd);
+
+    FP_OCD_Clear(&mtrCtrl->ocd);
+
+    FP_STD_Clear(&mtrCtrl->std);
+
+    FP_OPD_Clear(&mtrCtrl->opd);
 }
 
 
@@ -463,6 +384,24 @@ static void MotorPwmOutputDisable(volatile APT_RegStruct **aptAddr)
     for (unsigned int i = 0; i < PHASE_MAX_NUM; i++) {
         APT_RegStruct *aptx = aptAddr[i];
         DCL_APT_ForcePWMOutputLow(aptx);
+    }
+}
+
+static void FualtDetCarr(void)
+{
+    if (g_mc.stateMachine == FSM_RUN) {
+        /* Over current det. */
+        FP_OCD_Exec(&g_mc.ocd, &g_mc.faultStatus, g_mc.iuvw);
+        /* Open phase det. */
+        FP_OPD_Exec(&g_mc.opd, &g_mc.faultStatus, g_mc.iuvw);
+        /* Stall det. */
+        FP_STD_Exec(&g_mc.std, &g_mc.faultStatus, g_mc.hall->timer, g_mc.spdFbk);
+    }
+    /* Fault judgement. */
+    if (g_mc.stateMachine == FSM_RUN || g_mc.stateMachine == FSM_STARTUP) {
+        if (g_mc.faultStatus.all) {
+            g_mc.stateMachine = FSM_FAULT;
+        }
     }
 }
 
@@ -544,7 +483,7 @@ static void CheckSysCmdStart(MTRCTRL_Handle *mtrCtrl, volatile APT_RegStruct **a
         mtrCtrl->sysTickCnt = 0;
         *stateMachine = FSM_CAP_CHARGE;
         /* Preparation for charging the bootstrap capacitor. */
-        AptTurnOnLowSidePwm(aptAddr, mtrCtrl->aptMaxcntCmp);
+        AptTurnOnLowSidePwm(aptAddr, mtrCtrl->aptMaxCntCmp);
         /* Out put pwm */
         MotorPwmOutputEnable(aptAddr);
     }
@@ -616,9 +555,7 @@ static void TSK_SystickIsr(MTRCTRL_Handle *mtrCtrl, APT_RegStruct **aptAddr)
             MotorPwmOutputDisable(aptAddr);
             /* Clear run state. */
             SysRunningClr(statusReg);
-            mtrCtrl->hallSpeed = 0.0f;
             mtrCtrl->spdFbk = 0.0f;
-            mtrCtrl->hallAxisAngle = 0.0f;
             *stateMachine = FSM_IDLE;
             break;
 
@@ -645,33 +582,13 @@ static void readCurrBiasCb(IBIAS_Handle *iuvwAdcBias)
 
 
 /**
-  * @brief Read the ADC current sampling value.
-  * @retval None.
-  */
-static void ReadBusCurrCb(float *idc)
-{
-    /* when current is zero, the adc1 value is adc0Compensate/adc1Compensate value */
-    float adcVal = (float)HAL_ADC_GetConvResult(&ADC_U_HANDLE, ADC_U_SOC_NUM);
-    *idc = (adcVal - (float)g_mc.iuvwAdcBias.iBusAdcBias) * ADC_CURR_COFFI;
-}
-
-/**
-  * @brief Read the ADC volate sampling value.
-  * @retval None.
-  */
-static void ReadBusVoltCb(float *udc)
-{
-    *udc = (float)HAL_ADC_GetConvResult(&ADC_UDC_HANDLE, ADC_UDC_SOC_NUM) * ADC_VOLT_COFFI;
-}
-
-/**
   * @brief Temprature table.
   * @param tempResisValue Temperature sensor resistance.
   * @retval None.
   */
 static float TempTable(float tempResisValue)
 {
-    float boardTemp = 25.0f; /* Normal temp is 25 */
+    float boardTemp = 0.0f;
     /* Temperatures between 15 and 30. */
     if (tempResisValue > TEMP_RES_30 &&  tempResisValue <= TEMP_RES_15) {
         boardTemp = TEMP_15 + (TEMP_30 - TEMP_15) * (TEMP_RES_15 - tempResisValue) / (TEMP_RES_15 - TEMP_RES_30);
@@ -713,8 +630,15 @@ void MotorStatemachineCallBack(void *param)
     TIMER_ASSERT_PARAM(timer->baseAddress != NULL);
     /* Clear timer interrupt. */
     DCL_TIMER_IrqClear(timer->baseAddress);
+    /* Get board temperature. */
     ReadBoardTemp();
     TSK_SystickIsr(&g_mc, g_aptAddr);
+    if (g_mc.stateMachine == FSM_RUN) {
+        /* Over and under voltage det. */
+        FP_UOVD_Exec(&g_mc.uovd, &g_mc.faultStatus, g_mc.udc);
+        /* Over temperature det. */
+        FP_OTD_Exec(&g_mc.otd, &g_mc.faultStatus, 0.0f, g_mc.powerBoardTemp);
+    }
 }
 
 /**
@@ -766,7 +690,7 @@ static void MotorBlockageProtect(void)
         MotorPwmOutputDisable(g_aptAddr);
         /* Status setting error */
         SysErrorSet(&g_mc.statusReg);
-        g_hall.spd = 0.0f;
+        g_hall.spdEst = 0.0f;
     }
 }
 
@@ -789,33 +713,11 @@ void MotorSysErrCallback(void *para)
     SysErrorSet(&g_mc.statusReg);
     g_mc.stateMachine = FSM_FAULT;
     DBG_PRINTF("APT error! \r\n");
+    g_mc.faultStatus.Bit.hardOverCurFault = 1;
     HAL_GPIO_SetValue(&LED2_HANDLE, LED2_PIN, GPIO_LOW_LEVEL);
     BASE_FUNC_UNUSED(handle);
 }
 
-/**
-  * @brief Receive hall signal.
-  * @retval None.
-  */
-static unsigned int GetHallValue(void)
-{
-#ifdef CHIP_3061MNPICA
-    /* Get three hall values. */
-    unsigned int hallA = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
-    unsigned int hallB = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
-    unsigned int hallC = HAL_CAPM_GetCrtEdge(&g_capm2) & 0x01;
-#endif
-
-#if defined CHIP_3065HRPIRZ || defined CHIP_3065ARPIRZ
-    /* Get three hall values. */
-    unsigned int hallA = HAL_CAPM_GetCrtEdge(&g_capm2) & 0x01;
-    unsigned int hallB = HAL_CAPM_GetCrtEdge(&g_capm0) & 0x01;
-    unsigned int hallC = HAL_CAPM_GetCrtEdge(&g_capm1) & 0x01;
-#endif
-    /* WVU-+  -->  H3H2H1-+ */
-    unsigned int retValue = (hallC << 2) + (hallB << 1) + (hallA << 0);
-    return retValue;
-}
 
 /**
   * @brief Init motor controller's data structure.
@@ -823,16 +725,73 @@ static unsigned int GetHallValue(void)
   */
 static void InitSoftware(void)
 {
-    /* MCU peripheral configuration function used for initial motor control */
-    g_mc.getHallAngSpd = GetHallAngSpd;  /* Callback function for obtaining the encoder speed angle. */
-    g_hall.getHallValue = GetHallValue;
-    g_mc.readCurrBiasCb = readCurrBiasCb;
-    g_mc.readBusVoltCb = ReadBusVoltCb;
-    g_mc.readBusCurrCb = ReadBusCurrCb;
     /* Initializing motor Control Tasks */
     TSK_InitCp();
 }
 
+/**
+  * @brief Read the ADC current sampling value.
+  * @param iuvw Three-phase current.
+  * @retval None.
+  */
+static void ReadCurrUvw(UvwAxis *iuvw, HALL_SECTOR sector)
+{
+    MCS_ASSERT_PARAM(iuvw != NULL);
+    /* Sample point is set to pwm falling edge left offset by 100. */
+    float point = g_mc.aptMaxCntCmp * (1.0f - g_mc.pwmDuty) + 100.0f; /* Point shift is 100. */
+    unsigned short samplePoint = (unsigned short)Clamp(point, g_mc.aptMaxCntCmp - 1.0f, 1.0f);
+    DCL_APT_SetCounterCompare(g_apt0.baseAddress, APT_COMPARE_REFERENCE_A, samplePoint);
+    float iBusAbs = Abs(((float)HAL_ADC_GetConvResult(&ADC_U_HANDLE, ADC_U_SOC_NUM)
+                    - g_mc.iuvwAdcBias.iBusAdcBias) * ADC_CURR_COFFI);
+    float iu, iv, iw;
+    /* Calc uvw phase current according to sector. */
+    switch (sector) {
+        case SECTOR1: /* A+C- */
+            iu = iBusAbs;
+            iv = 0.0f;
+            iw = -iBusAbs;
+            break;
+
+        case SECTOR2: /* B+C- */
+            iu = 0.0f;
+            iv = iBusAbs;
+            iw = -iBusAbs;
+            break;
+
+        case SECTOR3: /* B+A- */
+            iu = -iBusAbs;
+            iv = iBusAbs;
+            iw = 0.0f;
+            break;
+
+        case SECTOR4: /* C+A- */
+            iu = -iBusAbs;
+            iv = 0.0f;
+            iw = iBusAbs;
+            break;
+
+        case SECTOR5: /* C+B- */
+            iu = 0.0f;
+            iv = -iBusAbs;
+            iw = iBusAbs;
+            break;
+
+        case SECTOR6: /* A+B- */
+            iu = iBusAbs;
+            iv = -iBusAbs;
+            iw = 0.0f;
+            break;
+
+        default:
+            iu = 0.0f;
+            iv = 0.0f;
+            iw = 0.0f;
+            break;
+        }
+    iuvw->u = iu;
+    iuvw->v = iv;
+    iuvw->w = iw;
+}
 
 /**
   * @brief The carrier ISR wrapper function.
@@ -842,33 +801,27 @@ static void InitSoftware(void)
 void MotorCarrierProcessCallback(void *aptHandle)
 {
     BASE_FUNC_UNUSED(aptHandle);
-    g_mc.readBusVoltCb(&g_mc.udc);
-    g_mc.readBusCurrCb(&g_mc.idc);
     /* Calculate hall sector. */
-    HALL_InformationUpdate(&g_hall);
-    GetHallAngSpd(&g_mc.hallSpeed, &g_mc.hallAxisAngle);
-    SIXSTEP_Match(GetHallValue(), &g_mc.sector, g_mc.dir);
-    /* Get feedback speed. */
-    g_mc.spdFbk = g_mc.hallSpeed;
-
-    SIXSTEP_SetPwmDuty(g_aptAddr, g_mc.aptMaxcntCmp, g_mc.pwmDuty);
+    HALL_SECTOR sector = SectorMatch(GetHallValue());
+    HALL_Exec(&g_hall, sector);
+    g_mc.spdFbk = g_hall.spdEst;
 
     if (g_mc.stateMachine == FSM_OFFSET_CALIB) {
-        g_mc.readCurrBiasCb(&g_mc.iuvwAdcBias);
+        readCurrBiasCb(&g_mc.iuvwAdcBias);
     }
     if (g_mc.stateMachine == FSM_RUN) {
-        SIXSTEP_AptConfig(g_aptAddr, g_mc.sector);
+        SIXSTEP_AptConfig(g_aptAddr, sector);
         /* Stall fault detection. */
+        SetPwmDuty(g_aptAddr, g_mc.aptMaxCntCmp, g_mc.pwmDuty);
         MotorBlockageProtect();
     }
 
     /* Fault detection. */
     if (g_mc.stateMachine == FSM_STARTUP || g_mc.stateMachine == FSM_RUN) {
-        bool motorStatus = FaultDetect_Exec(&g_mc.faultDet, g_mc.idc, g_mc.powerBoardTemp, g_mc.udc, g_mc.spdFbk);
-        if (motorStatus) {
-            g_mc.stateMachine = FSM_FAULT;
-        }
+        FualtDetCarr();
     }
+    g_mc.udc = (float)HAL_ADC_GetConvResult(&ADC_UDC_HANDLE, ADC_UDC_SOC_NUM) * ADC_VOLT_COFFI;
+    ReadCurrUvw(&g_mc.iuvw, sector);
 }
 
 
@@ -937,7 +890,6 @@ int MotorMain(void)
     HAL_TIMER_Start(&g_timer0);
     HAL_TIMER_Start(&g_timer1);
 
-    AptMasterSalveSet();
     /* Disable PWM output before startup. */
     MotorPwmOutputDisable(g_aptAddr);
 

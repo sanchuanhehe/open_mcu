@@ -36,7 +36,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.handleEx.pllPostDiv2   = CRG_PLL_POSTDIV2_3;
     crg.handleEx.clk1MSelect   = CRG_1M_CLK_SELECT_HOSC;
     /* The 1 MHz freq is equal to the input clock frequency / (clk_1m_div + 1). */
-    crg.handleEx.clk1MDiv = (25 - 1); /* The 25 - 1 is div coffecient */
+    crg.handleEx.clk1MDiv = (25 - 1); /* 25 is the div of the clk_1m in CLOCK. */
 
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
@@ -47,19 +47,17 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 
 static void ACMP0_Init(void)
 {
-    /* enable acmp input capture function */
     HAL_CRG_IpEnableSet(ACMP0_BASE, IP_CLK_ENABLE);                /* ACMP clock bit reset. */
-    HAL_CRG_IpClkSelectSet(ACMP0_BASE, 0);
     g_acmp0.baseAddress =  ACMP0_BASE;
     g_acmp0.inOutConfig.inputNNum = ACMP_INPUT_N_SELECT4;
     g_acmp0.inOutConfig.inputPNum = ACMP_INPUT_P_SELECT4;
-    /* set acmp polarity */
+	/* set acmp polarity */
     g_acmp0.inOutConfig.polarity = ACMP_OUT_NOT_INVERT;
     g_acmp0.filterCtrl.filterMode = ACMP_FILTER_FILTER;
     g_acmp0.filterCtrl.filterStep = 100; /* 100 is filter step size of the comparator. */
-    g_acmp0.hysteresisVol = ACMP_HYS_VOL_ZERO;
+    g_acmp0.hysteresisVol = ACMP_HYS_VOL_30MV;
     g_acmp0.interruptEn = BASE_CFG_UNSET;
-    /* acmp0 init */
+	/* acmp0 init */
     HAL_ACMP_Init(&g_acmp0);
 }
 
@@ -106,11 +104,10 @@ __weak void MotorCarrierProcessCallback(void *aptHandle)
 
 static void APT0_ProtectInit(void)
 {
-    /* enable apt0 event interupt protection function */
+	/* enable apt0 event interupt protection function */
     APT_OutCtrlProtectEx protectApt = {0};
     protectApt.ocEventEnEx = BASE_CFG_ENABLE;
     protectApt.ocEventModeEx = APT_OUT_CTRL_ONE_SHOT;
-    protectApt.cbcClrModeEx = APT_CLEAR_CBC_ON_CNTR_ZERO;
     protectApt.ocActionEx = APT_OUT_CTRL_ACTION_LOW;    /* low action protection */
     protectApt.ocActionBEx = APT_OUT_CTRL_ACTION_LOW;
     protectApt.ocEvtInterruptEnEx = BASE_CFG_ENABLE;
@@ -118,7 +115,7 @@ static void APT0_ProtectInit(void)
     protectApt.originalEvtEx = APT_EM_ORIGINAL_SRC_ACMP0;
     protectApt.evtPolarityMaskEx = APT_EM_ACMP0_INVERT_BIT;
     protectApt.filterCycleNumEx = 0;
-    /* set apt protect register */
+	/* set apt protect register */
     HAL_APT_ProtectInitEx(&g_apt0, &protectApt);
 }
 
@@ -131,7 +128,7 @@ static void APT0_Init(void)
     /* Clock Settings */
     g_apt0.waveform.dividerFactor = 1 - 1;
     /* Timer Settings */
-    g_apt0.waveform.timerPeriod = 7500; /* apt init timer period is 7500 */
+    g_apt0.waveform.timerPeriod = 7500; /* 7500 is count period of APT time-base timer */
     g_apt0.waveform.cntMode = APT_COUNT_MODE_UP_DOWN;
 
     /* Wave Form */
@@ -140,15 +137,15 @@ static void APT0_Init(void)
     g_apt0.waveform.chBOutType = APT_PWM_OUT_BASIC_TYPE;
     g_apt0.waveform.divInitVal = 0;
     g_apt0.waveform.cntInitVal = 0;
-    g_apt0.waveform.cntCmpLeftEdge = 500;   /* apt init left edge count period is 500 */
-    g_apt0.waveform.cntCmpRightEdge = 4000; /* apt init right edge count period is 4000 */
+    g_apt0.waveform.cntCmpLeftEdge = 500; /* 500 is count compare point of the left edge of PWM waveform */
+    g_apt0.waveform.cntCmpRightEdge = 4000; /* 4000 is count compare point of the right edge of PWM waveform */
     g_apt0.waveform.cntCmpLoadMode = APT_BUFFER_INDEPENDENT_LOAD;
     g_apt0.waveform.cntCmpLoadEvt = APT_COMPARE_LOAD_EVENT_ZERO;
-    g_apt0.waveform.deadBandCnt = 225;  /* apt dead band count value is 225 */
+    g_apt0.waveform.deadBandCnt = 225; /* 225 is dead-band value */
 
     /* ADC Trigger SOCA */
     g_apt0.adcTrg.trgEnSOCA = BASE_CFG_ENABLE;
-    g_apt0.adcTrg.cntCmpSOCA = 375; /* apt trig sample count value is 375 */
+    g_apt0.adcTrg.cntCmpSOCA = 375; /* 375 is count compare point of ADC trigger source SOCA when using CMPA */
     g_apt0.adcTrg.trgSrcSOCA = APT_CS_SRC_CNTR_CMPA_DOWN;
     g_apt0.adcTrg.trgScaleSOCA = 1;
 
@@ -170,11 +167,11 @@ static void APT0_Init(void)
 
     HAL_APT_PWMInit(&g_apt0);
     HAL_APT_RegisterCallBack(&g_apt0, APT_EVENT_INTERRUPT, MotorSysErrCallback);
-    IRQ_SetPriority(IRQ_APT0_EVT, 7); /* apt event interupt level is 7 */
+    IRQ_SetPriority(IRQ_APT0_EVT, 7); /* 7 is priority value */
     IRQ_Register(IRQ_APT0_EVT, HAL_APT_EventIrqHandler, &g_apt0);
     IRQ_EnableN(IRQ_APT0_EVT);
     HAL_APT_RegisterCallBack(&g_apt0, APT_TIMER_INTERRUPT, MotorCarrierProcessCallback);
-    IRQ_SetPriority(IRQ_APT0_TMR, 6); /* apt timer interupt level is 6 */
+    IRQ_SetPriority(IRQ_APT0_TMR, 6); /* 6 is priority value */
     IRQ_Register(IRQ_APT0_TMR, HAL_APT_TimerIrqHandler, &g_apt0);
     IRQ_EnableN(IRQ_APT0_TMR);
 }
@@ -182,19 +179,18 @@ static void APT0_Init(void)
 static void APT1_ProtectInit(void)
 {
     APT_OutCtrlProtectEx protectApt = {0};
-    /* enable apt1 event interupt protection function */
+	/* enable apt1 event interupt protection function */
     protectApt.ocEventEnEx = BASE_CFG_ENABLE;
     protectApt.ocEventModeEx = APT_OUT_CTRL_ONE_SHOT;
-    protectApt.cbcClrModeEx = APT_CLEAR_CBC_ON_CNTR_ZERO;
     protectApt.ocActionEx = APT_OUT_CTRL_ACTION_LOW;
     protectApt.ocActionBEx = APT_OUT_CTRL_ACTION_LOW;
-    /* disable apt1 event interupt protection function */
+	/* disable apt1 event interupt protection function */
     protectApt.ocEvtInterruptEnEx = BASE_CFG_DISABLE;
     protectApt.ocSysEvent = APT_SYS_EVT_DEBUG | APT_SYS_EVT_CLK | APT_SYS_EVT_MEM;
     protectApt.originalEvtEx = APT_EM_ORIGINAL_SRC_ACMP0;
     protectApt.evtPolarityMaskEx = APT_EM_ACMP0_INVERT_BIT;
     protectApt.filterCycleNumEx = 0;
-    /* init APT config module */
+	/* init APT config module */
     HAL_APT_ProtectInitEx(&g_apt1, &protectApt);
 }
 
@@ -207,7 +203,7 @@ static void APT1_Init(void)
     /* Clock Settings */
     g_apt1.waveform.dividerFactor = 1 - 1;
     /* Timer Settings */
-    g_apt1.waveform.timerPeriod = 7500; /* apt init timer period is 7500 */
+    g_apt1.waveform.timerPeriod = 7500; /* 7500 is count period of APT time-base timer */
     g_apt1.waveform.cntMode = APT_COUNT_MODE_UP_DOWN;
 
     /* Wave Form */
@@ -216,31 +212,32 @@ static void APT1_Init(void)
     g_apt1.waveform.chBOutType = APT_PWM_OUT_BASIC_TYPE;
     g_apt1.waveform.divInitVal = 0;
     g_apt1.waveform.cntInitVal = 0;
-    g_apt1.waveform.cntCmpLeftEdge = 500;   /* apt init left edge count period is 500 */
-    g_apt1.waveform.cntCmpRightEdge = 4000; /* apt init right edge count period is 4000 */
+    g_apt1.waveform.cntCmpLeftEdge = 500; /* 500 is count compare point of the left edge of PWM waveform */
+    g_apt1.waveform.cntCmpRightEdge = 4000; /* 4000 is count compare point of the right edge of PWM waveform */
     g_apt1.waveform.cntCmpLoadMode = APT_BUFFER_INDEPENDENT_LOAD;
     g_apt1.waveform.cntCmpLoadEvt = APT_COMPARE_LOAD_EVENT_ZERO;
-    g_apt1.waveform.deadBandCnt = 225; /* apt dead band count value is 225 */
+    g_apt1.waveform.deadBandCnt = 225; /* 225 is dead-band value */
+
     APT1_ProtectInit();
+
     HAL_APT_PWMInit(&g_apt1);
 }
 
 static void APT2_ProtectInit(void)
 {
     APT_OutCtrlProtectEx protectApt = {0};
-    /* enable apt2 event interupt protection function */
+	/* enable apt2 event interupt protection function */
     protectApt.ocEventEnEx = BASE_CFG_ENABLE;
     protectApt.ocEventModeEx = APT_OUT_CTRL_ONE_SHOT;
-    protectApt.cbcClrModeEx = APT_CLEAR_CBC_ON_CNTR_ZERO;
     protectApt.ocActionEx = APT_OUT_CTRL_ACTION_LOW;
     protectApt.ocActionBEx = APT_OUT_CTRL_ACTION_LOW;
-    /* disable apt2 event interupt protection function */
+	/* disable apt2 event interupt protection function */
     protectApt.ocEvtInterruptEnEx = BASE_CFG_DISABLE;
     protectApt.ocSysEvent = APT_SYS_EVT_DEBUG | APT_SYS_EVT_CLK | APT_SYS_EVT_MEM;
     protectApt.originalEvtEx = APT_EM_ORIGINAL_SRC_ACMP0;
     protectApt.evtPolarityMaskEx = APT_EM_ACMP0_INVERT_BIT;
     protectApt.filterCycleNumEx = 0;
-    /* init APT config module */
+	/* init APT config module */
     HAL_APT_ProtectInitEx(&g_apt2, &protectApt);
 }
 
@@ -253,7 +250,7 @@ static void APT2_Init(void)
     /* Clock Settings */
     g_apt2.waveform.dividerFactor = 1 - 1;
     /* Timer Settings */
-    g_apt2.waveform.timerPeriod = 7500; /* apt init timer period is 7500 */
+    g_apt2.waveform.timerPeriod = 7500; /* 7500 is count period of APT time-base timer */
     g_apt2.waveform.cntMode = APT_COUNT_MODE_UP_DOWN;
 
     /* Wave Form */
@@ -262,18 +259,20 @@ static void APT2_Init(void)
     g_apt2.waveform.chBOutType = APT_PWM_OUT_BASIC_TYPE;
     g_apt2.waveform.divInitVal = 0;
     g_apt2.waveform.cntInitVal = 0;
-    g_apt2.waveform.cntCmpLeftEdge = 500;   /* apt init left edge count period is 500 */
-    g_apt2.waveform.cntCmpRightEdge = 4000; /* apt init right edge count period is 4000 */
+    g_apt2.waveform.cntCmpLeftEdge = 500; /* 500 is count compare point of the left edge of PWM waveform */
+    g_apt2.waveform.cntCmpRightEdge = 4000; /* 4000 is count compare point of the right edge of PWM waveform */
     g_apt2.waveform.cntCmpLoadMode = APT_BUFFER_INDEPENDENT_LOAD;
     g_apt2.waveform.cntCmpLoadEvt = APT_COMPARE_LOAD_EVENT_ZERO;
-    g_apt2.waveform.deadBandCnt = 225;  /* apt dead band count value is 225 */
+    g_apt2.waveform.deadBandCnt = 225; /* 225 is dead-band value */
+
     APT2_ProtectInit();
+
     HAL_APT_PWMInit(&g_apt2);
 }
 
 __weak void MotorStartStopKeyCallback(void *param)
 {
-    /* gpio interupt callback function */
+	/* gpio interupt callback function */
     GPIO_Handle *handle = (GPIO_Handle *)param;
     BASE_FUNC_UNUSED(handle);
 }
@@ -282,13 +281,13 @@ static void GPIO_Init(void)
 {
     HAL_CRG_IpEnableSet(GPIO0_BASE, IP_CLK_ENABLE);
     g_gpio0.baseAddress = GPIO0;
-    /* set gpio0_6 config mode */
+	/* set gpio0_6 config mode */
     g_gpio0.pins = GPIO_PIN_6;
     HAL_GPIO_Init(&g_gpio0);
     HAL_GPIO_SetDirection(&g_gpio0, g_gpio0.pins, GPIO_OUTPUT_MODE);
     HAL_GPIO_SetValue(&g_gpio0, g_gpio0.pins, GPIO_LOW_LEVEL);
     HAL_GPIO_SetIrqType(&g_gpio0, g_gpio0.pins, GPIO_INT_TYPE_NONE);
-    /* enable gpio2 config */
+	/* enable gpio2 config */
     HAL_CRG_IpEnableSet(GPIO2_BASE, IP_CLK_ENABLE);
     g_gpio2.baseAddress = GPIO2;
     /* set gpio2_4 config mode */
@@ -306,7 +305,7 @@ static void GPIO_Init(void)
     /* set gpio2_3 config callback function */
     HAL_GPIO_RegisterCallBack(&g_gpio2, GPIO_PIN_3, MotorStartStopKeyCallback);
     IRQ_Register(IRQ_GPIO2, HAL_GPIO_IrqHandler, &g_gpio2);
-    IRQ_SetPriority(IRQ_GPIO2, 1); /* set gpio1 interrupt priority to 1, 1~15 */
+    IRQ_SetPriority(IRQ_GPIO2, 1); /* set gpio1 interrupt priority to 1, 1~15. 1 is priority value */
     IRQ_EnableN(IRQ_GPIO2); /* gpio interrupt enable */
 
     return;
@@ -315,10 +314,9 @@ static void GPIO_Init(void)
 static void PGA0_Init(void)
 {
     HAL_CRG_IpEnableSet(PGA0_BASE, IP_CLK_ENABLE);
-    HAL_CRG_IpClkSelectSet(PGA0_BASE, 0);
+
     /* congfig pga0 base address */
     g_pga0.baseAddress = PGA0_BASE;
-    g_pga0.gain = PGA_GAIN_2X;
     g_pga0.externalResistorMode = BASE_CFG_ENABLE;
     g_pga0.handleEx.extCapCompensation = PGA_EXT_COMPENSATION_2X;
     /* init pga0 module */
@@ -329,10 +327,9 @@ static void PGA1_Init(void)
 {
     /* enable pga1 */
     HAL_CRG_IpEnableSet(PGA1_BASE, IP_CLK_ENABLE);
-    HAL_CRG_IpClkSelectSet(PGA1_BASE, 0);
+
     /* config pga1 base address */
     g_pga1.baseAddress = PGA1_BASE;
-    g_pga1.gain = PGA_GAIN_2X;
     g_pga1.externalResistorMode = BASE_CFG_ENABLE;
     g_pga1.handleEx.extCapCompensation = PGA_EXT_COMPENSATION_2X;
     /* init pga1 module */
@@ -348,8 +345,9 @@ __weak void MotorStatemachineCallBack(void *handle)
 
 static void TIMER1_Init(void)
 {
-    HAL_CRG_IpEnableSet(TIMER1_BASE, IP_CLK_ENABLE);
+    HAL_CRG_IpEnableSet(TIMER1_BASE, IP_CLK_ENABLE);  /* TIMER1 clock enable. */
     unsigned int load = (HAL_CRG_GetIpFreq((void *)TIMER1) / (1u << (TIMERPRESCALER_NO_DIV * 4)) / 1000000u) * 500;
+
     g_timer1.baseAddress = TIMER1;
     g_timer1.load        = load - 1; /* Set timer value immediately */
     g_timer1.bgLoad      = load - 1; /* Set timer value */
@@ -363,7 +361,7 @@ static void TIMER1_Init(void)
     IRQ_Register(IRQ_TIMER1, HAL_TIMER_IrqHandler, &g_timer1);
 
     HAL_TIMER_RegisterCallback(&g_timer1, TIMER_PERIOD_FIN, MotorStatemachineCallBack);
-    IRQ_SetPriority(IRQ_TIMER1, 1);
+    IRQ_SetPriority(IRQ_TIMER1, 1); /* 1 is priority value */
     IRQ_EnableN(IRQ_TIMER1);
 }
 
@@ -371,118 +369,142 @@ static void IOConfig(void)
 {
     SYSCTRL0->SC_SYS_STAT.BIT.update_mode = 0;
     SYSCTRL0->SC_SYS_STAT.BIT.update_mode_clear = 1;
-    HAL_IOCMG_SetPinAltFuncMode(GPIO3_1_AS_APT1_PWMA);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO3_1_AS_APT1_PWMA, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO3_1_AS_APT1_PWMA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO3_1_AS_APT1_PWMA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO3_1_AS_APT1_PWMA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
-    HAL_IOCMG_SetPinAltFuncMode(GPIO4_1_AS_APT1_PWMB);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO4_1_AS_APT1_PWMB, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO4_1_AS_APT1_PWMB, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO4_1_AS_APT1_PWMB, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO4_1_AS_APT1_PWMB, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
-    HAL_IOCMG_SetPinAltFuncMode(GPIO3_0_AS_APT0_PWMA);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO3_0_AS_APT0_PWMA, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO3_0_AS_APT0_PWMA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO3_0_AS_APT0_PWMA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO3_0_AS_APT0_PWMA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
-    HAL_IOCMG_SetPinAltFuncMode(GPIO4_0_AS_APT0_PWMB);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO4_0_AS_APT0_PWMB, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO4_0_AS_APT0_PWMB, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO4_0_AS_APT0_PWMB, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO4_0_AS_APT0_PWMB, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
-    HAL_IOCMG_SetPinAltFuncMode(GPIO3_2_AS_APT2_PWMA);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO3_2_AS_APT2_PWMA, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO3_2_AS_APT2_PWMA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO3_2_AS_APT2_PWMA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO3_2_AS_APT2_PWMA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
-    HAL_IOCMG_SetPinAltFuncMode(GPIO4_2_AS_APT2_PWMB);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO4_2_AS_APT2_PWMB, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO4_2_AS_APT2_PWMB, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO4_2_AS_APT2_PWMB, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO4_2_AS_APT2_PWMB, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN4 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO2_6_AS_PGA0_N0);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_6_AS_PGA0_N0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO2_6_AS_PGA0_N0, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO2_6_AS_PGA0_N0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO2_6_AS_PGA0_N0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO2_6_AS_PGA0_N0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN5 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO2_5_AS_PGA0_P0);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_5_AS_PGA0_P0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO2_5_AS_PGA0_P0, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO2_5_AS_PGA0_P0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO2_5_AS_PGA0_P0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO2_5_AS_PGA0_P0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN3 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO2_7_AS_PGA0_OUT);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_7_AS_PGA0_OUT, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO2_7_AS_PGA0_OUT, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO2_7_AS_PGA0_OUT, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO2_7_AS_PGA0_OUT, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO2_7_AS_PGA0_OUT, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN11 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO1_5_AS_PGA1_P0);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO1_5_AS_PGA1_P0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO1_5_AS_PGA1_P0, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO1_5_AS_PGA1_P0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO1_5_AS_PGA1_P0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO1_5_AS_PGA1_P0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN12 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO1_6_AS_PGA1_N0);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO1_6_AS_PGA1_N0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO1_6_AS_PGA1_N0, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO1_6_AS_PGA1_N0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO1_6_AS_PGA1_N0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO1_6_AS_PGA1_N0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN13 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO1_7_AS_PGA1_OUT);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO1_7_AS_PGA1_OUT, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO1_7_AS_PGA1_OUT, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO1_7_AS_PGA1_OUT, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO1_7_AS_PGA1_OUT, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO1_7_AS_PGA1_OUT, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN48 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO0_6_AS_GPIO0_6);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO0_6_AS_GPIO0_6, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO0_6_AS_GPIO0_6, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO0_6_AS_GPIO0_6, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO0_6_AS_GPIO0_6, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO0_6_AS_GPIO0_6, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN41 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO2_4_AS_GPIO2_4);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_4_AS_GPIO2_4, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO2_4_AS_GPIO2_4, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO2_4_AS_GPIO2_4, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO2_4_AS_GPIO2_4, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO2_4_AS_GPIO2_4, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN35 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO2_3_AS_GPIO2_3);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_3_AS_GPIO2_3, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO2_3_AS_GPIO2_3, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO2_3_AS_GPIO2_3, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO2_3_AS_GPIO2_3, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO2_3_AS_GPIO2_3, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN7 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO3_7_AS_ACMP0_OUT);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO3_7_AS_ACMP0_OUT, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO3_7_AS_ACMP0_OUT, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO3_7_AS_ACMP0_OUT, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO3_7_AS_ACMP0_OUT, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO3_7_AS_ACMP0_OUT, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN8 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO3_6_AS_ACMP_N4);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO3_6_AS_ACMP_N4, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO3_6_AS_ACMP_N4, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO3_6_AS_ACMP_N4, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO3_6_AS_ACMP_N4, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO3_6_AS_ACMP_N4, DRIVER_RATE_2);  /* Output signal edge fast/slow */
-
+    /* Config PIN9 */
     HAL_IOCMG_SetPinAltFuncMode(GPIO3_5_AS_ACMP_P4);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO3_5_AS_ACMP_P4, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinPullMode(GPIO3_5_AS_ACMP_P4, PULL_NONE);  /* Pull-up and Pull-down */
     HAL_IOCMG_SetPinSchmidtMode(GPIO3_5_AS_ACMP_P4, SCHMIDT_DISABLE);  /* Schmitt input on/off */
     HAL_IOCMG_SetPinLevelShiftRate(GPIO3_5_AS_ACMP_P4, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
     HAL_IOCMG_SetPinDriveRate(GPIO3_5_AS_ACMP_P4, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    /* Config PIN19 */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO3_0_AS_APT0_PWMA);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO3_0_AS_APT0_PWMA, PULL_NONE);  /* Pull-up and Pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO3_0_AS_APT0_PWMA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO3_0_AS_APT0_PWMA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO3_0_AS_APT0_PWMA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    /* Config PIN23 */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO4_0_AS_APT0_PWMB);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO4_0_AS_APT0_PWMB, PULL_NONE);  /* Pull-up and Pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO4_0_AS_APT0_PWMB, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO4_0_AS_APT0_PWMB, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO4_0_AS_APT0_PWMB, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    /* Config PIN20 */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO3_1_AS_APT1_PWMA);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO3_1_AS_APT1_PWMA, PULL_NONE);  /* Pull-up and Pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO3_1_AS_APT1_PWMA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO3_1_AS_APT1_PWMA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO3_1_AS_APT1_PWMA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    /* Config PIN24 */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO4_1_AS_APT1_PWMB);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO4_1_AS_APT1_PWMB, PULL_NONE);  /* Pull-up and Pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO4_1_AS_APT1_PWMB, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO4_1_AS_APT1_PWMB, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO4_1_AS_APT1_PWMB, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    /* Config PIN21 */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO3_2_AS_APT2_PWMA);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO3_2_AS_APT2_PWMA, PULL_NONE);  /* Pull-up and Pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO3_2_AS_APT2_PWMA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO3_2_AS_APT2_PWMA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO3_2_AS_APT2_PWMA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    /* Config PIN25 */
+    HAL_IOCMG_SetPinAltFuncMode(GPIO4_2_AS_APT2_PWMB);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(GPIO4_2_AS_APT2_PWMB, PULL_NONE);  /* Pull-up and Pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(GPIO4_2_AS_APT2_PWMB, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(GPIO4_2_AS_APT2_PWMB, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(GPIO4_2_AS_APT2_PWMB, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+}
+
+static void APT_SyncMasterInit(void)
+{
+    /* APT master set. */
+    HAL_APT_MasterSyncInit(&g_apt0, APT_SYNC_OUT_ON_CNTR_ZERO);
+}
+
+static void APT_SyncSlaveInit(void)
+{
+    APT_SlaveSyncIn aptSlave;
+
+    aptSlave.cntPhase = 0; /* counter phase value  */
+    aptSlave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
+    aptSlave.syncInSrc = APT_SYNCIN_SRC_APT0_SYNCOUT; /* sync source selection */
+    aptSlave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
+    HAL_APT_SlaveSyncInit(&g_apt1, &aptSlave);
+
+    aptSlave.cntPhase = 0; /* counter phase value  */
+    aptSlave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
+    aptSlave.syncInSrc = APT_SYNCIN_SRC_APT0_SYNCOUT; /* sync source selection */
+    aptSlave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
+    HAL_APT_SlaveSyncInit(&g_apt2, &aptSlave);
 }
 
 void SystemInit(void)
 {
-    /* init system module */
+	/* init system module */
     IOConfig();
     ACMP0_Init();
     /* init APT module */
@@ -498,6 +520,8 @@ void SystemInit(void)
     TIMER1_Init();
     GPIO_Init();
 
+    APT_SyncMasterInit();
+    APT_SyncSlaveInit();
     /* USER CODE BEGIN system_init */
     /* USER CODE END system_init */
 }

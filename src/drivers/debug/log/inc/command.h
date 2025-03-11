@@ -54,10 +54,10 @@ struct CmdTable {
  * @brief use cmd line to find cmd
  * @attention None
  *
- * @param str [IN] command character string carried in the command line
+ * @param cmd [IN] command character string carried in the command line
  * @retval struct cmdRegisterTable *
  */
-struct cmdRegisterTable *ExtCmdFindCmd(const char *str);
+struct cmdRegisterTable *ExtCmdFindCmd(const char *cmd);
 
 /**
  * @brief use cmd line to match cmd read

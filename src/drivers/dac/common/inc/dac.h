@@ -63,6 +63,7 @@ typedef struct _DAC_Handle {
   * @{
   */
 /* DAC APIs */
+
 BASE_StatusType HAL_DAC_Init(DAC_Handle *dacHandle);
 BASE_StatusType HAL_DAC_DeInit(DAC_Handle *dacHandle);
 void HAL_DAC_SetValue(DAC_Handle *dacHandle, unsigned int value);

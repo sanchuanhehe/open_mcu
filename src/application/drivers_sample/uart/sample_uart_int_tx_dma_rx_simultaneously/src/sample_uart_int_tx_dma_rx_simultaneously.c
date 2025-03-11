@@ -32,7 +32,6 @@
 
 #define RX_IT_DMA_DATA_LENGTH 10
 #define TX_IT_DMA_DATA_LENGTH 15
-#define IT_DMA_REQUIRE_TIME 30
 
 static unsigned char g_txITDMAStr[TX_IT_DMA_DATA_LENGTH] = "123456789012345"; /* The transmit data length is 15 */
 static unsigned char g_rxITDMAStr[RX_IT_DMA_DATA_LENGTH] = {0};               /* The receive data length is 10 */
@@ -109,7 +108,6 @@ void UART_INTTxAndDMARxSimultaneously(void)
             /* DMA read: Length of the received data must be equal to the RX_IT_DMA_DATA_LENGTH */
             HAL_UART_ReadDMA(&g_uart, g_rxITDMAStr, RX_IT_DMA_DATA_LENGTH);
         }
-        BASE_FUNC_DELAY_MS(IT_DMA_REQUIRE_TIME); /* Add a deletion delay as required */
     }
     return;
 }

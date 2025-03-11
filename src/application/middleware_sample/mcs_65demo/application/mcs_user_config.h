@@ -63,15 +63,17 @@
 #define MOTOR_PARAM_ENCODER_ZSHIFT   (1)          /* Pulse Z shift. */
 
 /* ----------------------------PI parameters ----------------------------------- */
-#define CURR_KP            (0.07414f)
-#define CURR_KI            (1200.0f)
+#define CURR_KP            (0.07414f)     /* Current loop Kp of compressor. */
+#define CURR_KI            (1200.0f)      /* Current loop Ki of compressor. */
+/* Current loop PID output lower limit of compressor. */
 #define CURR_LOWERLIM      (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
+/* Current loop PID output upper limit of compressor. */
 #define CURR_UPPERLIM      (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
 
-#define SPD_KP            (0.05f)
-#define SPD_KI            (0.5f)
-#define SPD_LOWERLIM      (-MOTOR_PARAM_MAX_CURR)
-#define SPD_UPPERLIM      (MOTOR_PARAM_MAX_CURR)
+#define SPD_KP            (0.01f)                 /* Speed loop Kp. */
+#define SPD_KI            (0.5f)                  /* Speed loop Ki. */
+#define SPD_LOWERLIM      (-MOTOR_PARAM_MAX_CURR) /* Speed loop PID output lower limit. */
+#define SPD_UPPERLIM      (MOTOR_PARAM_MAX_CURR)  /* Speed loop PID output upper limit. */
 
 /** Duty of sample window, the real time is 0.06*50us = 3us. */
 #define SAMPLE_WINDOW_DUTY 0.06f
@@ -80,7 +82,7 @@
 #define SAMPLE_POINT_SHIFT 0.008f
 
 /* SMO */
-#define FOSMO_GAIN                 (8.0f)
+#define FOSMO_GAIN                 (8.0f)    /* SMO gain of compressor motor control. */
 #define FOSMO_LAMBDA               (2.0f)    /* SMO coefficient of cut-off frequency, its value = lambda * we */
 #define FOSMO_EMF_CUTOFF_FREQ      (2.0f)    /* SMO back emf cutoff frequency. */
 #define FOSMO_SPD_CUTOFF_FREQ      (30.0f)   /* SMO speed cutoff frequency. of speed filter. */
@@ -89,7 +91,12 @@
 /* User Command */
 #define CTRL_IF_CURR_AMP_A          1.0f      /* IF control current amplitude */
 /* 0.008055 Sampling resistance20 Ohm  Sampling resistance 100mOhm 0.001611f */
-#define ADC_CURR_COFFI_CP           0.001611f
+#if defined CHIP_3065HRPIRZ || defined CHIP_3065ARPIRZ
+#define ADC_CURR_COFFI_CP           0.001611f /* 3.3/4096/5/0.1 = 0.001611, 5 is PGA magnification factor.  */
+#else
+#define ADC_CURR_COFFI_CP           0.008055f /* 3.3/4096/5/0.02 = 0.008055, 5 is PGA magnification factor. */
+#endif
+
 #define USER_TARGET_SPD_HZ          (100.0f) /* Parentheses are used to enter negative instructions */
 #define USER_SWITCH_SPDBEGIN_HZ     51.0f    /* Start of handover interval */
 #define USER_SWITCH_SPDEND_HZ       52.0f    /* End of handover period */
@@ -113,18 +120,20 @@
 #define MOTOR_PARAM_ENCODER_ZSHIFT_FAN   (1)          /* Pulse Z shift. */
 
 /* ----------------------------PI parameters ----------------------------------- */
-#define CURR_KP_FAN            (0.07414f)
-#define CURR_KI_FAN            (1200.0f)
+#define CURR_KP_FAN            (0.07414f) /* Current loop Kp of fan. */
+#define CURR_KI_FAN            (1200.0f)  /* Current loop Ki of fan. */
+/* Current loop PID output lower limit of fan. */
 #define CURR_LOWERLIM_FAN      (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.92f)
+/* Current loop PID output upper limit of fan. */
 #define CURR_UPPERLIM_FAN      (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.92f)
 
-#define SPD_KP_FAN             (0.05f)
-#define SPD_KI_FAN             (0.5f)
-#define SPD_LOWERLIM_FAN       (-MOTOR_PARAM_MAX_CURR)
-#define SPD_UPPERLIM_FAN       (MOTOR_PARAM_MAX_CURR)
+#define SPD_KP_FAN             (0.01f)                 /* Speed loop Kp. */
+#define SPD_KI_FAN             (0.5f)                  /* Speed loop Ki. */
+#define SPD_LOWERLIM_FAN       (-MOTOR_PARAM_MAX_CURR) /* Speed loop PID output lower limit. */
+#define SPD_UPPERLIM_FAN       (MOTOR_PARAM_MAX_CURR)  /* Speed loop PID output upper limit. */
 
 /* SMO */
-#define FOSMO_GAIN_FAN             (8.0f)
+#define FOSMO_GAIN_FAN             (8.0f)    /* SMO gain */
 #define FOSMO_LAMBDA_FAN           (2.0f)    /* SMO coefficient of cut-off frequency, its value = lambda * we */
 #define FOSMO_EMF_CUTOFF_FREQ_FAN  (2.0f)    /* SMO back emf cutoff frequency. */
 #define FOSMO_SPD_CUTOFF_FREQ_FAN  (30.0f)   /* SMO speed cutoff frequency. of speed filter. */
@@ -133,7 +142,7 @@
 #define CTRL_IF_CURR_AMP_A_FAN      0.8f     /* IF control current amplitude */
 
 /* 0.008055 Sampling resistance20 Ohm  Sampling resistance 100mOhm 0.001611f */
-#define ADC_CURR_COFFI_FAN          0.001611f
+#define ADC_CURR_COFFI_FAN          0.001611f  /* 3.3/4096/5/0.1 = 0.001611, 5 is PGA magnification factor. */
 
 #define USER_TARGET_SPD_HZ_FAN      (100.0f)  /* Parentheses are used to enter negative instructions */
 #define USER_SWITCH_SPDBEGIN_HZ_FAN  50.0f   /* Start of handover interval, Positive number only */

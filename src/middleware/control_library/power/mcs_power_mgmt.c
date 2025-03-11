@@ -27,45 +27,47 @@
 
 /**
   * @brief Init motor power management.
-  * @param avgPower Pointer of motor power handle.
+  * @param powerCalc Pointer of motor power handle.
   * @param vdqRef Pointer of vdqRef handle.
   * @param idqFbk Pointer of idqFbk handle.
+  * @param fltCoeff Power filter coefficient.
   * @retval None.
   */
-void MotorPowerInit(POWER_Handle *avgPower, DqAxis *vdqRef, DqAxis *idqFbk)
+void MotorPowerInit(POWER_Handle *powerCalc, DqAxis *vdqRef, DqAxis *idqFbk, float fltCoeff)
 {
-    MCS_ASSERT_PARAM(avgPower != NULL);
+    MCS_ASSERT_PARAM(powerCalc != NULL);
     MCS_ASSERT_PARAM(vdqRef != NULL);
     MCS_ASSERT_PARAM(idqFbk != NULL);
     /* Initialization. */
-    avgPower->avgPower = 0.0f;
+    powerCalc->power = 0.0f;
     /* Initialization. */
-    avgPower->vdqRef = vdqRef;
-    avgPower->idqFbk = idqFbk;
+    powerCalc->vdqRef = vdqRef;
+    powerCalc->idqFbk = idqFbk;
+    powerCalc->fltCoeff = fltCoeff;
 }
 
 /**
   * @brief Power result value.
-  * @param avgPower Pointer of motor power handle.
+  * @param powerCalc Pointer of motor power handle.
   * @retval Motor power value (w).
   */
-float MotorPowerCalc(POWER_Handle *avgPower)
+float MotorPowerCalc(POWER_Handle *powerCalc)
 {
-    MCS_ASSERT_PARAM(avgPower != NULL);
+    MCS_ASSERT_PARAM(powerCalc != NULL);
     /* Calculate average power. */
-    float activePower = 1.5f * (avgPower->idqFbk->d * avgPower->vdqRef->d + avgPower->idqFbk->q * avgPower->vdqRef->q);
-    avgPower->avgPower = activePower;
-    return activePower;
+    float actvPwr = 1.5f * (powerCalc->idqFbk->d * powerCalc->vdqRef->d + powerCalc->idqFbk->q * powerCalc->vdqRef->q);
+    powerCalc->power = actvPwr * powerCalc->fltCoeff + powerCalc->power * (1.0f - powerCalc->fltCoeff);
+    return powerCalc->power;
 }
 
 /**
   * @brief Clear motor power history value.
-  * @param avgPower Pointer of motor power handle.
+  * @param powerCalc Pointer of motor power handle.
   * @retval None.
   */
-void MotorPowerClear(POWER_Handle *avgPower)
+void MotorPowerClear(POWER_Handle *powerCalc)
 {
-    MCS_ASSERT_PARAM(avgPower != NULL);
+    MCS_ASSERT_PARAM(powerCalc != NULL);
     /* Clear history value. */
-    avgPower->avgPower = 0.0f;
+    powerCalc->power = 0.0f;
 }

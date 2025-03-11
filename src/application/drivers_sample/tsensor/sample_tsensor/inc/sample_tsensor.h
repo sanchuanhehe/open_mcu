@@ -28,5 +28,6 @@
 #include "debug.h"
 #include "tsensor.h"
 
+void TSENSOR_Init(void);
 void TSENSOR_GetAveTemp(void);
 #endif

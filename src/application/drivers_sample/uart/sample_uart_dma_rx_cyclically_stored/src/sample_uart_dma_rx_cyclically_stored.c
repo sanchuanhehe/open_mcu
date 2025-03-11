@@ -48,7 +48,7 @@ int UART_DMA_RxCyclicallyStored(void)
     HAL_UART_ReadDMAAndCyclicallyStored(&g_uart, g_buf, &g_Node, BUF_LEN);
 
     while (1) {
-        /* Obtains the destination address written by the DAM */
+        /* Obtains the destination address written by the DMA */
         g_pointWrite = HAL_UART_ReadDMAGetPos(&g_uart);
 
         /* Print data if read pointer is inconsistent with write pointer */

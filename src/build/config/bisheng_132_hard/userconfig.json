@@ -1,0 +1,109 @@
+{
+    "system": [
+        {
+            "name": "compile",
+            "subsystem": [
+                {
+                    "name": "static_lib",
+                    "component": [
+                        {
+                            "name": "",
+                            "target_type": "static",
+                            "sources": [],
+                            "includes": [],
+                            "define": [],
+                            "libs": [],
+                            "lds_scripts": [],
+                            "cflags": [],
+                            "asmflags": [],
+                            "ldflags": []
+                        }
+                    ]
+                },
+                {
+                    "name": "compile_frame",
+                    "cflags": [
+                        "-Os",
+                        "-pipe",
+                        "-Wall",
+                        "-Wextra",
+                        "-Winit-self",
+                        "-Wmissing-include-dirs",
+                        "-Werror=undef",
+                        "-Wpointer-arith",
+                        "-Wstrict-prototypes",
+                        "-Wmissing-prototypes",
+                        "-Wformat=2",
+                        "-Wfloat-equal",
+                        "-Wdate-time",
+                        "-Wswitch-default",
+                        "-Wno-missing-declarations",
+                        "-Wcast-align",
+                        "-Wunused",
+                        "-Wvla",
+                        "-Wshadow",
+                        "-std=gnu11",
+                        "-fsigned-char",
+                        "-fno-builtin",
+                        "-ffreestanding",
+                        "-nostdlib",
+                        "-fno-exceptions",
+                        "-fno-unwind-tables",
+                        "-fno-short-enums",
+                        "-fno-common",
+                        "-fno-strict-aliasing",
+                        "-fdata-sections",
+                        "-ffunction-sections",
+                        "-falign-functions=2",
+                        "-Wa,-enable-c-lbu-sb",
+                        "-Wa,-enable-c-lhu-sh",
+                        "-msmall-data-limit=0",
+                        "-mabi=ilp32f",
+                        "-march=rv32imafcbxlinxma_xlinxmb_xlinxmc_xlinxmd_xlinxmg",
+                        "--target=riscv32",
+                        "-mllvm -imm-compare",
+                        "-mllvm -emit-muliadd",
+                        "-mllvm -merge-immshf",
+                        "-mllvm -emit-uxtb-uxth",
+                        "-mllvm --enable-lli=true",
+                        "-mllvm -fldm-stm-optimize",
+                        "-mllvm -m-push-pop",
+                        "-mllvm --jump-is-expensive=false",
+                        "-mllvm --min-jump-table-entries=1000000",
+                        "-mllvm --enable-oz-inline-threshold=true",
+                        "-mllvm --allow-unalign-ldst=true",
+                        "-mllvm --enable-machine-outliner=always",
+                        "-mllvm -machine-outliner-funcbytes=4",
+                        "-mllvm -enable-ldst-multiple-opt=true",
+                        "-mllvm -enable-rodata-sections=true",
+                        "-mllvm -enable-sequence-abstract=true",
+                        "-mllvm -enable-branch-imm-no-zero=true",
+                        "-mllvm --riscv-enable-copyelim=true",
+                        "-fvisibility=hidden"
+                    ],
+                    "asmflags": [],
+                    "ldflags": [
+                        "--target=riscv32",
+                        "-Wl,-Map,bin/target.map",
+                        "-nostdlib",
+                        "-Wl,--gc-sections",
+                        "-Wl,--enjal8m",
+                        "-Wl,--jal-transfer",
+                        "-Wl,-Bsymbolic",
+                        "-Wl,--no-undefined",
+                        "-static",
+                        "-lclang_rt.builtins-riscv32",
+                        "-lc"
+                    ],
+                    "define": [
+                        "FLOAT_SUPPORT"
+                    ],
+                    "nocheck": [],
+                    "extlibspath": [],
+                    "extlibsname": [],
+                    "extlibsinclude": []
+                }
+            ]
+        }
+    ]
+}

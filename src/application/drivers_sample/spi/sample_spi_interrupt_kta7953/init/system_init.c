@@ -85,7 +85,6 @@ static void SPI_Init(void)
     HAL_CRG_IpClkSelectSet(SPI_BASE, CRG_PLL_NO_PREDV);
 
     g_spiSampleHandle.baseAddress = SPI;
-    g_spiSampleHandle.irqNum = IRQ_SPI;
 
     g_spiSampleHandle.mode = HAL_SPI_MASTER;
     g_spiSampleHandle.csMode = SPI_CHIP_SELECT_MODE_INTERNAL;
@@ -110,15 +109,16 @@ static void SPI_Init(void)
     g_spiSampleHandle.txDMABurstSize =  SPI_TX_DMA_BURST_SIZE_1;
 
     HAL_SPI_Init(&g_spiSampleHandle);
+    HAL_SPI_ChipSelectChannelSet(&g_spiSampleHandle, SPI_CHIP_SELECT_CHANNEL_0);
 
     HAL_SPI_RegisterCallback(&g_spiSampleHandle, SPI_TX_COMPLETE_CB_ID, TxSampleCallbackHandle);
     HAL_SPI_RegisterCallback(&g_spiSampleHandle, SPI_RX_COMPLETE_CB_ID, RxSampleCallbackHandle);
     HAL_SPI_RegisterCallback(&g_spiSampleHandle, SPI_TX_RX_COMPLETE_CB_ID, TxRxSampleCallbackHandle);
     HAL_SPI_RegisterCallback(&g_spiSampleHandle, SPI_ERROR_CB_ID, ErrorSampleCallbackHandle);
     HAL_SPI_RegisterCallback(&g_spiSampleHandle, SPI_CS_CB_ID, SPICsCallback);
-    HAL_SPI_IRQService(&g_spiSampleHandle);
-    IRQ_SetPriority(g_spiSampleHandle.irqNum, 1);
-    IRQ_EnableN(g_spiSampleHandle.irqNum);
+    IRQ_Register(IRQ_SPI, HAL_SPI_IrqHandler, &g_spiSampleHandle);
+    IRQ_SetPriority(IRQ_SPI, 1); /* 1 is priority value */
+    IRQ_EnableN(IRQ_SPI);
 }
 
 static void UART0_Init(void)
@@ -127,7 +127,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;

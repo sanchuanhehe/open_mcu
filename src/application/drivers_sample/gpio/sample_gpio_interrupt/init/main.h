@@ -36,14 +36,28 @@
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
 
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
+
+#define TRIG_PIN GPIO_PIN_0
+#define TRIG_HANDLE g_gpio2
+#define INT_PIN GPIO_PIN_2
+#define INT_HANDLE g_gpio1
+
 extern UART_Handle g_uart0;
 
-extern GPIO_Handle g_intHandle;
-extern GPIO_Handle g_trigHandle;
+extern GPIO_Handle g_gpio2;
+extern GPIO_Handle g_gpio1;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
 void GPIO_CallBackFunc(void *param);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

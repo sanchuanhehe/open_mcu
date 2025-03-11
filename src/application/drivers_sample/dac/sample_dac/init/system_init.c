@@ -22,17 +22,19 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 {
     CRG_Handle crg;
-    crg.baseAddress     = CRG;
+    crg.baseAddress     = CRG; /* CRG base address */
     crg.pllRefClkSelect = CRG_PLL_REF_CLK_SELECT_HOSC;
     crg.pllPreDiv       = CRG_PLL_PREDIV_4;
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
-    if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
+
+    if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {  /* Init CRG */
         return BASE_STATUS_ERROR;
     }
     *coreClkSelect = crg.coreClkSelect;
@@ -41,23 +43,22 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 
 static void DAC0_Init(void)
 {
-    g_dac.baseAddress = DAC0_BASE; /* DAC0 base address */
-    g_dac.dacEn = BASE_CFG_ENABLE;
-    g_dac.dacValue = 128; /* 128: output 1.65v at 3.3v power supply */
-    g_dac.dacTstModeEn = BASE_CFG_DISABLE;
+    HAL_CRG_IpEnableSet(DAC0_BASE, IP_CLK_ENABLE);
+    HAL_CRG_IpClkDivSet(DAC0_BASE, CRG_DAC_DIV_1);
+
+    g_dac.baseAddress = DAC0_BASE;  /* DAC0 base address */
+    g_dac.dacValue = 120; /* 120: DAC Value */
+    g_dac.handleEx.sineMode = BASE_CFG_UNSET;
     HAL_DAC_Init(&g_dac);
 }
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
-
-    iconfig->iocmg_33.BIT.func = 0x8; /* 0x8 is DAC0_ANA_OUT */
-    iconfig->iocmg_33.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_33.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_33.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_33.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_33.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO16_AS_DAC0_ANA_OUT);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO16_AS_DAC0_ANA_OUT, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO16_AS_DAC0_ANA_OUT, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO16_AS_DAC0_ANA_OUT, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO16_AS_DAC0_ANA_OUT, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

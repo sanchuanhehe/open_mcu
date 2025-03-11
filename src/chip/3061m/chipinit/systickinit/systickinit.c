@@ -22,8 +22,57 @@
   */
 #include "baseaddr.h"
 #include "crg.h"
+#include "timer.h"
 #include "systick.h"
 #include "systickinit.h"
+#include "feature.h"
+#ifdef NOS_TASK_SUPPORT
+#include "interrupt.h"
+#include "nosinit.h"
+#endif
+TIMER_Handle g_systickHandle;
+#ifdef NOS_TASK_SUPPORT
+#define NOS_TickPostDispatch OsHwiDispatchTick
+
+static void SYSTICK_Default_Callback(void *handle)
+{
+    /* The default systick callback when using th nos task */
+    BASE_FUNC_UNUSED(handle);
+    NOS_TickPostDispatch();
+}
+
+void SYSTICK_IRQ_Enable(void)
+{
+    HAL_CRG_IpEnableSet(TIMER3_BASE, IP_CLK_ENABLE);
+    /* Choose the config to support GetTick and Delay */
+    g_systickHandle.baseAddress = TIMER3; /* use timer module */
+    g_systickHandle.load = (HAL_CRG_GetIpFreq(SYSTICK_BASE) / CRG_FREQ_1MHz) * CFG_SYSTICK_TICKINTERVAL_US;
+    g_systickHandle.bgLoad = (HAL_CRG_GetIpFreq(SYSTICK_BASE) / CRG_FREQ_1MHz) * CFG_SYSTICK_TICKINTERVAL_US;
+    g_systickHandle.mode = TIMER_MODE_RUN_PERIODIC;
+    g_systickHandle.prescaler = TIMERPRESCALER_NO_DIV;  /* frequency not divition */
+    g_systickHandle.size = TIMER_SIZE_32BIT;
+    g_systickHandle.interruptEn = BASE_CFG_ENABLE;
+    HAL_TIMER_Init(&g_systickHandle);
+    HAL_TIMER_RegisterCallback(&g_systickHandle, TIMER_PERIOD_FIN, SYSTICK_Default_Callback);  /* nos task schedule */
+    IRQ_SetPriority(IRQ_TIMER3, 1);  /* interrupt priority 1 */
+    IRQ_Register(IRQ_TIMER3, HAL_TIMER_IrqHandler, &g_systickHandle);
+    IRQ_EnableN(IRQ_TIMER3);
+    HAL_TIMER_Start(&g_systickHandle);  /* start timer module */
+}
+
+unsigned int SYSTICK_GetTickInterval(void)
+{
+    /* Get the tick interval(the number of usecond per tick) */
+    return CFG_SYSTICK_TICKINTERVAL_US;
+}
+
+#endif
+
+unsigned int SYSTICK_GetTimeStampUs(void)
+{
+    /* Get the systick timestamp(convert from the systick value) */
+    return DCL_SYSTICK_GetTick() / (SYSTICK_GetCRGHZ() / CRG_FREQ_1MHz);
+}
 
 /**
   * @brief   Init the systick
@@ -43,6 +92,10 @@ void SYSTICK_Init(void)
   */
 unsigned int SYSTICK_GetCRGHZ(void)
 {
+#ifdef NOS_TASK_SUPPORT
+    return HAL_CRG_GetCoreClkFreq();
+#else
     /* Get the Systick IP */
     return HAL_CRG_GetIpFreq(SYSTICK_BASE);
+#endif
 }

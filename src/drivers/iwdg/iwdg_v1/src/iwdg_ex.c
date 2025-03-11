@@ -29,8 +29,37 @@
 /* Macro definitions ---------------------------------------------------------*/
 #define IWDG_WINDOW_VALUE_UPPER_LIMIT     255
 #define IWDG_WINDOW_VALUE_LOWER_LIMIT     5
-
+#define IWDG_COUNT_MAXEX 0xFF
+#define TIME_CHANGE_NUMEX 1000
 static unsigned int IWDG_CalculateRegTimeoutEx(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType);
+
+/**
+  * @brief check iwdg time value parameter.
+  * @param baseAddress Value of @ref IWDG_RegStruct
+  * @param timeValue time value
+  * @param timeType Value of @ref IWDG_TimeType.
+  * @retval Bool.
+  */
+static bool IsIwdgTimeValueEx(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType)
+{
+    unsigned int clockFreq = HAL_CRG_GetIpFreq((void *)baseAddress); /* Get IWDG clock freq. */
+    if (clockFreq == 0) {
+        return false;
+    }
+
+    IWDG_RegStruct *iwdgx = (IWDG_RegStruct *)baseAddress;
+    /* Get IWDG clock prediv. */
+    unsigned int preDiv = IWDG_COUNT_MAXEX * (BASE_CFG_SET << iwdgx->IWDOG_PRE_DIV.BIT.iwdg_pre_div);
+    float maxSecValue = ((float)(preDiv) / (float)clockFreq);
+    float maxMsValue = maxSecValue * TIME_CHANGE_NUMEX;
+    float maxUsValue = maxMsValue * TIME_CHANGE_NUMEX;
+    /* Check iwdg time value parameter. */
+    return ((timeType == IWDG_TIME_UNIT_TICK && timeValue <= IWDG_COUNT_MAXEX) ||
+            (timeType == IWDG_TIME_UNIT_S && maxSecValue >= timeValue) ||
+            (timeType == IWDG_TIME_UNIT_MS && maxMsValue >= timeValue) ||
+            (timeType == IWDG_TIME_UNIT_US && maxUsValue >= timeValue));
+}
+
 /**
   * @brief Setting the window value of the IWDG counter.
   * @param handle Value of @ref IWDG_handle.
@@ -43,7 +72,12 @@ void HAL_IWDG_SetWindowValueEx(IWDG_Handle *handle, unsigned int windowValue, IW
     IWDG_ASSERT_PARAM(handle != NULL);
     IWDG_ASSERT_PARAM(IsIWDGInstance(handle->baseAddress));
     IWDG_PARAM_CHECK_NO_RET(IsIwdgTimeType(timeType));
-    /* handle->baseAddress only could be configed IWDG or IWDG */
+    /* Check iwdg time value parameter. */
+    if (IsIwdgTimeValueEx(handle->baseAddress, windowValue, timeType) == false) {
+        return;
+    }
+
+    /* handle->baseAddress only could be configed IWDG */
     if (handle->baseAddress->IWDOG_CONTROL.BIT.window_mode_en == BASE_CFG_SET) {
         handle->timeType = timeType;
         unsigned int value = IWDG_CalculateRegTimeoutEx(handle->baseAddress, windowValue, timeType);

@@ -33,7 +33,8 @@
 #include "apt.h"
 #include "mcs_adcCalibr.h"
 #include "mcs_fsm.h"
-#include "mcs_fault_detection.h"
+#include "mcs_sensor_hall.h"
+#include "fault_det.h"
 
 typedef struct {
     unsigned int iuAdcBias; /* iu adc temperature calibration */
@@ -41,12 +42,6 @@ typedef struct {
     unsigned int iwAdcBias; /* iw adc temperature calibration */
     unsigned int iBusAdcBias; /* ibus adc temperature calibration */
 } IBIAS_Handle; /* Current Bias */
-
-typedef void (*MCS_GetHallAngSpd)(float *speed, float *angle);
-typedef void (*MCS_AdcCalibrCurrUvwCb)(IBIAS_Handle *adcCalibrCurrUvw);
-typedef void (*MCS_ReadBusCurrCb)(float *idc);
-typedef void (*MCS_ReadBusVoltCb)(float *udc);
-
 
 /**
   * @brief Sampling mode.
@@ -64,17 +59,14 @@ typedef struct {
     float spdRef;              /**< Command value after speed ramp management */
     float spdFbk;              /**< Feedback speed */
     float currCtrlPeriod;        /**< current loop control period */
-    unsigned short aptMaxcntCmp; /**< Apt Maximum Comparison Count */
-
+    unsigned short aptMaxCntCmp; /**< Apt Maximum Comparison Count */
+    
+    UvwAxis iuvw;
     float idc;              /**< Bus current. */
     float udc;              /**< Bus voltage. */
     float powerBoardTemp;   /**< Power boart surface temperature */
 
     float pwmDuty;          /**< pwm duty. */
-    float hallSpeed;        /* Filtered speed of the hall sensor. */
-    float hallAxisAngle;    /* Filtered angle of the hall sensor. */
-    unsigned int sector;
-    int dir;
 
     unsigned short sysTickCnt;       /**< System Timer Tick Count */
     unsigned short capChargeTickNum; /**< Bootstrap Capacitor Charge Tick Count */
@@ -88,17 +80,16 @@ typedef struct {
     RMG_Handle spdRmg;           /**< Ramp management struct for the speed controller input reference */
     PID_Handle spdPi;            /**< Speed PI controller. */
     
-    MCS_GetHallAngSpd getHallAngSpd;  /**< Get the angle and speed of the hall. */
-    PLL_Handle hallAnglePll;          /**< Hall angle phase-locked loop. */
-    FOFLT_Handle hallSpdFilter;       /**< Hall speed filter. */
-    FAULT_DET_Handle faultDet;
-
+    HALL_Handle *hall;
     ADC_CALIBR_Handle adcCalibr;                 /**< adc calibration */
     IBIAS_Handle iuvwAdcBias;                    /**< Phase current ADC calibration handle. */
-    MCS_AdcCalibrCurrUvwCb readCurrBiasCb;       /**< Phase current ADC calibration function pointer. */
-    
-    MCS_ReadBusCurrCb readBusCurrCb;
-    MCS_ReadBusVoltCb readBusVoltCb;
+
+    FAULT_Status faultStatus;
+    FP_OCD_Handle ocd;
+    FP_UOVD_Handle uovd;
+    FP_OTD_Handle otd;
+    FP_STD_Handle std;
+    FP_OPD_Handle opd;
 } MTRCTRL_Handle;
 
 void MCS_CarrierProcess(MTRCTRL_Handle *mtrCtrl);

@@ -79,8 +79,8 @@
 #define CURRQAXIS_KI                      20612.84f
 #define CURRDAXIS_KP                      3.477114f
 #define CURRDAXIS_KI                      20612.84f
-#define CURR_LOWERLIM                     (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
-#define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.95f)
+#define CURR_LOWERLIM                     (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.98f)
+#define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.98f)
 
 #define SPD_KP                            0.00505f
 #define SPD_KI                            0.012f
@@ -99,6 +99,7 @@
     .mtrJ = 0.0f, \
     .maxElecSpd = 180.25f, \
     .maxCurr = 0.105f, \
+    .busVolt = INV_VOLTAGE_BUS, \
 }
 
 #define ADC_UDC_COFFI                     0.01289f      /* 0.01289 = 3.3/4096*192/12 */

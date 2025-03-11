@@ -26,7 +26,7 @@
 
 #include "uart.h"
 #include "crg.h"
-#include "wdg.h"
+#include "iwdg.h"
 
 #define    IO_SPEED_FAST     0x00U
 #define    IO_SPEED_SLOW     0x01U
@@ -36,7 +36,12 @@
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
 
-extern WDG_Handle g_iwdg;
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
+
+extern IWDG_Handle g_iwdg;
 extern UART_Handle g_uart0;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);

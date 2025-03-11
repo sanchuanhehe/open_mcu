@@ -78,12 +78,12 @@ static void DMA_Channel2Init(void *handle)
 
 static void DMA_Init(void)
 {
+    HAL_CRG_IpEnableSet(DMA_BASE, IP_CLK_ENABLE);
     g_dmac.baseAddress = DMA;
     g_dmac.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
     g_dmac.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.irqNumTc = IRQ_DMA_TC;
-    g_dmac.irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_IRQService(&g_dmac);
+    IRQ_Register(IRQ_DMA_TC, HAL_DMA_IrqHandlerTc, &g_dmac);
+    IRQ_Register(IRQ_DMA_ERR, HAL_DMA_IrqHandlerError, &g_dmac);
     IRQ_EnableN(IRQ_DMA_TC);
     IRQ_EnableN(IRQ_DMA_ERR);
     HAL_DMA_Init(&g_dmac);
@@ -133,7 +133,6 @@ static void SPI_Init(void)
     HAL_CRG_IpClkSelectSet(SPI_BASE, CRG_PLL_NO_PREDV);
 
     g_spiSampleHandle.baseAddress = SPI;
-    g_spiSampleHandle.irqNum = IRQ_SPI;
 
     g_spiSampleHandle.mode = HAL_SPI_MASTER;
     g_spiSampleHandle.csMode = SPI_CHIP_SELECT_MODE_INTERNAL;
@@ -175,7 +174,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;

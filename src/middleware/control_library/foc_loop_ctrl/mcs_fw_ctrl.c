@@ -28,7 +28,7 @@
   * @param fw Flux-Weakening struct handle.
   * @retval None.
   */
-static void FW_Clear(FW_Handle *fw)
+void FW_Clear(FW_Handle *fw)
 {
     MCS_ASSERT_PARAM(fw != NULL);
     fw->idRef = 0.0f;
@@ -41,7 +41,7 @@ static void FW_Clear(FW_Handle *fw)
   * @param enable Enable flux-weakening.
   * @param currMax Maximum phase current (A).
   * @param idDemag Demagnetizing d-axis current (A).
-  * @param thr .
+  * @param thr Voltage usage at start of field weakening, recommand: 0.85f.
   * @retval None.
   */
 void FW_Init(FW_Handle *fw, float ts, bool enable, float currMax, float idDemag, float thr, float slope)

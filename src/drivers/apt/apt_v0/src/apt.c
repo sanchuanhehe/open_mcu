@@ -358,10 +358,10 @@ BASE_StatusType HAL_APT_PWMInit(APT_Handle *aptHandle)
     APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.dividerFactor <= DIVIDER_FACTOR_MAX, BASE_STATUS_ERROR);
     APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.divInitVal <= aptHandle->waveform.dividerFactor, BASE_STATUS_ERROR);
     APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntInitVal < aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpLeftEdge > 0, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpLeftEdge < aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpRightEdge > 0, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpRightEdge < aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpLeftEdge >= 0, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpLeftEdge <= aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpRightEdge >= 0, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(aptHandle->waveform.cntCmpRightEdge <= aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
     APT_PARAM_CHECK_WITH_RET(aptHandle->adcTrg.cntCmpSOCA >= 0, BASE_STATUS_ERROR);
     APT_PARAM_CHECK_WITH_RET(aptHandle->adcTrg.cntCmpSOCA < aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
     APT_PARAM_CHECK_WITH_RET(aptHandle->adcTrg.cntCmpSOCB >= 0, BASE_STATUS_ERROR);
@@ -413,7 +413,7 @@ static void APT_SetOutCtrlProtectMode(APT_Handle *aptHandle, APT_OutCtrlProtect 
     unsigned int cbcClrOffsetPrd = 16;
     if (protect->ocEventMode == APT_OUT_CTRL_ONE_SHOT) {
         aptHandle->baseAddress->OC_MODE.reg &= (~(protect->ocEvent << ocModeOffset));
-    } else if (protect->ocEventMode == APT_OUT_CTRL_CYCLE_BY_CYBLE) {
+    } else if (protect->ocEventMode == APT_OUT_CTRL_CYCLE_BY_CYCLE) {
         aptHandle->baseAddress->OC_MODE.reg |= (protect->ocEvent << ocModeOffset);
         if ((protect->cbcClrMode & APT_CLEAR_CBC_ON_CNTR_ZERO) ==APT_CLEAR_CBC_ON_CNTR_ZERO) {
             aptHandle->baseAddress->OC_PRD_CLR.reg |= protect->ocEvent;
@@ -618,7 +618,7 @@ static void APT_SetProtectSrcEventPolarityEx(APT_Handle *aptHandle, unsigned int
     unsigned int curMpEventNum;    /* System Compare Event Sources */
     unsigned int curIoEventNum;    /* I/O Event Source */
     /* Sets the polarity of the trigger source. */
-    for (int i = 0; i <= APT_EM_COMBINE_SRC_EVT_MP_6; i++) {
+    for (unsigned int i = 0; i <= APT_EM_COMBINE_SRC_EVT_MP_6; i++) {
         curEvent = i;
         curPolarity = (polarityMask >> curEvent) & 0x01;
         if (curEvent >= APT_EM_COMBINE_SRC_EVT_MP_1) {
@@ -648,7 +648,7 @@ static void APT_SetSysEventProtectModeEx(APT_Handle *aptHandle, APT_OutCtrlProte
     unsigned int cbcClrOffsetPrd = 16;
     if (protect->ocEventModeEx == APT_OUT_CTRL_ONE_SHOT) {
         aptHandle->baseAddress->OC_MODE.reg &= (~(protect->ocSysEvent << ocModeOffset));
-    } else if (protect->ocEventModeEx == APT_OUT_CTRL_CYCLE_BY_CYBLE) {
+    } else if (protect->ocEventModeEx == APT_OUT_CTRL_CYCLE_BY_CYCLE) {
         aptHandle->baseAddress->OC_MODE.reg |= (protect->ocSysEvent << ocModeOffset);
         if ((protect->cbcClrModeEx & APT_CLEAR_CBC_ON_CNTR_ZERO) ==APT_CLEAR_CBC_ON_CNTR_ZERO) {
             aptHandle->baseAddress->OC_PRD_CLR.reg |= protect->ocSysEvent;
@@ -695,7 +695,7 @@ BASE_StatusType HAL_APT_ProtectInitEx(APT_Handle *aptHandle, APT_OutCtrlProtectE
     APT_PARAM_CHECK_WITH_RET(protect->originalEvtEx <= 0x1FF, BASE_STATUS_ERROR); /* 0x1FF : all event enable */
     unsigned int cbcClrOffsetPrd = 16;
     aptHandle->baseAddress->OC_MODE.reg = 0x0; /* clear OC_MODE resgiter */
-    aptHandle->baseAddress->TC_MODE.BIT.rg_emu_stop = 0x0; /* don't stop APT when emulation */
+    aptHandle->baseAddress->TC_MODE.BIT.rg_emu_stop = 0x2; /* stop APT when emulation */
     aptHandle->baseAddress->OC_PRD_CLR.reg = 0x0; /* clear OC_PRD_CLR register */
     APT_SysProtectInitEx(aptHandle, protect);
     /* event management configuration */
@@ -935,7 +935,7 @@ void HAL_APT_EMSetWdOffsetAndWidth(APT_Handle *aptHandle, unsigned short offset,
   * @param calibrate Delay calibration.
   * @retval None.
   */
-void HAL_APT_EMSetValleySwithSoftDelay(APT_Handle *aptHandle, unsigned short calibrate)
+void HAL_APT_EMSetValleySwitchSoftDelay(APT_Handle *aptHandle, unsigned short calibrate)
 {
     APT_ASSERT_PARAM(aptHandle != NULL);
     APT_ASSERT_PARAM(IsAPTInstance(aptHandle->baseAddress));
@@ -1052,10 +1052,10 @@ BASE_StatusType HAL_APT_SetPWMDuty(APT_Handle *aptHandle, unsigned short cntCmpL
 {
     APT_ASSERT_PARAM(aptHandle != NULL);
     APT_ASSERT_PARAM(IsAPTInstance(aptHandle->baseAddress));
-    APT_PARAM_CHECK_WITH_RET(cntCmpLeftEdge > 0, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(cntCmpLeftEdge < aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(cntCmpRightEdge > 0, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(cntCmpRightEdge < aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(cntCmpLeftEdge >= 0, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(cntCmpLeftEdge <= aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(cntCmpRightEdge >= 0, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(cntCmpRightEdge <= aptHandle->waveform.timerPeriod, BASE_STATUS_ERROR);
     TC_REFC_REG tmpC;
     TC_REFD_REG tmpD;
     tmpC = aptHandle->baseAddress->TC_REFC;
@@ -1077,20 +1077,21 @@ BASE_StatusType HAL_APT_SetPWMDutyByNumber(APT_Handle *aptHandle, unsigned int d
 {
     APT_ASSERT_PARAM(aptHandle != NULL);
     APT_ASSERT_PARAM(IsAPTInstance(aptHandle->baseAddress));
-    APT_PARAM_CHECK_WITH_RET(duty < MAX_DUTY, BASE_STATUS_ERROR);
-    APT_PARAM_CHECK_WITH_RET(duty > 0, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(duty <= MAX_DUTY, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(duty >= 0, BASE_STATUS_ERROR);
 
     unsigned int cntCmpLeftEdge, cntCmpRightEdge;
     TC_REFC_REG tmpC;
     TC_REFD_REG tmpD;
 
     if (aptHandle->waveform.cntMode == APT_COUNT_MODE_UP_DOWN) {
-        cntCmpLeftEdge = aptHandle->waveform.timerPeriod - \
-                         (int)(((float)aptHandle->waveform.timerPeriod / MAX_DUTY) * duty);
+        cntCmpLeftEdge = (unsigned int)((1.0f - (float)duty / (float)MAX_DUTY) * \
+                         (float)aptHandle->waveform.timerPeriod);
         cntCmpRightEdge = cntCmpLeftEdge;
     } else {
         cntCmpLeftEdge = 1;
-        cntCmpRightEdge = (int)(((float)aptHandle->waveform.timerPeriod / MAX_DUTY) * duty + cntCmpLeftEdge);
+        cntCmpRightEdge = (unsigned int)((float)aptHandle->waveform.timerPeriod / (float)MAX_DUTY) * duty + \
+                          cntCmpLeftEdge;
     }
     tmpC = aptHandle->baseAddress->TC_REFC;
     tmpC.BIT.rg_cnt_refch = cntCmpLeftEdge;
@@ -1423,4 +1424,33 @@ BASE_StatusType HAL_APT_ConfigRefDot(APT_Handle *aptHandle, APT_RefDotSelect ref
                                                                                              APT_ConfigRefC,
                                                                                              APT_ConfigRefD};
     return APT_RefDotConfigTable[refDotSelect](aptHandle, refDotParameters); /* Configure reference point. */
+}
+
+
+/**
+  * @brief Set APT period.
+  * @param aptHandle APT module handle.
+  * @param newPeriod New period.
+  * @param prdLoadMode Buffer load mode, recommend: APT_BUFFER_INDEPENDENT_LOAD.
+  * @param prdLoadEvt Period event load mode, recommend: APT_PERIOD_LOAD_EVENT_ZERO.
+  * @retval BASE_StatusType: OK, ERROR.
+  */
+BASE_StatusType HAL_APT_SetTimerPeriod(APT_Handle *aptHandle, unsigned short newPeriod, \
+                                       APT_BufferLoadMode prdLoadMode, unsigned int prdLoadEvt)
+{
+    APT_ASSERT_PARAM(aptHandle != NULL);
+    APT_PARAM_CHECK_WITH_RET(prdLoadMode >= APT_BUFFER_DISABLE, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(prdLoadMode <= APT_BUFFER_GLOBAL_LOAD, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(prdLoadEvt >= APT_PERIOD_LOAD_EVENT_ZERO, BASE_STATUS_ERROR);
+    APT_PARAM_CHECK_WITH_RET(prdLoadEvt <= APT_PERIOD_LOAD_EVENT_SYNC, BASE_STATUS_ERROR);
+    APT_ASSERT_PARAM(IsAPTInstance(aptHandle->baseAddress));
+    /* Sets the period value of the member variable. */
+    aptHandle->waveform.timerPeriod = newPeriod;
+    /* Set period load mode, recommend APT_BUFFER_INDEPENDENT_LOAD. */
+    DCL_APT_SetPeriodLoadMode(aptHandle->baseAddress, prdLoadMode);
+    /* Set period load event, recommend APT_PERIOD_LOAD_EVENT_ZERO. */
+    DCL_APT_SetPeriodLoadEvent(aptHandle->baseAddress, prdLoadEvt);
+    /* Set period register. */
+    DCL_APT_SetTimeBasePeriod(aptHandle->baseAddress, newPeriod);
+    return BASE_STATUS_OK;
 }

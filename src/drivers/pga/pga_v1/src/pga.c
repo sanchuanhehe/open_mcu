@@ -40,9 +40,25 @@ BASE_StatusType HAL_PGA_Init(PGA_Handle *pgaHandle)
     /* Initial configuration of the PGA. */
     PGA_CTRL1_REG pgaControl1;
     pgaControl1.reg = pgaHandle->baseAddress->PGA_CTRL1.reg;
-    pgaControl1.BIT.da_pga_mode_ctrl = pgaHandle->externalResistorMode;  /* PGA mode configuration. */
-    pgaControl1.BIT.da_pga_gain_ctrl = pgaHandle->gain;                  /* PGA gain setting. */
-    pgaControl1.BIT.da_pga_cf_ctrl = pgaHandle->handleEx.extCapCompensation;
+    /* PGA mode configuration. */
+    pgaControl1.BIT.da_pga_mode_ctrl = pgaHandle->externalResistorMode;
+    if (pgaHandle->externalResistorMode) {
+        /* External resistance mode setting. */
+        if (pgaHandle->handleEx.extCapCompensation <= PGA_EXT_COMPENSATION_9X) {
+            pgaControl1.BIT.da_pga_cf_ctrl = pgaHandle->handleEx.extCapCompensation;
+        } else {
+            /* If external gain is larger than PGA_EXT_COMPENSATION_9X. */
+            /* da_pga_cf_ctrl of PGA_CTRL1 must be set to 0x7 (111). */
+            pgaControl1.BIT.da_pga_cf_ctrl = 0x7;
+            /* da_pga_cf_ctrl1 of PGA_RSV is set to extValue - 0x7. */
+            pgaHandle->baseAddress->PGA_RSV.BIT.da_pga_cf_ctrl1 = pgaHandle->handleEx.extCapCompensation - 0x7;
+        }
+    } else {
+        /* Internal resistance mode setting. */
+        /* PGA gain. */
+        pgaControl1.BIT.da_pga_gain_ctrl = pgaHandle->gain;
+    }
+
     pgaHandle->baseAddress->PGA_CTRL1.reg = pgaControl1.reg;
     /* Enable PGA */
     pgaHandle->baseAddress->PGA_CTRL0.BIT.da_pga_enh = BASE_CFG_ENABLE;

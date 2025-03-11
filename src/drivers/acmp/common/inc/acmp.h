@@ -71,22 +71,40 @@ typedef void (* ACMP_CallBackType)(void *handle);
   */
 
 /**
-  * @defgroup ACMP_API_Declaration ACMP HAL API
+  * @defgroup ACMP_API_Declaration
+  * @brief ACMP HAL API.
   * @{
   */
+
 BASE_StatusType HAL_ACMP_Init(ACMP_Handle *acmpHandle);
 BASE_StatusType HAL_ACMP_DeInit(ACMP_Handle *acmpHandle);
 void HAL_ACMP_SetHystVol(ACMP_Handle *acmpHandle, ACMP_HystVol voltage);
 void HAL_ACMP_BlkingValid(ACMP_Handle *acmpHandle);
 void HAL_ACMP_BlkingInvalid(ACMP_Handle *acmpHandle);
 
-/* ACMP output result selection. */
-BASE_StatusType HAL_ACMP_ResultSelect(ACMP_Handle *acmpHandle, ACMP_ResultSelect resultSelect);
+/**
+  * @defgroup ACMP_API_Declaration
+  * @brief ACMP output result selection.
+  * @{
+  */
 
-/* ACMP interrupt service function and user callback registration function. */
+BASE_StatusType HAL_ACMP_ResultSelect(ACMP_Handle *acmpHandle, ACMP_ResultSelect resultSelect);
+/**
+  * @}
+  */
+
+/**
+  * @defgroup ACMP_API_Declaration
+  * @brief ACMP interrupt function.
+  * @{
+  */
+
 void HAL_ACMP_IrqHandler(void *handle);
-BASE_StatusType HAL_ACMP_RegisterCallBack(ACMP_Handle *uartHandle, ACMP_CallBackFun_Type typeID,
-                                          ACMP_CallBackType pCallback);
+BASE_StatusType HAL_ACMP_RegisterCallBack(ACMP_Handle *acmpHandle, ACMP_CallBackFun_Type typeID,
+                                          ACMP_CallBackType callBackFunc);
+/**
+  * @}
+  */
 /**
   * @}
   */

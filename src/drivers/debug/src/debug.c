@@ -96,7 +96,7 @@ static void DBG_PrintCh(unsigned int ch)
     while (DBG_PRINTF_UART_PORT->UART_FR.BIT.txff == 1) {
         ;
     }
-    DBG_PRINTF_UART_PORT->UART_DR.BIT.data = (unsigned char)ch;
+    DBG_PRINTF_UART_PORT->UART_DR.reg = ch;
 }
 
 /**
@@ -222,33 +222,41 @@ static unsigned int DBG_PrintHex(unsigned int hexNum)
 
 /**
  * @brief   Print floating-point number through UART port.
- * @param   fltNum The floating-point number to be printed.
+ * @param   fltNumber The floating-point number to be printed.
  * @retval  unsigned int The total number of characters printed.
  */
-static unsigned int DBG_PrintFlt(float fltNum, unsigned int precision)
+static unsigned int DBG_PrintFlt(float fltNumber, unsigned int precision)
 {
     unsigned int cnt = 0;
     unsigned int floatScale;
 
-    if (fltNum < 0) {
+    if (fltNumber < 0) {
         DBG_PrintCh('-');
         cnt += 1;
-        fltNum = -fltNum;
+        fltNumber = -fltNumber;
     }
-    int integerVal = (int)fltNum;
+    int integerVal = (int)fltNumber;
     floatScale = DBG_Pow(10, (precision + 1)); /* 10: decimal */
-    int floatVal = (long)(floatScale * (fltNum - integerVal));
+    int floatVal = (long)(floatScale * (fltNumber - integerVal));
     /* Half-adjust: round up or round down */
     if (floatVal % DECIMAL_BASE >= HALF_ADJUST_BOUNDARY) {
         floatVal = floatVal / DECIMAL_BASE + 1;
     } else {
         floatVal = floatVal / DECIMAL_BASE;
     }
+    unsigned int fltCnt = DBG_CountDigits(floatVal, DECIMAL);
+    /* Rounding to the whole part */
+    if (fltCnt > precision) {
+        integerVal += 1;
+        /* The decimal part is all 0s after the carry is carried to the integer part. */
+        floatVal = 0;
+        /* Decimal significant bits are subtracted by 1. */
+        fltCnt -= 1;
+    }
     cnt += DBG_PrintInt(integerVal);
     DBG_PrintCh('.');
     cnt += 1;
     /* Pad 0 in float part */
-    unsigned int fltCnt = DBG_CountDigits(floatVal, DECIMAL);
     if (precision > fltCnt) {
         for (unsigned int i = 0; i < precision - fltCnt; i++) {
             DBG_PrintCh('0'); /* add '0' */
@@ -413,4 +421,384 @@ int DBG_UartPrintf(const char *format, ...)
     VA_END(paramList);
     return cnt;
 }
+
+/**
+ * @brief   Writes characters to memory of a specified length and returns the length written.
+ * @param   chstr The int promotion of the character to be written.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the length written.
+ */
+static unsigned int DBG_SnprintfChar(char chstr, char** destMem, unsigned int* destLen)
+{
+    DEBUG_ASSERT_PARAM(destMem != NULL);
+    DEBUG_ASSERT_PARAM(destLen != NULL);
+    if (*destLen == 0) {
+        return 0;
+    }
+    **destMem = chstr; /* Value assigned to the address pointed to by the memory pointer */
+    *destMem = *destMem + 1; /* Memory pointer address plus 1 */
+    *destLen = *destLen - 1; /* The remaining length of the buffer space is reduced by 1. */
+    return 1;
+}
+
+/**
+ * @brief   write a string to memory of a specified length and returns the length written.
+ * @param   str Character string to be formatted for output.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the length written.
+ */
+static unsigned int DBG_SnprintfString(const char *str, char** destMem, unsigned int* destLen)
+{
+    DEBUG_ASSERT_PARAM(str != NULL);
+    DEBUG_ASSERT_PARAM(destMem != NULL);
+    DEBUG_ASSERT_PARAM(destLen != NULL);
+    int cnt = 0;
+    while (*str != '\0') {
+        if (DBG_SnprintfChar(*str, destMem, destLen) == 0) {
+            break;  /* Store character strings based on the actual remaining space. */
+        }
+        str++;
+        cnt++; /* Data and Technology Shifting Operations */
+    }
+    return cnt; /* Returns the actual written length. */
+}
+
+
+/**
+ * @brief   Convert unsigned number to string and Stored in the buffer according to the basic data type.
+ * @param   ch Characters to be formatted for output.
+ * @param   base The number base of num.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  bool Whether the writing is successful.
+ */
+static bool DBG_SnprintfBaseTypeNum(unsigned char ch, NumBase base, char** destMem, unsigned int* destLen)
+{
+    DEBUG_ASSERT_PARAM(destMem != NULL);
+    DEBUG_ASSERT_PARAM(destLen != NULL);
+    bool ret = true;
+    if (base == DECIMAL) { /* Decimal number */
+        if (DBG_SnprintfChar((ch + '0'), destMem, destLen) == 0) { /* Number to String Conversion */
+            return false;
+        }
+    } else if (base == HEXADECIMAL) { /* Hexadecimal number */
+        if (ch < DECIMAL_BASE) {
+            if (DBG_SnprintfChar((ch + '0'), destMem, destLen) == 0) { /* Number to String Conversion */
+                return false;
+            }
+        } else {
+            if (DBG_SnprintfChar((ch - DECIMAL_BASE + 'A'), destMem, destLen) == 0) { /* Number to String Conversion */
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+    return ret;
+}
+
+/**
+ * @brief   Convert unsigned number to string and write to memory of a specified length and returns the length written.
+ * @param   num The unsigned number to be printed.
+ * @param   base The number base of num.
+ * @param   numLen The digits of num.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the real length written.
+ */
+static unsigned int DBG_SnprintfUnsignedNum(unsigned int num, NumBase base, unsigned int numLen, \
+                                            char** destMem, unsigned int* destLen)
+{
+    DEBUG_ASSERT_PARAM(destMem != NULL);
+    DEBUG_ASSERT_PARAM(destLen != NULL);
+    unsigned char ch = 0;
+    unsigned char realCnt = 0;
+    while (numLen != 0) {
+        ch = num / DBG_Pow(base, numLen - 1); /* Value of the most significant digit */
+        num %= DBG_Pow(base, numLen - 1);
+        if (DBG_SnprintfBaseTypeNum(ch, base, destMem, destLen) != true) {
+            break;
+        }
+        numLen--;
+        realCnt++;
+    }
+    return realCnt; /* Returns the actual written length. */
+}
+
+/**
+ * @brief   Convert signed num and write to memory of a specified length and returns the length written.
+ * @param   intNum The decimal number to be printed.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the real length written.
+ */
+static unsigned int DBG_SnprintfSignedNum(int intNum, char** destMem, unsigned int* destLen)
+{
+    unsigned int cnt;
+    unsigned int realCnt;
+    if (intNum == 0) {
+        if (DBG_SnprintfChar('0', destMem, destLen) == 0) { /* If the data is 0, store 0. */
+            return 0;
+        }
+        return 1;
+    }
+    if (intNum < 0) {
+        if (DBG_SnprintfChar('-', destMem, destLen) == 0) {  /* If the data is negative, store the minus sign. */
+            return 0;
+        }
+        intNum = -intNum;
+    }
+    cnt = DBG_CountDigits(intNum, DECIMAL);  /* Obtains the decimal length of data. */
+    realCnt = DBG_SnprintfUnsignedNum(intNum, DECIMAL, cnt, destMem, destLen);
+    return realCnt; /* Returns the actual written length. */
+}
+
+/**
+ * @brief   Convert hex num and write to memory of a specified length and returns the length written.
+ * @param   hexNum The hex number to be printed.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the real length written.
+ */
+static unsigned int DBG_SnprintfHex(unsigned int hexNum, char** destMem, unsigned int* destLen)
+{
+    unsigned int cnt = 0;
+    unsigned int realCnt;
+    if (hexNum == 0) {
+        if (DBG_SnprintfChar('0', destMem, destLen) == 0) { /* If the data is 0, store 0. */
+            return 0;
+        }
+        return 1;
+    }  /* Obtain and store the length of the character converted from the hexadecimal number. */
+    cnt += DBG_CountDigits(hexNum, HEXADECIMAL);
+    realCnt = DBG_SnprintfUnsignedNum(hexNum, HEXADECIMAL, cnt, destMem, destLen);
+    return realCnt; /* Returns the actual written length. */
+}
+
+/**
+ * @brief   Convert float number and write to memory of a specified length and returns the length written.
+ * @param   fltNum The float number to be printed.
+ * @param   precision Floating-point number precision.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the real length written.
+ */
+static unsigned int DBG_SnprintfFlt(float fltNum, unsigned int precision, char** destMem, unsigned int* destLen)
+{
+    unsigned int count = 0;
+    unsigned int realCnt = 0;
+    unsigned int floatScale;
+
+    if (fltNum < 0) {
+        if (DBG_SnprintfChar('-', destMem, destLen) == 0) {  /* Stores the minus sign of a negative number */
+            return 0;
+        }
+        count++;
+        fltNum = -fltNum;
+    }
+    int integerVal = (int)fltNum;
+    floatScale = DBG_Pow(10, (precision + 1)); /* 10: decimal */
+    int floatVal = (long)(floatScale * (fltNum - integerVal));
+    /* Half-adjust: round up or round down */
+    if (floatVal % DECIMAL_BASE >= HALF_ADJUST_BOUNDARY) {
+        floatVal = floatVal / DECIMAL_BASE + 1;
+    } else {
+        floatVal = floatVal / DECIMAL_BASE;
+    }
+    unsigned int fltCnt = DBG_CountDigits(floatVal, DECIMAL);
+    /* Rounding to the whole part */
+    if (fltCnt > precision) {
+        /* Decimal significant bits are subtracted by 1. */
+        fltCnt -= 1;
+        integerVal += 1;
+        /* The decimal part is all 0s after the carry is carried to the integer part. */
+        floatVal = 0;
+    }
+    count += DBG_SnprintfSignedNum(integerVal, destMem, destLen); /* Store Integer Part */
+    if (DBG_SnprintfChar('.', destMem, destLen) == 0) { /* Stores the decimal point of a floating point number */
+        return 0;
+    }
+    count++;
+    /* Pad 0 in float part */
+    if (precision > fltCnt) {
+        for (unsigned int i = 0; i < precision - fltCnt; i++) {
+            if (DBG_SnprintfChar('0', destMem, destLen) == 0) {
+                return 0;  /* Fill 0 when the number of decimal places is less than the number of significant digits */
+            }
+            count++;
+        }
+    }
+    realCnt = DBG_SnprintfUnsignedNum(floatVal, DECIMAL, fltCnt, destMem, destLen);
+    realCnt += count;
+    return realCnt; /* Returns the actual written length. */
+}
+
+
+/**
+ * @brief   Parse the format specifier convert to string and write to memory of a
+            specified length and returns the length written.
+ * @param   ch The format specifier.
+ * @param   paramList The pointer of the variable parameter list.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the real length written.
+ */
+static unsigned int DBG_SnprintfParseSpecifier(char** destMem, unsigned int* destLen, \
+                                               const char ch, va_list *paramList)
+{
+    unsigned int countValue = 0, realCnt = 0, tmpCnt = 0, unsignedVal = 0, hexVal = 0;
+    char chVal = 0;
+    const char *strVal = NULL;
+    int intVal = 0;
+    float fltVal = 0;
+    switch (ch) {
+        case 'c': /* character type variable */
+            chVal = VA_ARG(*paramList, int); /* Use type int because of byte alignment */
+            if (DBG_SnprintfChar(chVal, destMem, destLen) == 0) {
+                return 0;
+            }
+            countValue++;
+            break;
+        case 's': /* Variable of the string type */
+            strVal = VA_ARG(*paramList, const char *);
+            countValue += DBG_SnprintfString(strVal, destMem, destLen);
+            break;
+        case 'd': /* integer type variable */
+            intVal = VA_ARG(*paramList, int);
+            countValue += DBG_SnprintfSignedNum(intVal, destMem, destLen);
+            break;
+        case 'u': /* unsigned integer type variable */
+            unsignedVal = VA_ARG(*paramList, unsigned int);
+            tmpCnt = DBG_CountDigits(unsignedVal, DECIMAL);
+            DBG_PutUnsignedNum(unsignedVal, DECIMAL, tmpCnt);
+            realCnt = DBG_SnprintfUnsignedNum(unsignedVal, DECIMAL, tmpCnt, destMem, destLen);
+            countValue += realCnt;
+            break;
+        case 'x':
+        case 'X':
+        case 'p': /* Pointer address type variable or variable address */
+            hexVal = VA_ARG(*paramList, unsigned int);
+            countValue += DBG_SnprintfString("0x", destMem, destLen);
+            countValue += DBG_SnprintfHex(hexVal, destMem, destLen);
+            break;
+        case 'f': /* Floating-point variable */
+            fltVal = VA_ARG(*paramList, double);
+            countValue += DBG_SnprintfFlt(fltVal, 6, destMem, destLen); /* default precision: 6 */
+            break;
+        default:
+            if (DBG_SnprintfChar(ch, destMem, destLen) == 0) {
+                return 0;
+            }
+            countValue++;
+            break;
+    }
+    return countValue;
+}
+
+
+/**
+ * @brief   Convert decimal number with field width to string and write to memory of a
+            specified length and returns the length written.
+ * @param   intNumber The decimal number to be printed.
+ * @param   fieldWidth Field width.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  unsigned int the real length written.
+ */
+static unsigned int DBG_SnprintfIntWithField(int intNumber, int fieldWidth, char** destMem, unsigned int* destLen)
+{
+    int zeroCnt = 0;
+    int digitsCnt = 0;
+    unsigned int realCnt = 0;
+    if (intNumber == 0) {
+        if (DBG_SnprintfChar('0', destMem, destLen) == 0) {  /* If the data is 0, store 0. */
+            return 0; /* When the remaining space is insufficient, 0 is returned. */
+        }
+        return 1;
+    }
+    if (intNumber < 0) {
+        if (DBG_SnprintfChar('-', destMem, destLen) == 0) {  /* If the data is negative, store the minus sign. */
+            return 0; /* When the remaining space is insufficient, 0 is returned. */
+        }
+        intNumber = -intNumber;
+        digitsCnt = DBG_CountDigits(intNumber, DECIMAL); /* get int value's width */
+        zeroCnt = fieldWidth - digitsCnt;
+        for (int i = 0; i < zeroCnt; i++) {
+            if (DBG_SnprintfChar('0', destMem, destLen) == 0) { /* Fill 0 when the bit width is less than */
+                return 0; /* When the remaining space is insufficient, 0 is returned. */
+            }
+        }
+    } else {
+        digitsCnt = DBG_CountDigits(intNumber, DECIMAL); /* get int value's width */
+        zeroCnt = fieldWidth - digitsCnt;
+        for (int i = 0; i < zeroCnt; i++) {
+            if (DBG_SnprintfChar('0', destMem, destLen) == 0) {  /* Fill 0 when the bit width is less than */
+                return 0; /* When the remaining space is insufficient, 0 is returned. */
+            }
+        }
+    }
+    realCnt = DBG_SnprintfUnsignedNum(intNumber, DECIMAL, digitsCnt, destMem, destLen);
+    return realCnt; /* Returns the actual written length. */
+}
+
+
+/**
+ * @brief   Convert format string write to memory of a specified length, supporting %c, %s, %d, %u, %x, %X, %p, %f.
+ *          %c      To print a character.
+ *          %s      To print a string.
+ *          %d      To print a decimal value.
+ *          %u      To print an unsigned decimal value.
+ *          %x, %X  To print a hexadecimal value using upper case letters.
+ *          %p      To print a pointer as a hexadecimal value.
+ *          %f      To print a floating-point number with a fixed precision determined by FLOAT_PRECISION.
+ * @param   format  A string that contains the text to be printed and the format specifiers.
+ * @param   ...     Variable parameter list.
+ * @param   destMem point of memory address.
+ * @param   destLen point of memory lenth.
+ * @retval  int the real length written.
+ */
+int DBG_Snprintf(char* destMem, unsigned int destLen, const char *format, ...)
+{
+    DEBUG_ASSERT_PARAM(destMem != NULL);
+    DEBUG_ASSERT_PARAM(format != NULL);
+    char* pDestMem = NULL;
+    pDestMem = destMem; /* Memory Pointer Index */
+    unsigned int destMemLenth = destLen;  /* Remaining space of the destination memory */
+    int cntVal = 0;
+    int fieldWidth = 0;
+    int floatPrecision = 0;
+    float fltVal = 0;
+    int intVal = 0;
+    va_list paramList;
+    VA_START(paramList, format); /* The variable initialization points to the first parameter. */
+    while (*format != '\0') {
+        if (*format != '%') {
+            if (DBG_SnprintfChar(*format, &pDestMem, &destMemLenth) == 0) {
+                return 0;
+            }
+            cntVal++;
+        } else {
+            format++;
+            if (*format == '0') {
+                format++;
+                fieldWidth = DBG_Atoi(&format); /* Character to Number */
+                intVal = VA_ARG(paramList, int);
+                cntVal += DBG_SnprintfIntWithField(intVal, fieldWidth, &pDestMem, &destMemLenth);
+            } else if (*format == '.') {
+                format++;
+                floatPrecision = DBG_Atoi(&format); /* Character to Number */
+                fltVal = VA_ARG(paramList, double);
+                cntVal += DBG_SnprintfFlt(fltVal, floatPrecision, &pDestMem, &destMemLenth);
+            } else { /* escape character parsing */
+                cntVal += DBG_SnprintfParseSpecifier(&pDestMem, &destMemLenth, *format, &paramList);
+            }
+        }
+        format++;
+    }
+    VA_END(paramList);
+    return cntVal;
+}
+
 #endif

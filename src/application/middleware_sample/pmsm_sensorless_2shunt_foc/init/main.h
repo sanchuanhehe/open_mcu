@@ -25,6 +25,7 @@
 #define McuMagicTag_SYSTEM_INIT_H
 
 #include "adc.h"
+#include "adc_ex.h"
 #include "acmp.h"
 #include "apt.h"
 #include "uart.h"
@@ -75,12 +76,16 @@ void MotorCarrierProcessCallback(void *aptHandle);
 void MotorSysErrCallback(void *aptHandle);
 void CheckPotentiometerValueCallback(void *handle);
 void MotorStatemachineCallBack(void *handle);
-void UART0WriteInterruptCallback(UART_Handle *handle);
-void UART0ReadInterruptCallback(UART_Handle *handle);
-void UART0InterruptErrorCallback(UART_Handle *handle);
+void UART0WriteInterruptCallback(void *handle);
+void UART0ReadInterruptCallback(void *handle);
+void UART0InterruptErrorCallback(void *handle);
 
-void UART0_TXDMACallback(UART_Handle *handle);
+void UART0_TXDMACallback(void *handle);
 
 void MotorStartStopKeyCallback(void *param);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

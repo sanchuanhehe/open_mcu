@@ -41,11 +41,39 @@
   */
 
 /* Includes ------------------------------------------------------------------ */
+#include "systick.h"
 #include "generalfunc.h"
+
+/* Macro definitions ---------------------------------------------------------*/
+#define MEA_MAX_NUM 2  /* the num of the measurement group */
+#define AVE_MAX_NUM 10 /* the num of the saving current ticks */
+
+/* Typedef definitions -------------------------------------------------------*/
+typedef enum {
+    STOP,
+    START
+} MeasureStatus;
+
+typedef struct {
+    unsigned int startTick; /* start tick */
+    unsigned int stopTick;  /* stop tick */
+    unsigned int curr;     /* current tick, value is (stopTick - startTick) */
+    unsigned int peak;     /* maximum tick value */
+    unsigned int valley;   /* minimum tick value */
+    unsigned int average;  /* average value of the ave[AVE_MAX_NUM] */
+    unsigned int ave[AVE_MAX_NUM]; /* save current tick for average */
+    unsigned char size;   /* the size of the ave[AVE_MAX_NUM] */
+    unsigned char index;  /* the index of the ave[AVE_MAX_NUM] */
+    MeasureStatus status; /* the status of the measurement(start or stop) */
+} Measurement;
 
 /* Private variables --------------------------------------------------------- */
 BASE_AverageHandle g_averageHandle[BASE_DEFINE_SLIPAVERAGE_NUM];
 BASE_FSM_Handle g_fsmHandle;
+
+#ifdef MEASURE_SUPPORT
+static Measurement g_measure[MEA_MAX_NUM];
+#endif
 
 /**
   * @brief Obtains the current tick value.
@@ -221,3 +249,91 @@ void BASE_FSM_Run(unsigned int delayTime, BASE_DelayUnit delayUnit)
         BASE_FUNC_Delay(delayTime, delayUnit);
     }
 }
+
+#ifdef MEASURE_SUPPORT
+/**
+ * @brief   Start Measurement. Get the systick for Measurement.
+ * @param   id Selecting a measurement group
+ * @retval  None
+ */
+void BASE_FUNC_MeasurementStart(unsigned int id)
+{
+    if (id >= MEA_MAX_NUM) {
+        return;
+    }
+
+    Measurement *measure = &g_measure[id];
+    if (measure->status == START) {
+        /* START and STOP must appear in pairs. Drop the superfluous START. */
+        return;
+    }
+
+    measure->status = START;
+    measure->startTick = DCL_SYSTICK_GetTick();
+}
+
+/**
+ * @brief   Average measurement.
+ * @param   measure a measurement group
+ * @retval  None
+ */
+static void BASE_FUNC_MeasurementAve(Measurement *measure)
+{
+    if (measure == NULL) {
+        return;
+    }
+    /* Add cur value into average queue */
+    if (measure->index < AVE_MAX_NUM) {
+        measure->ave[measure->index] = measure->curr;
+        if (measure->size < AVE_MAX_NUM) {
+            measure->size++;
+        }
+        measure->index = (measure->index + 1) % AVE_MAX_NUM;
+    }
+
+    /* Calculate the average in the queue */
+    unsigned long long tmp = 0;
+    for (int i = 0; i < measure->size; i++) {
+        tmp += measure->ave[i];
+    }
+    if (measure->size != 0) {
+        float f = (float)tmp / (float)measure->size;
+        measure->average = (unsigned int)f;
+    }
+}
+
+/**
+ * @brief   Stop measurement. Get the systick and statistic the systick.
+ * @param   id Selecting a measurement group
+ * @retval  None
+ */
+void BASE_FUNC_MeasurementStop(unsigned int id)
+{
+    unsigned int tick = DCL_SYSTICK_GetTick();
+    if (id >= MEA_MAX_NUM) {
+        return;
+    }
+
+    Measurement *measure = &g_measure[id];
+    if (measure->status == STOP) {
+        /* START and STOP must appear in pairs. Drop the superfluous STOP. */
+        return;
+    }
+
+    measure->status = STOP;
+    measure->stopTick = tick;
+    measure->curr =
+        tick > measure->startTick ? tick - measure->startTick : SYSTICK_MAX_VALUE - measure->startTick + tick;
+    /* max measurement. */
+    if (measure->curr > measure->peak) {
+        measure->peak = measure->curr;
+    }
+
+    /* min measurement. */
+    if (measure->curr < measure->valley || measure->valley == 0) {
+        measure->valley = measure->curr;
+    }
+
+    BASE_FUNC_MeasurementAve(measure);
+}
+#endif

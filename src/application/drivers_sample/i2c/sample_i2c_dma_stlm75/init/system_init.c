@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -44,52 +45,75 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     return BASE_STATUS_OK;
 }
 
-static void DMA_Channel2Init(void *handle)
+static void DMA_Channel0Init(void *handle)
 {
+    /* Setting DMA-related parameters. */
     DMA_ChannelParam dma_param;
     dma_param.direction = DMA_PERIPH_TO_MEMORY_BY_DMAC;
     dma_param.srcAddrInc = DMA_ADDR_UNALTERED;
-    dma_param.destAddrInc = DMA_ADDR_UNALTERED;
+    dma_param.destAddrInc = DMA_ADDR_INCREASE;
     dma_param.srcPeriph = DMA_REQUEST_I2C_RX;
     dma_param.destPeriph = DMA_REQUEST_MEM;
+    /* Set the moving position width. */
     dma_param.srcWidth = DMA_TRANSWIDTH_BYTE;
     dma_param.destWidth = DMA_TRANSWIDTH_BYTE;
     dma_param.srcBurst = DMA_BURST_LENGTH_1;
     dma_param.destBurst = DMA_BURST_LENGTH_1;
     dma_param.pHandle = handle;
-    HAL_DMA_InitChannel(&g_dmac, &dma_param, 2); /* Channel 2 */
+    /* DMA Channel initialization. */
+    HAL_DMA_InitChannel(&g_dmac, &dma_param, DMA_CHANNEL_ZERO);
+}
+
+static void DMA_Channel1Init(void *handle)
+{
+    /* Setting DMA-related parameters. */
+    DMA_ChannelParam dma_param;
+    dma_param.direction = DMA_MEMORY_TO_PERIPH_BY_DMAC;
+    dma_param.srcAddrInc = DMA_ADDR_INCREASE;
+    dma_param.destAddrInc = DMA_ADDR_UNALTERED;
+    dma_param.srcPeriph = DMA_REQUEST_MEM;
+    dma_param.destPeriph = DMA_REQUEST_I2C_TX;
+    /* Set the moving position width. */
+    dma_param.srcWidth = DMA_TRANSWIDTH_BYTE;
+    dma_param.destWidth = DMA_TRANSWIDTH_BYTE;
+    dma_param.srcBurst = DMA_BURST_LENGTH_1;
+    dma_param.destBurst = DMA_BURST_LENGTH_1;
+    dma_param.pHandle = handle;
+    /* DMA Channel initialization. */
+    HAL_DMA_InitChannel(&g_dmac, &dma_param, DMA_CHANNEL_ONE);
 }
 
 static void DMA_Init(void)
 {
+    HAL_CRG_IpEnableSet(DMA_BASE, IP_CLK_ENABLE);
     g_dmac.baseAddress = DMA;
-    g_dmac.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.irqNumTc = IRQ_DMA_TC;
-    g_dmac.irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_IRQService(&g_dmac);
+    g_dmac.handleEx.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
+    g_dmac.handleEx.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
+    IRQ_Register(IRQ_DMA_TC, HAL_DMA_IrqHandlerTc, &g_dmac);
+    IRQ_Register(IRQ_DMA_ERR, HAL_DMA_IrqHandlerError, &g_dmac);
     IRQ_EnableN(IRQ_DMA_TC);
     IRQ_EnableN(IRQ_DMA_ERR);
     HAL_DMA_Init(&g_dmac);
 
-    DMA_Channel2Init((void *)(&g_i2cSampleHandle));
+    DMA_Channel0Init((void *)(&g_i2cSampleHandle));
+    DMA_Channel1Init((void *)(&g_i2cSampleHandle));
 }
 
-__weak void Stlm75TxSampleHandle(I2C_Handle *handle)
+__weak void Stlm75TxSampleHandle(void *handle)
 {
     BASE_FUNC_UNUSED(handle);
     /* USER CODE BEGIN Stlm75TxSampleHandle */
     /* USER CODE END Stlm75TxSampleHandle */
 }
 
-__weak void Stlm75RxSampleHandle(I2C_Handle *handle)
+__weak void Stlm75RxSampleHandle(void *handle)
 {
     BASE_FUNC_UNUSED(handle);
     /* USER CODE BEGIN Stlm75RxSampleHandle */
     /* USER CODE END Stlm75RxSampleHandle */
 }
 
-__weak void Stlm75ErrSampleHandle(I2C_Handle *handle)
+__weak void Stlm75ErrSampleHandle(void *handle)
 {
     BASE_FUNC_UNUSED(handle);
     /* USER CODE BEGIN Stlm75ErrSampleHandle */
@@ -101,26 +125,20 @@ static void I2C_Init(void)
     HAL_CRG_IpEnableSet(I2C_BASE, IP_CLK_ENABLE);
 
     g_i2cSampleHandle.baseAddress = I2C;
-    g_i2cSampleHandle.irqNum = IRQ_I2C;
-
     g_i2cSampleHandle.addrMode = I2C_7_BITS;
     g_i2cSampleHandle.sdaHoldTime = I2C_HOLD_DURATION;
     g_i2cSampleHandle.freq = I2C_FREQ_SCR;
-    g_i2cSampleHandle.rxBuff = NULL;
-    g_i2cSampleHandle.txBuff = NULL;
+    g_i2cSampleHandle.transferBuff = NULL;
     g_i2cSampleHandle.ignoreAckFlag =  BASE_CFG_DISABLE;
-    g_i2cSampleHandle.msgStopFlag =  BASE_CFG_ENABLE;
     g_i2cSampleHandle.state = I2C_STATE_RESET;
-    g_i2cSampleHandle.rxWaterMark = 1; /* Rx water mark is 1 */
-    g_i2cSampleHandle.txWaterMark = 16; /* Tx water mark is 16 */
-    g_i2cSampleHandle.dmaHandle = &g_dmac;
-    g_i2cSampleHandle.dmaCh = 2; /* Channel is 2 */
-    g_i2cSampleHandle.srcBurst = DMA_BURST_LENGTH_1;
-    g_i2cSampleHandle.destBurst = DMA_BURST_LENGTH_1;
-    g_i2cSampleHandle.srcWidth = DMA_TRANSWIDTH_BYTE;
-    g_i2cSampleHandle.destWidth = DMA_TRANSWIDTH_BYTE;
-    HAL_I2C_Init(&g_i2cSampleHandle);
+    g_i2cSampleHandle.rxWaterMark = 1; /* 1 is Rx Threshold configuration */
+    g_i2cSampleHandle.txWaterMark = 32; /* 32 is Tx Threshold configuration */
 
+    g_i2cSampleHandle.dmaHandle = &g_dmac;
+    g_i2cSampleHandle.rxDmaCh = 0; /* DMA Channel 0 */
+    g_i2cSampleHandle.txDmaCh = 1; /* DMA Channel 1 */
+
+    HAL_I2C_Init(&g_i2cSampleHandle);
     HAL_I2C_RegisterCallback(&g_i2cSampleHandle, I2C_MASTER_TX_COMPLETE_CB_ID, Stlm75TxSampleHandle);
     HAL_I2C_RegisterCallback(&g_i2cSampleHandle, I2C_MASTER_RX_COMPLETE_CB_ID, Stlm75RxSampleHandle);
     HAL_I2C_RegisterCallback(&g_i2cSampleHandle, I2C_ERROR_CB_ID, Stlm75ErrSampleHandle);
@@ -132,7 +150,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
@@ -149,35 +166,27 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
-
-    iconfig->iocmg_66.BIT.func = 0x2; /* 0x2 is I2C0_SCL */
-    iconfig->iocmg_66.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_66.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_66.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_66.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_66.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_67.BIT.func = 0x2; /* 0x2 is I2C0_SDA */
-    iconfig->iocmg_67.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_67.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_67.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_67.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_67.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO47_AS_I2C0_SCL);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO47_AS_I2C0_SCL, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO47_AS_I2C0_SCL, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO47_AS_I2C0_SCL, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO47_AS_I2C0_SCL, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO48_AS_I2C0_SDA);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO48_AS_I2C0_SDA, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO48_AS_I2C0_SDA, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO48_AS_I2C0_SDA, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO48_AS_I2C0_SDA, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

@@ -26,7 +26,7 @@
 #include "main.h"
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
-WDG_Handle g_iwdg;
+IWDG_Handle g_iwdg;
 UART_Handle g_uart0;
 /* USER CODE BEGIN 1 */
 /* USER CODE END 1 */

@@ -44,19 +44,22 @@ typedef struct {
     unsigned char space0[12];
     IOCMG_REG IOCFG_GPIO5_0;   /**< Pin GPIO5_0 IO Config Register, offset address:0x000010U */
     unsigned char space1[4];
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO3_3;   /**< Pin GPIO3_3 IO Config Register, offset address:0x000018U */
 #else
     unsigned char space2[4];
 #endif
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO2_4;   /**< Pin GPIO2_4 IO Config Register, offset address:0x00001CU */
 #else
     unsigned char space3[4];
 #endif
     unsigned char space4[224];
     IOCMG_REG IOCFG_GPIO0_7;    /**< Pin GPIO0_7 IO Config Register, offset address:0x000100U */
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO5_1;    /**< Pin GPIO5_1 IO Config Register, offset address:0x000104U */
 #else
     unsigned char space5[4];
@@ -64,7 +67,8 @@ typedef struct {
     IOCMG_REG IOCFG_GPIO2_7;    /**< Pin GPIO2_7 IO Config Register, offset address:0x000108U */
     IOCMG_REG IOCFG_GPIO2_6;    /**< Pin GPIO2_6 IO Config Register, offset address:0x00010CU */
     IOCMG_REG IOCFG_GPIO2_5;    /**< Pin GPIO2_5 IO Config Register, offset address:0x000110U */
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO5_2;    /**< Pin GPIO5_2 IO Config Register, offset address:0x000114U */
 #else
     unsigned char space6[4];
@@ -72,7 +76,8 @@ typedef struct {
     IOCMG_REG IOCFG_GPIO3_7;    /**< Pin GPIO3_7 IO Config Register, offset address:0x000118U */
     IOCMG_REG IOCFG_GPIO3_6;    /**< Pin GPIO3_6 IO Config Register, offset address:0x00011CU */
     IOCMG_REG IOCFG_GPIO3_5;    /**< Pin GPIO3_5 IO Config Register, offset address:0x000120U */
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO5_3;    /**< Pin GPIO5_3 IO Config Register, offset address:0x000124U */
 #else
     unsigned char space7[4];
@@ -81,7 +86,8 @@ typedef struct {
     IOCMG_REG IOCFG_GPIO1_6;    /**< Pin GPIO1_6 IO Config Register, offset address:0x00012CU */
     IOCMG_REG IOCFG_GPIO1_7;    /**< Pin GPIO1_7 IO Config Register, offset address:0x000130U */
     IOCMG_REG IOCFG_GPIO4_7;    /**< Pin GPIO4_7 IO Config Register, offset address:0x000134U */
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO4_5;    /**< Pin GPIO4_5 IO Config Register, offset address:0x000138U */
     IOCMG_REG IOCFG_GPIO4_6;    /**< Pin GPIO4_6 IO Config Register, offset address:0x00013CU */
     IOCMG_REG IOCFG_GPIO1_3;    /**< Pin GPIO1_3 IO Config Register, offset address:0x000140U */
@@ -96,7 +102,8 @@ typedef struct {
     IOCMG_REG IOCFG_EF_BIST_INTF;   /**< Pin EF_BIST_INTF IO Config Register, offset address:0x000158U */
     IOCMG_REG IOCFG_GPIO4_1;    /**< Pin GPIO4_1 IO Config Register, offset address:0x00015CU */
     IOCMG_REG IOCFG_GPIO4_2;    /**< Pin GPIO4_2 IO Config Register, offset address:0x000160U */
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO4_3;    /**< Pin GPIO4_3 IO Config Register, offset address:0x000164U */
     IOCMG_REG IOCFG_GPIO1_0;    /**< Pin GPIO1_0 IO Config Register, offset address:0x000168U */
     IOCMG_REG IOCFG_GPIO1_1;    /**< Pin GPIO1_1 IO Config Register, offset address:0x00016CU */
@@ -107,7 +114,8 @@ typedef struct {
 #endif
     IOCMG_REG IOCFG_GPIO2_0;    /**< Pin GPIO2_0 IO Config Register, offset address:0x000178U */
     IOCMG_REG IOCFG_GPIO2_1;    /**< Pin GPIO2_1 IO Config Register, offset address:0x00017CU */
-#ifdef CHIP_3061MNPICA /* Only CHIP_3061MNPICA is supported. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNPIC8) || defined (CHIP_3061MNNIC8)  /* Only 48Pins chip is supported. */
     IOCMG_REG IOCFG_GPIO2_2;    /**< Pin GPIO2_2 IO Config Register, offset address:0x000180U */
     IOCMG_REG IOCFG_GPIO2_3;    /**< Pin GPIO2_3 IO Config Register, offset address:0x000184U */
 #else

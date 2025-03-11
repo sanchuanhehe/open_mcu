@@ -28,7 +28,33 @@
 #include "interrupt.h"
 #include "iwdg.h"
 
+#define IWDG_COUNT_MAX 0xFFFFFFFF
+#define TIME_CHANGE_NUM 1000
 static unsigned int IWDG_CalculateRegTimeout(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType);
+
+/**
+  * @brief check iwdg time value parameter.
+  * @param baseAddress Value of @ref IWDG_RegStruct
+  * @param timeValue time value
+  * @param timeType Value of @ref IWDG_TimeType.
+  * @retval Bool.
+  */
+static bool IsIwdgTimeValue(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType)
+{
+    unsigned int clockFreq = HAL_CRG_GetIpFreq((void *)baseAddress); /* Get IWDG clock freq. */
+    if (clockFreq == 0) {
+        return false;
+    }
+    /* Get max count. */
+    double maxSecValue = ((double)(IWDG_COUNT_MAX) / (double)clockFreq);
+    double maxMsValue = maxSecValue * TIME_CHANGE_NUM;
+    double maxUsValue = maxMsValue * TIME_CHANGE_NUM;
+    /* Check iwdg time value parameter. */
+    return ((timeType == IWDG_TIME_UNIT_TICK && timeValue <= (float)IWDG_COUNT_MAX) ||
+            (timeType == IWDG_TIME_UNIT_S && maxSecValue >= timeValue) ||
+            (timeType == IWDG_TIME_UNIT_MS && maxMsValue >= timeValue) ||
+            (timeType == IWDG_TIME_UNIT_US && maxUsValue >= timeValue));
+}
 
 /**
   * @brief Initializing IWDG values
@@ -40,8 +66,7 @@ BASE_StatusType HAL_IWDG_Init(IWDG_Handle *handle)
     IWDG_ASSERT_PARAM(handle != NULL);
     IWDG_ASSERT_PARAM(IsIWDGInstance(handle->baseAddress));
     IWDG_PARAM_CHECK_WITH_RET(IsIwdgTimeType(handle->timeType), BASE_STATUS_ERROR);
-    IWDG_PARAM_CHECK_WITH_RET(IsIwdgTimeValue(handle->baseAddress, handle->timeValue, handle->timeType),
-        BASE_STATUS_ERROR);
+
     /* baseaddress = IWDG */
     HAL_IWDG_SetTimeValue(handle, handle->timeValue, handle->timeType);
     /* Set IWDG Reset and Interrupt */
@@ -91,7 +116,10 @@ void HAL_IWDG_SetTimeValue(IWDG_Handle *handle, unsigned int timeValue, IWDG_Tim
     IWDG_ASSERT_PARAM(handle != NULL);
     IWDG_ASSERT_PARAM(IsIWDGInstance(handle->baseAddress));
     IWDG_PARAM_CHECK_NO_RET(IsIwdgTimeType(handle->timeType));
-    IWDG_PARAM_CHECK_NO_RET(IsIwdgTimeValue(handle->baseAddress, handle->timeValue, handle->timeType));
+    /* Check iwdg time value parameter. */
+    if (IsIwdgTimeValue(handle->baseAddress, timeValue, timeType) == false) {
+        return;
+    }
     /* handle->baseAddress only could be configured IWDG */
     unsigned int value = IWDG_CalculateRegTimeout(handle->baseAddress, timeValue, timeType);
     DCL_IWDG_SetLoadValue(handle->baseAddress, value);

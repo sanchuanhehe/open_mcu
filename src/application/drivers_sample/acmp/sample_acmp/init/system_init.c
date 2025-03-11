@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 {
@@ -32,6 +33,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -41,44 +43,41 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 
 static void ACMP1_Init(void)
 {
-    g_acmp1.baseAddress =  ACMP1_BASE;
+    HAL_CRG_IpEnableSet(ACMP1_BASE, BASE_CFG_ENABLE); /* Enable ACMP clock */
 
-    g_acmp1.enable = true;
-    g_acmp1.syncEn = false;
-    g_acmp1.inOutConfig.vinNNum = ACMP_VIN_MUX3; /* input select */
-    g_acmp1.inOutConfig.vinPNum = ACMP_VIN_MUX3; /* input select */
+    g_acmp1.baseAddress =  ACMP1_BASE; /* ACMP baseAddr */
+
+    g_acmp1.inOutConfig.vinNNum = ACMP_VIN_MUX3;  /* input channel 3 */
+    g_acmp1.inOutConfig.vinPNum = ACMP_VIN_MUX3;  /* input channel 3 */
     g_acmp1.inOutConfig.swVinPNum = ACMP_SW_VIN3;
     g_acmp1.inOutConfig.swVinNNum = ACMP_SW_VIN3;
-    g_acmp1.inOutConfig.polarity = ACMP_OUT_NOT_INVERT;
-    g_acmp1.filterCtrl.filterMode = ACMP_FILTER_NONE; /* filter level */
-    g_acmp1.hysteresisVol = 0; /* 0: without hysteresis */
+    g_acmp1.inOutConfig.polarity = ACMP_OUT_NOT_INVERT; /* ACMP out not invert */
+    g_acmp1.filterCtrl.filterMode = ACMP_FILTER_NONE;
+    g_acmp1.hysteresisVol = ACMP_HYS_VOL_30MV; /* 30mv: without hysteresis */
     HAL_ACMP_Init(&g_acmp1);
 }
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    SYSCTRL0->SC_SYS_STAT.BIT.update_mode = 0;
+    SYSCTRL0->SC_SYS_STAT.BIT.update_mode_clear = 1;
+    HAL_IOCMG_SetPinAltFuncMode(IO2_AS_ACMP1_ANA_N2);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO2_AS_ACMP1_ANA_N2, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO2_AS_ACMP1_ANA_N2, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO2_AS_ACMP1_ANA_N2, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO2_AS_ACMP1_ANA_N2, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_18.BIT.func = 0x9; /* 0x9 is ACMP1_ANA_N */
-    iconfig->iocmg_18.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_18.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_18.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_18.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_18.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO5_AS_ACMP1_ANA_P2);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO5_AS_ACMP1_ANA_P2, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO5_AS_ACMP1_ANA_P2, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO5_AS_ACMP1_ANA_P2, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO5_AS_ACMP1_ANA_P2, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_21.BIT.func = 0x9; /* 0x9 is ACMP1_ANA_P */
-    iconfig->iocmg_21.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_21.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_21.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_21.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_21.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_26.BIT.func = 0x2; /* 0x2 is ACMP1_OUT */
-    iconfig->iocmg_26.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_26.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_26.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_26.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_26.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO10_AS_ACMP1_OUT);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO10_AS_ACMP1_OUT, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO10_AS_ACMP1_OUT, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO10_AS_ACMP1_OUT, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO10_AS_ACMP1_OUT, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

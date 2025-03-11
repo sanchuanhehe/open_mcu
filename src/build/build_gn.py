@@ -22,16 +22,19 @@
 
 import sys
 import os
+import platform
 import stat
 import subprocess
 import pathlib
 import json
 import shlex
 import shutil
+import distutils.spawn
 
+from configparser import ConfigParser
 from createxml.mk_prim_xml_step1 import CreateCfg
 from createxml.mk_prim_xml_step2 import CreateXml
- 
+
 
 def read_json_file(input_file):
     '''
@@ -64,15 +67,41 @@ def del_allgn():
         os.remove(global_buildfile)
 
 
+def get_gn_args_config():
+    configini_path = pathlib.Path.cwd().joinpath('build', 'config.ini')
+    config_ini_data = ConfigParser()
+    config_ini_data.read(configini_path)
+    return config_ini_data
+
+
+def set_link_path(config_gn_args):
+    config_tools_path = config_gn_args.get('gn_args', 'tools_path')
+    link_path = None
+    if config_tools_path:
+        cur_sys = platform.system()
+        if cur_sys == "Linux":
+            link_path = pathlib.Path(config_tools_path).joinpath("Linux", 'linx-llvm-binary-release-musl',
+                                                            'riscv32-elf', 'lib', 'rv32imfc_ilp32f')
+        elif cur_sys == "Windows":
+            link_path = pathlib.Path(config_tools_path).joinpath("Windows", 'linx-llvm-binary-release-win-musl',
+                                                            'riscv32-elf', 'lib', 'rv32imfc_ilp32f')
+    else:
+        clang_dir = os.path.dirname(distutils.spawn.find_executable("clang"))
+        link_path = pathlib.Path(clang_dir).joinpath("..", "riscv32-elf", "lib", "rv32imfc_ilp32f")
+    return link_path
+
+
 class AutoCreate():
     '''
     Function description: Automatically builds the compilation framework.
     '''
 
-    def __init__(self, json_content):
+    def __init__(self, json_content, logger):
         '''
         Function description: Initialization is invoked by default.
         '''
+
+        self.logger = logger
 
         if 'system' not in json_content:
             raise Exception('Error: system not exist,please check.')
@@ -84,6 +113,8 @@ class AutoCreate():
         # Save the path of third-party components so that 
         # they are not scanned during automatic construction.
         self.ext_component_path = []
+        self.xmlfiles = []
+        self.includes_path = []
 
         for subsystem in json_content['system']:
             if subsystem['name'] == 'compile':
@@ -150,15 +181,8 @@ class AutoCreate():
             if not pathlib.Path(include).is_dir():
                 raise Exception('Error: {} is not a dir, please '
                             'check.'.format(include)) 
-            for (dirpath, _, filenames) in os.walk(pathlib.Path(
-                                                          include)):
-                for file in filenames:
-                    if pathlib.Path(file).suffix != '.h':
-                        continue
-                    include_file = pathlib.Path(dirpath).joinpath(file)
-                    copy_path = pathlib.Path('middleware').joinpath(
-                                'thirdparty', 'sysroot', 'include')
-                    shutil.copy(include_file, copy_path)
+            for (dirpath, _, filenames) in os.walk(pathlib.Path(include)):
+                copy_includes(dirpath, filenames)
 
     @staticmethod
     def cmd_exec(command):
@@ -231,6 +255,16 @@ class AutoCreate():
                 return False
 
         return True
+    
+    @staticmethod
+    def copy_includes(self, dirpath, files):
+        for file in files:
+            if pathlib.Path(file).suffix != '.h':
+                continue
+            include_file = pathlib.Path(dirpath).joinpath(file)
+            copy_path = pathlib.Path('middleware').joinpath(
+                        'thirdparty', 'sysroot', 'include')
+            shutil.copy(include_file, copy_path)
 
     def subsystem_transplant(self, subsystem):
         '''
@@ -270,7 +304,6 @@ class AutoCreate():
         '''
         Function description: Compiling Subsystem
         '''
-
         # Instantiation parameter check.
         if not isinstance(subsystem, dict):
             raise TypeError("subsystem in para type error {}".format(
@@ -301,6 +334,11 @@ class AutoCreate():
                             'please check.')
         # Global compilation script building
         self.globalgn_create(globalbuild_dict)
+
+        dfx_path = pathlib.Path.cwd().joinpath('drivers', 'debug', 'log')
+        if os.path.exists(dfx_path):
+            self.logger.info("exist dfx feature, create log.xml") 
+            self.xml_create()
 
     def localgn_create(self, module_content):
         '''
@@ -480,6 +518,7 @@ class AutoCreate():
         if self.cflags:
             self.build_content.append("    cflags = [\n")
             for cflags in self.cflags:
+                cflags = cflags.replace(" ", "\", \"")
                 self.build_content.append(prefix + cflags + suffix)
             self.build_content.append(close_bracket)
 
@@ -494,6 +533,7 @@ class AutoCreate():
         if self.ldflags:
             self.build_content.append("    ldflags = [\n")
             for ldflags in self.ldflags:
+                ldflags = ldflags.replace(" ", "\", \"")
                 self.build_content.append(prefix + ldflags + suffix)
 
             self.lds_scripts_config()
@@ -544,23 +584,27 @@ class AutoCreate():
         c_file = self.xmlfiles
         module_name = "mcu_xml"
         str_dfx_db = 'dfx_db'
-        build_tmp_path = pathlib.Path.cwd().joinpath('build', 'createxml',
-                                                     'mss_prim_db')
+        build_tmp_path = pathlib.Path.cwd().joinpath('build', 'createxml', 'mss_prim_db')
         if not build_tmp_path:
             os.makedirs(build_tmp_path)
         prim_xml_cfg_dir = build_tmp_path.joinpath(str_dfx_db, 'xml_cfg')
-        prim_xml_cfg_file = build_tmp_path.joinpath(str_dfx_db, 'xml_cfg',
-                                                    module_name + '.cfg')
-        in_path = pathlib.Path.cwd().joinpath('build', 'createxml',
-                                              'mk_dfx_xml.json')
+        prim_xml_cfg_file = build_tmp_path.joinpath(str_dfx_db, 'xml_cfg', module_name + '.cfg')
+        in_path = pathlib.Path.cwd().joinpath('build', 'createxml', 'mk_dfx_xml.json')
         hdb_xml_temp_root_dir = build_tmp_path.joinpath('modules')
-        hdb_xml_file_id = pathlib.Path.cwd().joinpath('drivers',
-            'debug', 'log', 'inc', 'file_id_defs.h')
+        hdb_xml_file_id = pathlib.Path.cwd().joinpath('drivers', 'debug', 'log', 'inc', 'file_id_defs.h')
         prim_xml_key_word = module_name
         i_file_dir = build_tmp_path.joinpath('modules', module_name)
         prim_xml_dst_full_path = build_tmp_path.joinpath(str_dfx_db, 'log.xml')
         sources = c_file
-        build_xml_para.update({"cflags": self.cflags})
+        cflags = []
+        for cflag in self.cflags:
+            cflags + cflag.split()
+        config_gn_args = get_gn_args_config()
+        config_toolchain_select = config_gn_args.get('gn_args', 'toolchain_select')
+        cc = 'riscv32-linux-musl-gcc'
+        if config_toolchain_select == 'bisheng':
+            cc = 'clang'
+        build_xml_para.update({"cflags": cflags})
         build_xml_para.update({"c_file": c_file})
         build_xml_para.update({"build_tmp_path": build_tmp_path})
         build_xml_para.update({"prim_xml_cfg_dir": prim_xml_cfg_dir})
@@ -572,7 +616,7 @@ class AutoCreate():
         build_xml_para.update({"prim_xml_key_word": prim_xml_key_word})
         build_xml_para.update({"i_file_dir": i_file_dir})
         build_xml_para.update({"sources": sources})
-        build_xml_para.update({"cc": "riscv32-linux-musl-gcc"})
+        build_xml_para.update({"cc": cc})
         build_xml_para.update({"include": self.includes_path})
         build_xml_para.update({"prim_xml_dst_full_path":
                                    prim_xml_dst_full_path})
@@ -602,27 +646,26 @@ class AutoCreate():
         Function description: Global Source File Search.
         '''
 
-        self.nocheck_lists = []
-        self.nocheck_lists_file = []
+        nocheck_lists = []
+        nocheck_lists_file = []
 
         self.build_content.append("    sources = [\n")
-        self.xmlfiles = []
         for module_list in self.json_module_path:
             for sources_list in module_list:
                 if pathlib.Path(sources_list).is_file():
-                    self.nocheck_lists_file.append(sources_list)
+                    nocheck_lists_file.append(sources_list)
                 else:
-                    self.nocheck_lists.append(sources_list)
+                    nocheck_lists.append(sources_list)
         for nocheck_list in self.nocheck:
-            self.nocheck_lists.append(nocheck_list)
-        self.nocheck_lists.extend(self.ext_component_path)
+            nocheck_lists.append(nocheck_list)
+        nocheck_lists.extend(self.ext_component_path)
 
-        self._root_path = pathlib.Path()
-        for (dirpath, dirnames, filenames) in os.walk(self._root_path):
+        root_path = pathlib.Path()
+        for (dirpath, dirnames, filenames) in os.walk(root_path):
             dirnames.sort()
             filenames.sort()
             # Find all module code except in the JSON file
-            if not self.nochecklist(dirpath, self.nocheck_lists):
+            if not self.nochecklist(dirpath, nocheck_lists):
                 continue
 
             for file_global in filenames:
@@ -631,7 +674,7 @@ class AutoCreate():
                     continue
                 if not self.nochecklist(str(pathlib.Path(dirpath).
                                         joinpath(file_global)),
-                                        self.nocheck_lists_file):
+                                        nocheck_lists_file):
                     continue
                 if pathlib.Path(file_global).suffix == '.c':
                     self.xmlfiles.append("{}".format(
@@ -704,7 +747,6 @@ class AutoCreate():
         return True
 
     def includes_scan(self, path):
-        self.includes_path = []
         for (dirpath, dirnames, filenames) in os.walk(path):
             dirnames.sort()
             filenames.sort()
@@ -746,10 +788,10 @@ class AutoCreate():
                 if filename == "target":
                     continue
                 break
-            self._lds_scripts_path = pathlib.Path("..").joinpath('chip',
+            lds_scripts_path = pathlib.Path("..").joinpath('chip',
                                      filename, 'flash.lds')
             self.build_content.append("        \"-T{}\",\n"
-                                      .format(self._lds_scripts_path))
+                                      .format(lds_scripts_path))
 
     def library_link_config(self):
         '''
@@ -799,6 +841,11 @@ class AutoCreate():
                 self.build_content.append("        \"-l{}\",\n"
                                           .format(extlibsname[3:-2]))
             self.build_content.append("        \"-Wl,--no-whole-archive\",\n")
+        config_gn_args = get_gn_args_config()
+        config_toolchain_select = config_gn_args.get('gn_args', 'toolchain_select')
+        if (config_toolchain_select == 'bisheng'):
+            link_path = set_link_path(config_gn_args)
+            self.build_content.append("        \"-L{}\", \n".format(link_path))
 
 
 def main(argv):

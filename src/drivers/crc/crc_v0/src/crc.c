@@ -346,7 +346,7 @@ static void CRC_SetPolynomialModeByAlgorithm(CRC_RegStruct *crcx, CRC_AlgorithmM
     } else if (algorithmMode == CRC16_IBM || algorithmMode == CRC16_MODBUS) {
         polyMode = CRC16_8005_POLY_MODE;
     } else if (algorithmMode == CRC32) {
-        polyMode = CRC32_04C11D87_POLY_MODE;
+        polyMode = CRC32_04C11DB7_POLY_MODE;
     }
     /* config register */
     DCL_CRC_SetPolynomialMode(crcx, polyMode);

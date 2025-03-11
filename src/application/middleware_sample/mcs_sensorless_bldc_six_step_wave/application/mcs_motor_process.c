@@ -55,43 +55,6 @@ static void TimerTickInit(MtrCtrlHandle *mtrCtrl)
 }
 
 /**
-  * @brief APT Synchronize initialize.
-  * @retval None.
-  */
-static void APT_SyncMasterInit(APT_Handle *aptHandle)
-{
-    HAL_APT_MasterSyncInit(aptHandle, APT_SYNC_OUT_ON_CNTR_ZERO);
-}
-
-/**
-  * @brief Config the slave APT.
-  * @param aptx The slave APT handle.
-  * @retval None.
-  */
-static void APT_SyncSlaveInit(APT_Handle *aptHandle)
-{
-    APT_SlaveSyncIn aptSlave;
-    aptSlave.divPhase = 0; /* divide phase value */
-    aptSlave.cntPhase = 0; /* counter phase value */
-    aptSlave.syncCntMode = APT_COUNT_MODE_AFTER_SYNC_UP;
-    aptSlave.syncInSrc = APT_SYNC_IN_SRC; /* sync source selection */
-    aptSlave.cntrSyncSrc = APT_CNTR_SYNC_SRC_SYNCIN;
-    HAL_APT_SlaveSyncInit(aptHandle, &aptSlave);
-}
-
-/**
-  * @brief Configuring Master and Slave APTs.
-  * @retval None.
-  */
-static void AptMasterSalveSet(void)
-{
-    /* Compressor fan APT master/slave synchronization */
-    APT_SyncMasterInit(&g_apt0);
-    APT_SyncSlaveInit(&g_apt1);
-    APT_SyncSlaveInit(&g_apt2);
-}
-
-/**
   * @brief Read the ADC current sampling value of the compressor.
   * @param CurrUvw Three-phase current.
   * @retval None.
@@ -99,9 +62,9 @@ static void AptMasterSalveSet(void)
 static void ReadBemfUVWMotor(UVWBemf *bemfUVW)
 {
     MCS_ASSERT_PARAM(bemfUVW != NULL);
-    bemfUVW->u = (int)(HAL_ADC_GetConvResult(&g_adc0, ADC_SOC_NUM2)&0xFFF);
-    bemfUVW->v = (int)(HAL_ADC_GetConvResult(&g_adc0, ADC_SOC_NUM5)&0xFFF);
-    bemfUVW->w = (int)(HAL_ADC_GetConvResult(&g_adc0, ADC_SOC_NUM6)&0xFFF);
+    bemfUVW->u = (int)(HAL_ADC_GetConvResult(&ADC_HANDLE, ADC_U_SOC_NUM)&0xFFF);
+    bemfUVW->v = (int)(HAL_ADC_GetConvResult(&ADC_HANDLE, ADC_V_SOC_NUM)&0xFFF);
+    bemfUVW->w = (int)(HAL_ADC_GetConvResult(&ADC_HANDLE, ADC_W_SOC_NUM)&0xFFF);
 }
 
 /**
@@ -223,7 +186,7 @@ static void MotorStatePerProc(SysStatusReg *statusReg, volatile FsmState *stateM
     }
     if (SysGetCmdStop(statusReg)) {
         SysCmdStopClr(statusReg);
-        *stateMachine = FSM_STOP;
+        *stateMachine = FSM_WAIT_STOP;
     }
 }
 
@@ -352,6 +315,26 @@ static void CheckOverCurrentState(SysStatusReg *statusReg, FsmState *stateMachin
 }
 
 /**
+  * @brief Deceleration control phase before stop.
+  * @param mtrCtrl The motor control handle.
+  * @param statusReg Motor Control Status.
+  * @param targetSpd Deceleration target value.
+  * @param switchSpd Switch to stop state speed.
+  * @retval None.
+  */
+static void DecelerateSpeed(MtrCtrlHandle *mtrCtrl, FsmState *stateMachine, float targetSpd, float switchSpd)
+{
+    /* Reduce speed before stop. */
+    mtrCtrl->spdRefHz = RMG_Exec(&mtrCtrl->spdRmg, targetSpd);
+    mtrCtrl->spdPi.error = mtrCtrl->spdRefHz - mtrCtrl->spdEstHz;
+    /* Speed loop control */
+    mtrCtrl->pwmDuty = PI_Exec(&mtrCtrl->spdPi);
+    if (mtrCtrl->spdRefHz <= switchSpd) { /* Maximum speed for switching to the FSM_STOP state */
+        *stateMachine = FSM_STOP;
+    }
+}
+
+/**
   * @brief System timer tick task.
   * @param mtrCtrl The motor control handle.
   * @param aptAddr Three-phase APT address pointer.
@@ -391,6 +374,10 @@ static void TSK_SystickIsr(MtrCtrlHandle *mtrCtrl, APT_RegStruct **aptAddr)
             mtrCtrl->spdPi.error = mtrCtrl->spdRefHz - mtrCtrl->spdEstHz;
             /* Speed loop control */
             mtrCtrl->pwmDuty = PI_Exec(&mtrCtrl->spdPi);
+            break;
+        case FSM_WAIT_STOP:
+            /* 5.0f : maximum speed for switching to the FSM_STOP state */
+            DecelerateSpeed(mtrCtrl, (FsmState *)stateMachine, 0.0f, 5.0f);
             break;
         case FSM_STOP:
             MotorPwmOutputDisable(aptAddr);
@@ -453,7 +440,7 @@ void MotorCarrierProcessCallback(void *aptHandle)
     BASE_FUNC_UNUSED(aptHandle);
     /* USER CODE BEGIN APT0_TIMER_INTERRUPT */
     MCS_CarrierProcess(&g_mc);
-    if (g_mc.stateMachine == FSM_RUN) {
+    if (g_mc.stateMachine == FSM_RUN || g_mc.stateMachine == FSM_WAIT_STOP) {
         MotorBlockageProtect();
     }
     /* USER CODE END APT0_TIMER_INTERRUPT */
@@ -481,8 +468,8 @@ static void AdjustSpeedFunction(void)
     static unsigned int potentiomitorAdcValue = 0;
     static float spdCmdHz = 0;
     static float spdCmdHzLast = SDP_MAX_VALUE;
-    HAL_ADC_SoftTrigSample(&g_adc0, ADC_SOC_NUM9); /* Get the speed adjustment resistance. */
-    potentiomitorAdcValue = HAL_ADC_GetConvResult(&g_adc0, ADC_SOC_NUM9);
+    HAL_ADC_SoftTrigSample(&ADC_HANDLE, ADC_SOC_NUM9); /* Get the speed adjustment resistance. */
+    potentiomitorAdcValue = HAL_ADC_GetConvResult(&ADC_HANDLE, ADC_SOC_NUM9);
     /* 4045.0 is adc sample max value of potentiomitor */
     spdCmdHz = (float)potentiomitorAdcValue / 4045.0 * SDP_MAX_VALUE;
     if (spdCmdHz < SDP_MIN_VALUE) { /* Speed protection. */
@@ -544,13 +531,12 @@ int MotorMainProcess(void)
 {
     SystemInit();
     /* System Initialization. */
-    unsigned int tickNum100Ms = 150; /* 100ms tick */
+    unsigned int tickNum100Ms = 200; /* 100ms tick */
     static unsigned int tickCnt100Ms = 0;
-    unsigned int tickNum500Ms = 750; /* 500ms tick */
+    unsigned int tickNum500Ms = 1000; /* 500ms tick */
     static unsigned int tickCnt500Ms = 0;
 
     HAL_TIMER_Start(&g_timer1);
-    AptMasterSalveSet();
     /* Disable PWM output before startup. */
     MotorPwmOutputDisable(g_aptCp);
     InitSoftware();
@@ -568,7 +554,7 @@ int MotorMainProcess(void)
                 break;
             }
             /* The LED blinks when no status is not error. */
-            HAL_GPIO_TogglePin(&g_gpio2, GPIO_PIN_3);
+            HAL_GPIO_TogglePin(&SYS_LED_HANDLE, SYS_LED_PIN);
             tickCnt500Ms = g_mc.msTickCnt;
         }
     }

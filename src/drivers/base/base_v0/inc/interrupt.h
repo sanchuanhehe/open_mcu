@@ -80,7 +80,9 @@
   */
 
 /**
-  * @brief Read standard csr registers
+  * @brief Read standard CSR registers.
+  * @param csrReg standard CSR registers name.
+  * @retval CSR register value.
   */
 #define READ_CSR(csrReg) ({                             \
     unsigned int tmp_;                                  \
@@ -90,7 +92,10 @@
 
 
 /**
-  * @brief Write standard csr registers
+  * @brief Write standard CSR registers.
+  * @param csrReg standard CSR registers name.
+  * @param csrVal Configuration value of the CSR register.
+  * @retval None.
   */
 #define WRITE_CSR(csrReg, csrVal) do {                              \
     if (__builtin_constant_p(csrVal) && ((unsigned int)(csrVal) < 32)) {  \
@@ -101,7 +106,10 @@
 } while (0)
 
 /**
-  * @brief Set standard csr registers
+  * @brief Set standard CSR registers.
+  * @param csrReg standard CSR registers name.
+  * @param csrBit Configuration bit value of the CSR register.
+  * @retval None
   */
 #define SET_CSR(csrReg, csrBit) do {                                           \
     unsigned int tmp_;                                                         \
@@ -114,7 +122,10 @@
 } while (0)
 
 /**
-  * @brief Clear standard csr registers
+  * @brief Clear standard CSR registers.
+  * @param csrReg standard CSR registers name.
+  * @param csrBit Configuration bit value of the CSR register.
+  * @retval None
   */
 #define CLEAR_CSR(csrReg, csrBit) do {                                         \
     unsigned int tmp_;                                                         \
@@ -127,7 +138,9 @@
 } while (0)
 
 /**
-  * @brief Read the custom defined registers of the chip
+  * @brief Read the custom defined CSR registers of the chip.
+  * @param csrReg custom defined CSR registers address of the chip.
+  * @retval CSR register value.
   */
 #define READ_CUSTOM_CSR(csrReg) ({                                              \
     unsigned int tmp_;                                                          \
@@ -136,7 +149,10 @@
 })
 
 /**
-  * @brief Write the custom defined registers of the chip
+  * @brief Write the custom defined CSR registers of the chip.
+  * @param csrRegAddr custom defined CSR registers address of the chip.
+  * @param csrVal Configuration value of the CSR register..
+  * @retval None
   */
 #define WRITE_CUSTOM_CSR_VAL(csrRegAddr, csrVal) do {                           \
     if (__builtin_constant_p(csrVal))  {                                        \
@@ -148,7 +164,10 @@
 } while (0)
 
 /**
-  * @brief Set the custom defined registers of the chip
+  * @brief Set the custom defined CSR registers of the chip.
+  * @param csrRegAddr custom defined CSR registers address of the chip.
+  * @param csrBit Configuration bit value of the CSR register.
+  * @retval None
   */
 #define SET_CUSTOM_CSR(csrRegAddr, csrBit) do {                                 \
     if (__builtin_constant_p(csrBit) && ((unsigned int)(csrBit) < 32)) {        \
@@ -160,7 +179,10 @@
 } while (0)
 
 /**
-  * @brief Clear the custom defined registers of the chip
+  * @brief Clear the custom defined CSR registers of the chip.
+  * @param csrRegAddr custom defined CSR registers address of the chip.
+  * @param csrBit Configuration bit value of the CSR register.
+  * @retval None
   */
 #define CLEAR_CUSTOM_CSR(csrRegAddr, csrBit) do {                               \
     if (__builtin_constant_p(csrBit) && ((unsigned int)(csrBit) < 32)) {        \

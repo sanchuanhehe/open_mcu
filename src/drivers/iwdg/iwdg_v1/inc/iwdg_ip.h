@@ -322,6 +322,7 @@ static inline void DCL_IWDG_SetFreqDivValue(IWDG_RegStruct *iwdgx, IWDG_FreqDivT
     iwdgx->IWDOG_KEY.BIT.iwdg_key = IWDG_UNLOCK_REG_CMD;
     iwdgx->IWDOG_PRE_DIV.BIT.iwdg_pre_div = freqDiv; /* freqDiv parameters set */
     iwdgx->IWDOG_KEY.BIT.iwdg_key = IWDG_UNLOCK_REG_CMD;
+    BASE_FUNC_DELAY_MS(200); /* IWDG need delay 200 us */
 }
 
 /**
@@ -412,22 +413,6 @@ static inline bool IsIwdgTimeType(IWDG_TimeType timeType)
             timeType == IWDG_TIME_UNIT_US);
 }
 
-/**
-  * @brief check iwdg time value parameter.
-  * @param baseAddress Value of @ref IWDG_RegStruct
-  * @param timeValue time value
-  * @param timeType Value of @ref IWDG_TimeType.
-  * @retval Bool.
-  */
-static inline bool IsIwdgTimeValue(IWDG_RegStruct *baseAddress, float timeValue, IWDG_TimeType timeType)
-{
-    float clockFreq = (float)HAL_CRG_GetIpFreq((void *)baseAddress);
-    float maxSecond = (float)(0xFFFFFFFF / clockFreq); /* 0xFFFFFFFF max input value */
-    return ((timeType == IWDG_TIME_UNIT_TICK && timeValue <= 0xFFFFFFFF) ||
-            (timeType == IWDG_TIME_UNIT_S && maxSecond >= timeValue) ||
-            (timeType == IWDG_TIME_UNIT_MS && maxSecond >= timeValue / FREQ_CONVERT_MS_UNIT) ||
-            (timeType == IWDG_TIME_UNIT_US && maxSecond >= timeValue / FREQ_CONVERT_US_UNIT));
-}
 /**
   * @}
   */

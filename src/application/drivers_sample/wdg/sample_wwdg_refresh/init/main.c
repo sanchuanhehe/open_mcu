@@ -22,6 +22,7 @@
 
 #include "typedefs.h"
 #include "feature.h"
+#include "sample_wwdg_refresh.h"
 #include "main.h"
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */

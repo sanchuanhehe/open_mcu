@@ -47,7 +47,7 @@ typedef enum {
     SECTOR_SIX
 } HALL_SECTOR;
 
-#define     EANGLE0     (0.0f)
+#define     EANGLE0     (0.00f)
 #define     EANGLE30    (0.5235988f)
 #define     EANGLE60    (1.0471976f)
 #define     EANGLE90    (1.5707963f)

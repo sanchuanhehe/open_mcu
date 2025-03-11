@@ -49,7 +49,7 @@ BASE_StatusType HAL_UART_EnableBaudDetectionEx(UART_Handle *uartHandle);
 
 BASE_StatusType HAL_UART_DisableBaudDetectionEx(UART_Handle *uartHandle);
 
-BASE_StatusType HAL_UART_SetRxWaiteTimeEx(UART_Handle *uartHandle, unsigned int cntOfBit);
+BASE_StatusType HAL_UART_SetRxWaitTimeEx(UART_Handle *uartHandle, unsigned int cntOfBit);
 
 BASE_StatusType HAL_UART_SetOversampleMultipleEx(UART_Handle *uartHandle, UART_OversampleMultiple multiple);
 

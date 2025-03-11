@@ -32,24 +32,15 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.baseAddress     = CRG;
     crg.pllRefClkSelect = CRG_PLL_REF_CLK_SELECT_HOSC;
     crg.pllPreDiv       = CRG_PLL_PREDIV_4;
-    crg.pllFbDiv        = 48; /* PLL Multiplier 48 */
-    crg.pllPostDiv      = CRG_PLL_POSTDIV_2;
-    crg.coreClkSelect   = CRG_CORE_CLK_SELECT_HOSC;
-    crg.handleEx.clk1MSelect   = CRG_1M_CLK_SELECT_HOSC;
-    crg.handleEx.pllPostDiv2   = CRG_PLL_POSTDIV2_3;
+    crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
+    crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
+    crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
 
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
     *coreClkSelect = crg.coreClkSelect;
     return BASE_STATUS_OK;
-}
-
-__weak void UART0InterruptErrorCallback(void *handle)
-{
-    BASE_FUNC_UNUSED(handle);
-    /* USER CODE BEGIN UART0_TRNS_IT_ERROR */
-    /* USER CODE END UART0_TRNS_IT_ERROR */
 }
 
 __weak void UART0WriteInterruptCallback(void *handle)
@@ -66,9 +57,17 @@ __weak void ReadFinish(void *handle)
     /* USER CODE END UART0_READ_IT_FINISH */
 }
 
+__weak void UART0InterruptErrorCallback(void *handle)
+{
+    BASE_FUNC_UNUSED(handle);
+    /* USER CODE BEGIN UART0_TRNS_IT_ERROR */
+    /* USER CODE END UART0_TRNS_IT_ERROR */
+}
+
 static void UART0_Init(void)
 {
     HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
+    HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart.baseAddress = UART0;
 
@@ -79,34 +78,32 @@ static void UART0_Init(void)
     g_uart.txMode = UART_MODE_INTERRUPT;
     g_uart.rxMode = UART_MODE_INTERRUPT;
     g_uart.fifoMode = BASE_CFG_ENABLE;
-    g_uart.fifoTxThr = UART_FIFODEPTH_SIZE8;
-    g_uart.fifoRxThr = UART_FIFODEPTH_SIZE8;
+    g_uart.fifoTxThr = UART_FIFOFULL_ONE_TWO;
+    g_uart.fifoRxThr = UART_FIFOFULL_ONE_TWO;
     g_uart.hwFlowCtr = BASE_CFG_DISABLE;
-    g_uart.handleEx.overSampleMultiple = UART_OVERSAMPLING_16X;
-    g_uart.handleEx.msbFirst = BASE_CFG_DISABLE;
     HAL_UART_Init(&g_uart);
-    HAL_UART_RegisterCallBack(&g_uart, UART_TRNS_IT_ERROR, UART0InterruptErrorCallback);
     HAL_UART_RegisterCallBack(&g_uart, UART_WRITE_IT_FINISH, UART0WriteInterruptCallback);
     HAL_UART_RegisterCallBack(&g_uart, UART_READ_IT_FINISH, ReadFinish);
-
+    HAL_UART_RegisterCallBack(&g_uart, UART_TRNS_IT_ERROR, UART0InterruptErrorCallback);
     IRQ_Register(IRQ_UART0, HAL_UART_IrqHandler, &g_uart);
-    IRQ_SetPriority(IRQ_UART0, 1);
+    IRQ_SetPriority(IRQ_UART0, 1); /* 1 is priority value */
     IRQ_EnableN(IRQ_UART0);
 }
 
 static void IOConfig(void)
 {
-    HAL_IOCMG_SetPinAltFuncMode(GPIO2_2_AS_UART0_TXD);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_2_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO2_2_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO2_2_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO2_2_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    HAL_IOCMG_SetPinAltFuncMode(GPIO2_3_AS_UART0_RXD);  /* Check function selection */
-    HAL_IOCMG_SetPinPullMode(GPIO2_3_AS_UART0_RXD, PULL_NONE);  /* Pull-up and pull-down */
-    HAL_IOCMG_SetPinSchmidtMode(GPIO2_3_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
-    HAL_IOCMG_SetPinLevelShiftRate(GPIO2_3_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
-    HAL_IOCMG_SetPinDriveRate(GPIO2_3_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)

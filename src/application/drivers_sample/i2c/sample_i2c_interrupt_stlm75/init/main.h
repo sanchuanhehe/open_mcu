@@ -43,8 +43,8 @@ extern UART_Handle g_uart0;
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
-void Stlm75TxCallbackHandle(I2C_Handle *handle);
-void Stlm75RxCallbackHandle(I2C_Handle *handle);
-void Stlm75ErrCallbackHandle(I2C_Handle *handle);
+void Stlm75TxCallbackHandle(void *handle);
+void Stlm75RxCallbackHandle(void *handle);
+void Stlm75ErrCallbackHandle(void *handle);
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

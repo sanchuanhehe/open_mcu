@@ -29,6 +29,9 @@
 #include "anatrim.h"
 #include "crg.h"
 #include "interrupt.h"
+#ifdef NOS_TASK_SUPPORT
+#include "nosinit.h"
+#endif
 #include "chipinit.h"
 
 /**
@@ -58,12 +61,17 @@ void Chip_Init(void)
 
     /* Config FLASH Clock */
     FLASH_ClockConfig(coreClkSelect);
+    IRQ_Init();
     SYSTICK_Init();
     /* Set CoreClock Select after FLASH Config Done */
     CRG_SetCoreClockSelect(coreClkSelect);
-
-    IRQ_Init();
+#ifdef NOS_TASK_SUPPORT
+    SYSTICK_IRQ_Enable();
+#endif
     ANAVREF_Init();
     ANATRIM_Entry();
     /* User Add Code Here */
+#ifdef NOS_TASK_SUPPORT
+    NOS_Init();
+#endif
 }

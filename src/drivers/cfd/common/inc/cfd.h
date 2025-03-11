@@ -85,6 +85,7 @@ typedef void (*CFD_CallBackFuncType)(void *handle);
   */
 
 /* Hardware abstraction layer functions -------------------------------------------------------- */
+
 BASE_StatusType HAL_CFD_Init(CFD_Handle *handle);
 BASE_StatusType HAL_CFD_DeInit(CFD_Handle *handle);
 BASE_StatusType CFD_RspInit(CFD_Handle *handle);

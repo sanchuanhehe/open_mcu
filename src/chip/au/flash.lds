@@ -160,6 +160,7 @@ SECTIONS
         __data_load = LOADADDR(.data);
         __data_start = .;
         *(.data*)
+        *(.sdata*)
         . = ALIGN(4);
         __data_end = .;
     } > RAM_DATA AT> FLASH_CODE
@@ -170,6 +171,7 @@ SECTIONS
     {
         __bss_begin__ = .;
         *(.bss*)
+        *(.sbss*)
         *(COMMON)
         . = ALIGN(4);
         __bss_end__ = .;

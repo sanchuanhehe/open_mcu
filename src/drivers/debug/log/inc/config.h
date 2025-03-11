@@ -64,7 +64,7 @@ enum DataItem {
  * @param len [OUT] Length of the read content
  * @retval None
  */
-void ExtLoadRead(uintptr_t add, char *value, int len);
+void ExtLoadRead(uintptr_t add, char *value, unsigned int len);
 
 /**
  * @extLoadWrite Write the content in the configuration address according to the address
@@ -75,7 +75,7 @@ void ExtLoadRead(uintptr_t add, char *value, int len);
  * @param len [IN] Length of the content to be written
  * @retval None
  */
-void ExtLoadWrite(uintptr_t add, const char *value, int len);
+void ExtLoadWrite(uintptr_t add, const char *value, unsigned int len);
 
 /**
  * @extConfigRead Reads content based on data items

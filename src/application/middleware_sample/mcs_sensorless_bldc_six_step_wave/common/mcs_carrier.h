@@ -60,7 +60,6 @@ typedef struct {
 typedef struct {
     volatile float spdCmdHz;                         /**< Set target change phase frequency */
     float spdRefHz;                         /**< Command values after speed ramp management */
-    float spdCurrHz;                        /**< Actual change phase frequency of feedback */
     float spdEstHz;                         /**< Actual change phase frequency of feedback */
     float pwmDuty;                          /**< APT duty cycle  */
     unsigned int zeroPoint;                 /**< Adc value of zero point */

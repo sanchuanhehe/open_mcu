@@ -2,7 +2,7 @@
 
 ## 介绍
 
-  open_mcu代码仓为支持3061M和3065M解决方案SDK。
+  open_mcu代码仓为支持3061M、3065H、3066M解决方案SDK。
 
 ## 购买渠道
 
@@ -30,9 +30,9 @@
 |  ECBMCU105H![](docs/pic/readme/3061M.png)  | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 3065H是RISC-V内核的高性能实时控制专用MCU， 具有高性能、高集成度、高可靠性、易开发的特点，同时配合强大的算法团队和嵌入式AI能力，使得3065H上市后快速获得家电、能源、工业等行业内多个客户的认可和好评。 |
 ## 支持的调试器
 
-|                          调试器名称                          | 使用说明                                                     | 购买链接                                                     | 调试器介绍                                      |
-| :----------------------------------------------------------: | ------------------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------- |
-| ![image-20250121114616068](./docs/pic/tools/image-20250121114616068.png) | [HiSpark调试器系列 使用指南](https://gitee.com/HiSpark/open_mcu/tree/master/tools) | [调试器购买链接](https://e.tb.cn/h.T8tE2Ot1oR359nj?tk=Fy3He1qiATn) | ARM 仿真调试器 Hispark 烧录器 4合1调试器 编码器 |
+|                          调试器名称                          | 使用说明                                                     | 购买链接                                                     | 调试器介绍                               |
+| :----------------------------------------------------------: | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------- |
+| ![image-20250121114616068](./docs/pic/tools/image-20250121114616068.png) | [HiSpark调试器系列 使用指南](https://gitee.com/HiSpark/open_mcu/tree/master/tools) | [调试器购买链接](https://e.tb.cn/h.T8tE2Ot1oR359nj?tk=Fy3He1qiATn) | ARM 仿真调试器 Hispark 烧录器 4合1调试器 |
 
 
 
@@ -46,7 +46,7 @@
 
 ## 示例教程
 
-ECBMCU201MPC、ECBMCU105H提供了以下Demo供开发参考：
+ECBMCU201MPC、ECBMCU105H、ECBMCU301M提供了以下Demo供开发参考：
 
 <table  width="990" border="0" cellpadding="0" cellspacing="0" style='border-collapse:collapse;table-layout:fixed;'>
  <tr height="18" style='height:13.50pt;'>
@@ -269,7 +269,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC或 PMSM电机控制。该�
 
 ![image-20240715162244103](docs/pic/tools/image-20240715162244103.png)
 
-3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/2.%203061/1.%203061%20%E7%94%9F%E6%80%81%E6%9D%BF%E5%8F%82%E8%80%83%E8%AE%BE%E8%AE%A1" title="超链接title">3061M系列 通用生态板用户手册 00B01</a>
+3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/document/hardware/3061M" title="超链接title">3061M系列 通用生态板用户手册 00B01</a>
 
 ### 3065H介绍
 
@@ -289,7 +289,29 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ![image-20240527103127826](docs/pic/tools/image-20240527103127826.png)  
 
-3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/1.%203065" title="超链接title">3065H通用生态板用户手册 V03</a>
+3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/document/hardware/306xH" title="超链接title">3065H通用生态板用户手册 V03</a>
+
+### 3066M介绍
+
+3065H 通用生态板由 ECBMCU301M （核心板）和 ECBMOTORA （电机驱动板）组成。
+
+ECBMCU301M是针对 3066M 生态核心板，用于 3066M 初始评估和设计参考，内嵌一块 USB 接口的调试板。
+
+ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。该单板支持24V/12V DCIN 输入。
+
+核心板电机驱动扩展板的常用组装方式是电机驱动板通过两个40pin 连接器扣接到核心板，如下图所示。
+
+<img src="docs/pic/tools/image-20240530173305431.png" alt="image-20240530173305431" style="zoom:80%;" />
+
+### 3066M硬件说明
+
+ 3066M通用生态板通过ECBMCU301M 核心板实现控制、 ECBMOTORA 扩展板实现接口扩展以及电源接口，同时提供USB TypeC线进行调试 / 供电、12V电源适配器和一个电机。
+
+![image-20240527103127826](docs/pic/tools/image-20240527103127826.png)  
+
+3066M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/document/hardware/3066M／3065P" title="超链接title">3066M通用生态板用户手册 V00B01</a>
+
+
 
 ## 开发环境搭建
 
@@ -297,7 +319,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ## Demo
 
-3061M/3065H提供了以下Demo供开发参考，sample存放路径：[application_sample](https://gitee.com/HiSpark/open_mcu/tree/master/src/application)
+3061M/3065H/3066M提供了以下Demo供开发参考，sample存放路径：[application_sample](https://gitee.com/HiSpark/open_mcu/tree/master/src/application)
 
 **主目录结构说明**
 

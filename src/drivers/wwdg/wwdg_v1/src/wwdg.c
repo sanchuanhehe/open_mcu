@@ -31,7 +31,36 @@
 /* Macro definitions ---------------------------------------------------------*/
 #define WWDG_LOAD_VALUE_LIMIT      65535
 #define WWDG_WINDOW_VALUE_LIMIT      65535
+#define WWDG_COUNT_MAX 0x0000FFFF
+#define TIME_CHANGE_NUM 1000
 static unsigned int WWDG_CalculateRegTimeout(WWDG_RegStruct *baseAddress, float timeValue, WWDG_TimeType timeType);
+
+/**
+  * @brief check wwdg time value parameter.
+  * @param baseAddress Value of @ref WDG_RegStruct
+  * @param timeValue time value
+  * @param timeType Value of @ref WDG_TimeType.
+  * @retval Bool.
+  */
+static bool IsWwdgTimeValue(WWDG_RegStruct *baseAddress, float timeValue, WWDG_TimeType timeType)
+{
+    unsigned int clockFreq = HAL_CRG_GetIpFreq((void *)baseAddress); /* Get WDG clock freq. */
+    WWDG_RegStruct *wwdgx = (WWDG_RegStruct *)baseAddress;
+    if (clockFreq == 0) {
+        return false;
+    }
+
+    unsigned int preDiv = wwdgx->WWDOG_PRE_DIV.BIT.wwdg_pre_div; /* Get clock prediv. */
+    preDiv = WWDG_COUNT_MAX * (BASE_CFG_SET << preDiv);
+    float maxSecValue = ((float)(preDiv) / (float)clockFreq);
+    float maxMsValue = maxSecValue * TIME_CHANGE_NUM;
+    float maxUsValue = maxMsValue * TIME_CHANGE_NUM;
+    /* Check wdg time value parameter. */
+    return ((timeType == WWDG_TIME_UNIT_TICK && timeValue <= (float)WWDG_COUNT_MAX) ||
+            (timeType == WWDG_TIME_UNIT_S && maxSecValue >= timeValue) ||
+            (timeType == WWDG_TIME_UNIT_MS && maxMsValue >= timeValue) ||
+            (timeType == WWDG_TIME_UNIT_US && maxUsValue >= timeValue));
+}
 
 /**
   * @brief Initializing WWDG values
@@ -43,8 +72,7 @@ BASE_StatusType HAL_WWDG_Init(WWDG_Handle *handle)
     WWDG_ASSERT_PARAM(handle != NULL);
     WWDG_ASSERT_PARAM(IsWWDGInstance(handle->baseAddress));
     WWDG_PARAM_CHECK_WITH_RET(IsWwdgTimeType(handle->timeType), BASE_STATUS_ERROR);
-    WWDG_PARAM_CHECK_WITH_RET(IsWwdgTimeValue(handle->baseAddress, handle->timeValue, handle->timeType),
-        BASE_STATUS_ERROR);
+
     /* The frequency divide value cannot exceed 8192. */
     unsigned int freqDivVal = (handle->freqDivValue > WWDG_FREQ_DIV_MAX) ? WWDG_FREQ_DIV_8192 : handle->freqDivValue;
     DCL_WWDG_SetFreqDivValue(handle->baseAddress, freqDivVal);
@@ -108,7 +136,11 @@ void HAL_WWDG_SetTimeValue(WWDG_Handle *handle, unsigned int timeValue, WWDG_Tim
     WWDG_ASSERT_PARAM(handle != NULL);
     WWDG_ASSERT_PARAM(IsWWDGInstance(handle->baseAddress));
     WWDG_PARAM_CHECK_NO_RET(IsWwdgTimeType(timeType));
-    WWDG_PARAM_CHECK_NO_RET(IsWwdgTimeValue(handle->baseAddress, timeValue, timeType));
+
+    /* Check wwdg time value parameter. */
+    if (IsWwdgTimeValue(handle->baseAddress, handle->timeValue, handle->timeType) == false) {
+        return;
+    }
     /* handle->baseAddress only could be configed WWDG */
     unsigned int value = WWDG_CalculateRegTimeout(handle->baseAddress, timeValue, timeType);
     unsigned int freqDiv = DCL_WWDG_GetFreqDivValue(handle->baseAddress);

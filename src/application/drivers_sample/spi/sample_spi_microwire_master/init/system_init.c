@@ -22,6 +22,9 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
+
+#define UART0_BAND_RATE 115200
 
 #define SPI_FREQ_SCR 2
 #define SPI_FREQ_CPSDVSR 10
@@ -35,6 +38,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -48,19 +52,19 @@ static void SPI_Init(void)
     HAL_CRG_IpClkSelectSet(SPI_BASE, CRG_PLL_NO_PREDV);
 
     g_spiSampleHandle.baseAddress = SPI;
-    g_spiSampleHandle.irqNum = IRQ_SPI;
 
     g_spiSampleHandle.mode = HAL_SPI_MASTER;
     g_spiSampleHandle.csMode = SPI_CHIP_SELECT_MODE_INTERNAL;
     g_spiSampleHandle.xFerMode = HAL_XFER_MODE_BLOCKING;
-    g_spiSampleHandle.clkPolarity = 0;
-    g_spiSampleHandle.clkPhase = 0;
+    g_spiSampleHandle.clkPolarity = HAL_SPI_CLKPOL_0;
+    g_spiSampleHandle.clkPhase =  HAL_SPI_CLKPHA_0;
     g_spiSampleHandle.endian = HAL_SPI_BIG_ENDIAN;
     g_spiSampleHandle.frameFormat = HAL_SPI_MODE_MICROWIRE;
     g_spiSampleHandle.dataWidth = SPI_DATA_WIDTH_8BIT;
     g_spiSampleHandle.freqScr = SPI_FREQ_SCR;
     g_spiSampleHandle.freqCpsdvsr = SPI_FREQ_CPSDVSR;
-    g_spiSampleHandle.waitVal = 127; /* Wait time is 127 clock */
+    g_spiSampleHandle.waitEn = BASE_CFG_DISABLE;
+    g_spiSampleHandle.waitVal = 127; /* 127 is microwire wait time */
     g_spiSampleHandle.rxBuff = NULL;
     g_spiSampleHandle.txBuff = NULL;
     g_spiSampleHandle.transferSize = 0;
@@ -71,53 +75,82 @@ static void SPI_Init(void)
     g_spiSampleHandle.txIntSize =  SPI_TX_INTERRUPT_SIZE_1;
     g_spiSampleHandle.rxDMABurstSize =  SPI_RX_DMA_BURST_SIZE_1;
     g_spiSampleHandle.txDMABurstSize =  SPI_TX_DMA_BURST_SIZE_1;
-
     HAL_SPI_Init(&g_spiSampleHandle);
+    HAL_SPI_ChipSelectChannelSet(&g_spiSampleHandle, SPI_CHIP_SELECT_CHANNEL_0);
+}
+
+static void UART0_Init(void)
+{
+    HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
+    HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
+
+    g_uart0.baseAddress = UART0;
+
+    g_uart0.baudRate = UART0_BAND_RATE;
+    g_uart0.dataLength = UART_DATALENGTH_8BIT;
+    g_uart0.stopBits = UART_STOPBITS_ONE;
+    g_uart0.parity = UART_PARITY_NONE;
+    g_uart0.txMode = UART_MODE_BLOCKING;
+    g_uart0.rxMode = UART_MODE_BLOCKING;
+    g_uart0.fifoMode = BASE_CFG_ENABLE;
+    g_uart0.fifoTxThr = UART_FIFOFULL_ONE_TWO;
+    g_uart0.fifoRxThr = UART_FIFOFULL_ONE_TWO;
+    g_uart0.hwFlowCtr = BASE_CFG_DISABLE;
+    HAL_UART_Init(&g_uart0);
 }
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    SYSCTRL0->SC_SYS_STAT.BIT.update_mode = 0;
+    SYSCTRL0->SC_SYS_STAT.BIT.update_mode_clear = 1;
+    HAL_IOCMG_SetPinAltFuncMode(IO6_AS_SSP0_CLK);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO6_AS_SSP0_CLK, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO6_AS_SSP0_CLK, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO6_AS_SSP0_CLK, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO6_AS_SSP0_CLK, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_22.BIT.func = 0x5; /* 0x5 is SPI_CLK */
-    iconfig->iocmg_22.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_22.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_22.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_22.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_22.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO3_AS_SSP0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO3_AS_SSP0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO3_AS_SSP0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO3_AS_SSP0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO3_AS_SSP0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_18.BIT.func = 0x5; /* 0x5 is SPI_CSN0 */
-    iconfig->iocmg_18.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_18.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_18.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_18.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_18.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO4_AS_SSP0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO4_AS_SSP0_RXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO4_AS_SSP0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO4_AS_SSP0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO4_AS_SSP0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_21.BIT.func = 0x5; /* 0x5 is SPI_CSN1 */
-    iconfig->iocmg_21.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_21.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_21.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_21.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_21.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO2_AS_SSP0_CSN0);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO2_AS_SSP0_CSN0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO2_AS_SSP0_CSN0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO2_AS_SSP0_CSN0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO2_AS_SSP0_CSN0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_20.BIT.func = 0x5; /* 0x5 is SPI_RXD */
-    iconfig->iocmg_20.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_20.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_20.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_20.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_20.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO5_AS_SSP0_CSN1);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO5_AS_SSP0_CSN1, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO5_AS_SSP0_CSN1, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO5_AS_SSP0_CSN1, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO5_AS_SSP0_CSN1, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_19.BIT.func = 0x5; /* 0x5 is SPI_TXD */
-    iconfig->iocmg_19.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_19.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_19.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_19.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_19.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
+
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)
 {
     IOConfig();
+    UART0_Init();
     SPI_Init();
 
     /* USER CODE BEGIN system_init */

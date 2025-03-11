@@ -24,8 +24,6 @@
 #ifndef McuMagicTag_SYSTEM_INIT_H
 #define McuMagicTag_SYSTEM_INIT_H
 
-#include "uart.h"
-#include "iocmg.h"
 #include "crg.h"
 
 #define    IO_SPEED_FAST     0x00U
@@ -36,12 +34,16 @@
 #define    IO_DRV_LEVEL2     0x02U
 #define    IO_DRV_LEVEL1     0x03U
 
-#define    UART0_TXD_PIN   IOCMG_PIN_MUX(iocmg_6, FUNC_MODE_4, 0x0000)
-#define    UART0_RXD_PIN   IOCMG_PIN_MUX(iocmg_7, FUNC_MODE_4, 0x0000)
-
-extern UART_Handle g_uart0;
+#define    XTAL_DRV_LEVEL4   0x03U
+#define    XTAL_DRV_LEVEL3   0x02U
+#define    XTAL_DRV_LEVEL2   0x01U
+#define    XTAL_DRV_LEVEL1   0x00U
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
+
+/* USER CODE BEGIN 0 */
+/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
+/* USER CODE END 0 */
 
 #endif /* McuMagicTag_SYSTEM_INIT_H */

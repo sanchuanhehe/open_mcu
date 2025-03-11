@@ -111,9 +111,9 @@ void MCS_CarrierProcess(MTRCTRL_Handle *mtrCtrl)
             /* If speed is over set Speed threshold, switch control angle */
             if (Abs(mtrCtrl->hallSpeed) >= SIXSTEPTOFOC) {
                 sixStepToFocAngleCnt++;
-                /* 3000 is delay tick,delay 3000 tick cut from sixwave angle to foc control,
+                /* 1000 is delay count,delay 1000 * 100 us time convert from sixwave angle to foc angle,
                     make sure cut speed point is steady */
-                if (sixStepToFocAngleCnt >= 3000) {
+                if (sixStepToFocAngleCnt >= 1000) {
                     mtrCtrl->controlMode = FOC_CONTROLMODE_SPEED;
                 }
             } else {

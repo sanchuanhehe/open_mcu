@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -34,6 +35,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -41,75 +43,71 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     return BASE_STATUS_OK;
 }
 
-static void DMA_Channel1Init(void *handle)
+static void DMA_Channel0Init(void *handle)
 {
     DMA_ChannelParam dma_param;
-    dma_param.direction = DMA_PERIPH_TO_MEMORY_BY_DMAC;  /* DMA transmission direction */
+    dma_param.direction = DMA_PERIPH_TO_MEMORY_BY_DMAC;  /* Periph to memory */
     dma_param.srcAddrInc = DMA_ADDR_UNALTERED;
     dma_param.destAddrInc = DMA_ADDR_UNALTERED;
-    dma_param.srcPeriph = DMA_REQUEST_ADC1;   /* ADC as DMA Request Source */
-    dma_param.destPeriph = DMA_REQUEST_MEM;
-    dma_param.srcWidth = DMA_TRANSWIDTH_BYTE;
-    dma_param.destWidth = DMA_TRANSWIDTH_BYTE;
+    dma_param.srcPeriph = DMA_REQUEST_ADC1;  /* Source Request by ADC */
+    dma_param.destPeriph = DMA_REQUEST_MEM;  /* Destination Request by ADC */
+    dma_param.srcWidth = DMA_TRANSWIDTH_WORD;
+    dma_param.destWidth = DMA_TRANSWIDTH_WORD;
     dma_param.srcBurst = DMA_BURST_LENGTH_1;
     dma_param.destBurst = DMA_BURST_LENGTH_1;
     dma_param.pHandle = handle;
-    HAL_DMA_InitChannel(&g_dmac, &dma_param, DMA_CHANNEL_ONE);   /* Initializing the DMA Channel */
+    HAL_DMA_InitChannel(&g_dmac, &dma_param, DMA_CHANNEL_ZERO);  /* Init DMA Channel Param */
 }
 
 static void DMA_Init(void)
 {
+    HAL_CRG_IpEnableSet(DMA_BASE, IP_CLK_ENABLE);
     g_dmac.baseAddress = DMA;
-    g_dmac.srcByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.destByteOrder = DMA_BYTEORDER_SMALLENDIAN;
-    g_dmac.irqNumTc = IRQ_DMA_TC;
-    g_dmac.irqNumError = IRQ_DMA_ERR;
-    HAL_DMA_IRQService(&g_dmac);
+    g_dmac.handleEx.srcByteOrder = DMA_BYTEORDER_BIGENDIAN;
+    g_dmac.handleEx.destByteOrder = DMA_BYTEORDER_BIGENDIAN;
+    /* Rigister DMA TC IRQ */
+    IRQ_Register(IRQ_DMA_TC, HAL_DMA_IrqHandlerTc, &g_dmac);
+    /* Rigister DMA ERR IRQ */
+    IRQ_Register(IRQ_DMA_ERR, HAL_DMA_IrqHandlerError, &g_dmac);
     IRQ_EnableN(IRQ_DMA_TC);
     IRQ_EnableN(IRQ_DMA_ERR);
-    HAL_DMA_Init(&g_dmac);  /* Initializing the DMA controller */
+    HAL_DMA_Init(&g_dmac);  /* Init DMA */
 
-    DMA_Channel1Init((void *)(&g_adc));
+    DMA_Channel0Init((void *)(&g_adc));
 }
 
-__weak void ADC1DMACallback(ADC_Handle *handle)
+__weak void ADC_DMACallback(ADC_Handle *handle)
 {
     BASE_FUNC_UNUSED(handle);
-    /* USER CODE BEGIN ADC1DMACallback */
-    /* USER CODE END ADC1DMACallback */
+    /* USER CODE BEGIN ADC1_CALLBACK_DMA */
+    /* USER CODE END ADC1_CALLBACK_DMA */
 }
 
 static void ADC1_Init(void)
 {
     HAL_CRG_IpEnableSet(ADC1_BASE, IP_CLK_ENABLE);
     HAL_CRG_IpClkSelectSet(ADC1_BASE, CRG_ADC_CLK_SELECT_PLL_DIV);
-    HAL_CRG_IpClkDivSet(ADC1_BASE, CRG_ADC_DIV_5);
+    HAL_CRG_IpClkDivSet(ADC1_BASE, CRG_ADC_DIV_5); /* Clock divison 5 */
 
     g_adc.baseAddress = ADC1;
     g_adc.socPriority = ADC_PRIMODE_ALL_ROUND;
-    g_adc.vrefBuf = ADC_VREF_2P5V;
-    g_adc.irqNumOver = IRQ_ADC1_OVINT;
-    g_adc.ADC_IntxParam[0].irqNum = IRQ_ADC1_INT1;     /* interrupt 0 */
-    g_adc.ADC_IntxParam[1].irqNum = IRQ_ADC1_INT2;     /* interrupt 1 */
-    g_adc.ADC_IntxParam[2].irqNum = IRQ_ADC1_INT3;     /* interrupt 2 */
-    g_adc.ADC_IntxParam[3].irqNum = IRQ_ADC1_INT4;     /* interrupt 3 */
+    g_adc.handleEx.vrefBuf = ADC_VREF_2P5V;
 
     g_adc.dmaHandle = &g_dmac;
-    g_adc.adcDmaChn = 1; /* DMA Channel 1 */
-    HAL_ADC_RegisterCallBack(&g_adc, ADC_CALLBACK_DMA, ADC1DMACallback);
-
+    g_adc.adcDmaChn = 0; /* DMA Channel 0 */
     HAL_ADC_Init(&g_adc);
 
     SOC_Param socParam = {0};
-    socParam.adcInput = ADC_CH_ADCINA1;
+    socParam.adcInput = ADC_CH_ADCINA1; /* PIN5(ADC INA1) */
 
     socParam.sampleHoldTime =  2; /* adc sample holed time 2 adc_clk */
     socParam.sampleTotalTime = 127; /* adc sample total time 127 adc_clk */
-    socParam.softTrigSource = ADC_TRIGSOC_SOFT;
+    socParam.softTrigSource = ADC_TRIGSOC_SOFT; /* Soft triggle sample */
     socParam.intTrigSource = ADC_TRIGSOC_NONEINT;
     socParam.periphTrigSource = ADC_TRIGSOC_NONEPERIPH;
     socParam.finishMode = ADC_SOCFINISH_DMA;
-    HAL_ADC_ConfigureSoc(&g_adc, ADC_SOC_NUM1, &socParam);
+    HAL_ADC_ConfigureSoc(&g_adc, ADC_SOC_NUM1, &socParam); /* Config SOC param */
+    HAL_ADC_RegisterCallBack(&g_adc, ADC_CALLBACK_DMA, (ADC_CallbackType)ADC_DMACallback);
 }
 
 static void UART0_Init(void)
@@ -118,7 +116,6 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
 
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
@@ -135,36 +132,33 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    HAL_IOCMG_SetPinAltFuncMode(IO5_AS_ADC1_ANA_A1);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO5_AS_ADC1_ANA_A1, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO5_AS_ADC1_ANA_A1, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO5_AS_ADC1_ANA_A1, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO5_AS_ADC1_ANA_A1, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_21.BIT.func = 0x8; /* 0x8 is ADC1_ANA_A1 */
-    iconfig->iocmg_21.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_21.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_21.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_21.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_21.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)
 {
     IOConfig();
     DMA_Init();
-    ADC1_Init();
     UART0_Init();
+    ADC1_Init();
+
     /* USER CODE BEGIN system_init */
     /* USER CODE END system_init */
 }

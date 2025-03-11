@@ -44,8 +44,6 @@
 
 /* Sampling resistance 50mOhm 0.0053179 */
 #define ADC_CURR_COFFI                    0.0053179f   /* 3.3/4096/3.03/0.05     pga: 3.03, 50mohm */
-/* APT */
-#define APT_SYNC_IN_SRC                   APT_SYNCIN_SRC_APT0_SYNCOUT
 
 #define APT_U                             APT0_BASE /* Base address of U phase APT module */
 #define APT_V                             APT1_BASE /* Base address of V phase APT module */
@@ -59,31 +57,33 @@
 #define SPEED_FILTER_CUTOFF_FREQUENCY     40.0f   /* SMO speed cutoff frequency. of speed filter. */
 
 /* SMO4TH */
-#define SPECIAL_SMO4TH_PLL_BDW            50.0f
-#define SPECIAL_SMO4TH_KD                 1000.0f
-#define SPECIAL_SMO4TH_KQ                 7000.0f
-#define SPECIAL_SMO4TH_SPD_FILTER_CUTOFF_FREQ 40.0f
+#define SPECIAL_SMO4TH_PLL_BDW            50.0f     /* SMO4TH PLL Bandwidth. */
+#define SPECIAL_SMO4TH_KD                 1000.0f   /* SMO4TH parameters KD. */
+#define SPECIAL_SMO4TH_KQ                 7000.0f   /* SMO4TH parameters KQ. */
+#define SPECIAL_SMO4TH_SPD_FILTER_CUTOFF_FREQ 40.0f /* SMO4TH speed cutoff frequency of speed filter. */
 
 /* User_Commond */
-#define CTRL_IF_CURR_AMP_A                0.5f      /* IF control current amplitude */
+#define CTRL_IF_CURR_AMP_A                0.5f    /* IF control current amplitude */
 #define USER_TARGET_SPD_HZ                100.0f  /* Parentheses are used to enter negative instructions */
 #define USER_SWITCH_SPDBEGIN_HZ           40.0f   /* Start of handover interval */
-#define USER_MAX_SPD_HZ                   200.0f
+#define USER_MAX_SPD_HZ                   200.0f  /* User-defined maximum speed value. */
 #define USER_SPD_SLOPE                    20.0f                       /* slope of velocity change */
 #define USER_CURR_SLOPE                   (CTRL_IF_CURR_AMP_A * 5.0f) /* Current change slope  */
 
 /* PID PARAMS */
-#define CURRQAXIS_KP                      5.023202f
-#define CURRQAXIS_KI                      20612.84f
-#define CURRDAXIS_KP                      3.477114f
-#define CURRDAXIS_KI                      20612.84f
+#define CURRQAXIS_KP                      5.023202f /* Current loop Q axis Kp. */
+#define CURRQAXIS_KI                      20612.84f /* Current loop Q axis Ki. */
+#define CURRDAXIS_KP                      3.477114f /* Current loop D axis Kp. */
+#define CURRDAXIS_KI                      20612.84f /* Current loop D axis Ki. */
+/* Current loop PID output lower limit. */
 #define CURR_LOWERLIM                     (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 1.0f)
+/* Current loop PID output upper limit. */
 #define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 1.0f)
 
-#define SPD_KP                            0.0105f
-#define SPD_KI                            0.03f
-#define SPD_LOWERLIM                      -2.0f
-#define SPD_UPPERLIM                      2.0f
+#define SPD_KP                            0.0105f /* Speed loop Kp. */
+#define SPD_KI                            0.03f   /* Speed loop Ki. */
+#define SPD_LOWERLIM                      -2.0f   /* Speed loop PID output lower limit. */
+#define SPD_UPPERLIM                      2.0f    /* Speed loop PID output upper limit. */
 
 /* MOTOR PARAMS */
 /* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift */
@@ -96,6 +96,7 @@
     .mtrJ = 0.0f, \
     .maxElecSpd = 300.0f, \
     .maxCurr = 1.0f, \
+    .busVolt = INV_VOLTAGE_BUS, \
 }
 
 #endif

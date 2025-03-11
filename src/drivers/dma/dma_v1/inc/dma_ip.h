@@ -118,75 +118,83 @@ typedef enum {
 /**
   * @brief DMA request peripheral. The multiplexed transmitter requires additional
   * configuration of the system register.
-  * @details DMA request line type:
-  *          + DMA_REQUEST_I2C0_RX -- I2C0_RX use the request line numbered 0
-  *          + DMA_REQUEST_I2C0_TX -- I2C0_TX use the request line numbered 1
-  *          + DMA_REQUEST_I2C1_RX -- I2C1_RX use the request line numbered 2
-  *          + DMA_REQUEST_I2C1_TX -- I2C1_RX use the request line numbered 3
-  *          + DMA_REQUEST_UART0_RX -- UART0_TX use the request line numbered 4
-  *          + DMA_REQUEST_UART0_TX -- UART0_TX use the request line numbered 5
-  *          + DMA_REQUEST_UART1_RX -- UART1_RX use the request line numbered 6
-  *          + DMA_REQUEST_UART1_TX -- UART1_TX use the request line numbered 7
-  *          + DMA_REQUEST_UART2_RX -- UART2_RX use the request line numbered 8
-  *          + DMA_REQUEST_UART2_TX -- UART2_TX use the request line numbered 9
-  *          + DMA_REQUEST_UART3_RX -- UART3_RX use the request line numbered 30
-  *          + DMA_REQUEST_UART3_TX -- UART3_TX use the request line numbered 31
-  *          + DMA_REQUEST_CAPM0 -- CAPM0 use the request line numbered 10
-  *          + DMA_REQUEST_CAPM1 -- CAPM1 use the request line numbered 11
-  *          + DMA_REQUEST_CAPM2 -- CAPM2 use the request line numbered 12
-  *          + DMA_REQUEST_ADC0 -- ADC0 use the request line numbered 13
-  *          + DMA_REQUEST_TIMER0 -- TIMER0 use the request line numbered 14
-  *          + DMA_REQUEST_TIMER1 -- TIMER1 use the request line numbered 15
-  *          + DMA_REQUEST_TIMER2 -- TIMER2 use the request line numbered 16
-  *          + DMA_REQUEST_TIMER3 -- TIMER3 use the request line numbered 17
-  *          + DMA_REQUEST_SPI0_RX -- SPI0_RX ause the request line numbered 18
-  *          + DMA_REQUEST_SPI0_TX -- SPI0_TX use the request line numbered 19
-  *          + DMA_REQUEST_SPI1_RX -- SPI1_RX use the request line numbered 20
-  *          + DMA_REQUEST_SPI1_TX -- SPI1_TX use the request line numbered 21
-  *          + DMA_REQUEST_APT0 -- APT0 use the request line numbered 22
-  *          + DMA_REQUEST_APT1 -- APT1 use the request line numbered 23
-  *          + DMA_REQUEST_APT2 -- APT2 use the request line numbered 24
-  *          + DMA_REQUEST_APT3 -- APT3 use the request line numbered 25
-  *          + DMA_REQUEST_GPT0 -- GPT0 use the request line numbered 26
-  *          + DMA_REQUEST_GPT1 -- GPT1 use the request line numbered 27
-  *          + DMA_REQUEST_GPT2 -- GPT2 use the request line numbered 28
-  *          + DMA_REQUEST_GPT3 -- GPT3 use the request line numbered 29
-  *          + DMA_REQUEST_MEM -- The source and destination devices are memory
   */
 typedef enum {
-    DMA_REQUEST_I2C0_RX = 0x00000000U,
-    DMA_REQUEST_I2C0_TX = 0x00000001U,
-    DMA_REQUEST_I2C1_RX = 0x00000002U,
-    DMA_REQUEST_I2C1_TX = 0x00000003U,
-    DMA_REQUEST_UART0_RX = 0x00000004U,
-    DMA_REQUEST_UART0_TX = 0x00000005U,
-    DMA_REQUEST_UART1_RX = 0x00000006U,
-    DMA_REQUEST_UART1_TX = 0x00000007U,
-    DMA_REQUEST_UART2_RX = 0x00000008U,
-    DMA_REQUEST_UART2_TX = 0x00000009U,
-    DMA_REQUEST_UART3_RX = 0x0000001EU,
-    DMA_REQUEST_UART3_TX = 0x0000001FU,
-    DMA_REQUEST_CAPM0 = 0x0000000AU,
-    DMA_REQUEST_CAPM1 = 0x0000000BU,
-    DMA_REQUEST_CAPM2 = 0x0000000CU,
-    DMA_REQUEST_ADC0 = 0x0000000DU,
-    DMA_REQUEST_TIMER0 = 0x0000000EU,
-    DMA_REQUEST_TIMER1 = 0x0000000FU,
-    DMA_REQUEST_TIMER2 = 0x00000010U,
-    DMA_REQUEST_TIMER3 = 0x00000011U,
-    DMA_REQUEST_SPI0_RX = 0x00000012U,
-    DMA_REQUEST_SPI0_TX = 0x00000013U,
-    DMA_REQUEST_SPI1_RX = 0x00000014U,
-    DMA_REQUEST_SPI1_TX = 0x00000015U,
-    DMA_REQUEST_APT0 = 0x00000016U,
-    DMA_REQUEST_APT1 = 0x00000017U,
-    DMA_REQUEST_APT2 = 0x00000018U,
-    DMA_REQUEST_APT3 = 0x00000019U,
-    DMA_REQUEST_GPT0 = 0x0000001AU,
-    DMA_REQUEST_GPT1 = 0x0000001BU,
-    DMA_REQUEST_GPT2 = 0x0000001CU,
-    DMA_REQUEST_GPT3 = 0x0000001DU,
-    DMA_REQUEST_MEM = 0x00000020U,
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || defined (CHIP_3065PNPIRH) || \
+    defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+    DMA_REQUEST_I2C0_RX  = 0x00000000U,  /* I2C0_RX use the request line numbered 0 */
+    DMA_REQUEST_I2C0_TX  = 0x00000001U,  /* I2C0_TX use the request line numbered 1 */
+    DMA_REQUEST_UART0_RX = 0x00000002U,  /* UART0_TX use the request line numbered 2 */
+    DMA_REQUEST_UART0_TX = 0x00000003U,  /* UART0_TX use the request line numbered 3 */
+    DMA_REQUEST_UART1_RX = 0x00000004U,  /* UART1_RX use the request line numbered 4 */
+    DMA_REQUEST_UART1_TX = 0x00000005U,  /* UART1_TX use the request line numbered 5 */
+    DMA_REQUEST_UART2_RX = 0x00000006U,  /* UART2_RX use the request line numbered 6 */
+    DMA_REQUEST_UART2_TX = 0x00000007U,  /* UART2_TX use the request line numbered 7 */
+    DMA_REQUEST_UART3_RX = 0x00000008U,  /* UART3_RX use the request line numbered 8 */
+    DMA_REQUEST_UART3_TX = 0x00000009U,  /* UART3_TX use the request line numbered 9 */
+    DMA_REQUEST_UART4_RX = 0x0000000AU,  /* UART3_RX use the request line numbered 10 */
+    DMA_REQUEST_UART4_TX = 0x0000000BU,  /* UART3_TX use the request line numbered 11 */
+    DMA_REQUEST_SPI0_RX  = 0x00000008U,  /* SPI0_RX ause the request line numbered 8 */
+    DMA_REQUEST_SPI0_TX  = 0x00000009U,  /* SPI0_TX use the request line numbered 9 */
+    DMA_REQUEST_SPI1_RX  = 0x0000000AU,  /* SPI1_RX use the request line numbered 10 */
+    DMA_REQUEST_SPI1_TX  = 0x0000000BU,  /* SPI1_TX use the request line numbered 11 */
+    DMA_REQUEST_CAPM0    = 0x0000000CU,  /* CAPM0 use the request line numbered 12 */
+    DMA_REQUEST_CAPM1    = 0x0000000DU,  /* CAPM1 use the request line numbered 13 */
+    DMA_REQUEST_CAPM2    = 0x0000000EU,  /* CAPM2 use the request line numbered 14 */
+    DMA_REQUEST_TIMER0   = 0x0000000FU,  /* TIMER0 use the request line numbered 15 */
+    DMA_REQUEST_TIMER1   = 0x00000010U,  /* TIMER1 use the request line numbered 16 */
+    DMA_REQUEST_TIMER2   = 0x00000011U,  /* TIMER2 use the request line numbered 17 */
+    DMA_REQUEST_TIMER3   = 0x00000012U,  /* TIMER3 use the request line numbered 18 */
+    DMA_REQUEST_GPT0     = 0x00000013U,  /* GPT0 use the request line numbered 19 */
+    DMA_REQUEST_GPT1     = 0x00000014U,  /* GPT1 use the request line numbered 20 */
+    DMA_REQUEST_APT0     = 0x00000015U,  /* APT0 use the request line numbered 21 */
+    DMA_REQUEST_APT1     = 0x00000016U,  /* APT1 use the request line numbered 22 */
+    DMA_REQUEST_APT2     = 0x00000017U,  /* APT2 use the request line numbered 23 */
+    DMA_REQUEST_APT3     = 0x00000018U,  /* APT3 use the request line numbered 24 */
+    DMA_REQUEST_APT4     = 0x00000019U,  /* APT4 use the request line numbered 25 */
+    DMA_REQUEST_APT5     = 0x0000001AU,  /* APT5 use the request line numbered 26 */
+    DMA_REQUEST_APT6     = 0x0000001BU,  /* APT6 use the request line numbered 27 */
+    DMA_REQUEST_APT7     = 0x0000001CU,  /* APT7 use the request line numbered 28 */
+    DMA_REQUEST_APT8     = 0x0000001DU,  /* APT8 use the request line numbered 29 */
+    DMA_REQUEST_ADC0     = 0x0000001EU,  /* ADC0 use the request line numbered 30 */
+    DMA_REQUEST_ADC1     = 0x0000001FU,  /* ADC1 use the request line numbered 31 */
+    DMA_REQUEST_ADC2     = 0x0000000CU,  /* ADC2 use the request line numbered 12 */
+    DMA_REQUEST_MEM      = 0x00000020U,  /* The source and destination devices are memory */
+#else
+    DMA_REQUEST_I2C0_RX  = 0x00000000U,  /* I2C0_RX use the request line numbered 0 */
+    DMA_REQUEST_I2C0_TX  = 0x00000001U,  /* I2C0_TX use the request line numbered 1 */
+    DMA_REQUEST_I2C1_RX  = 0x00000002U,  /* I2C1_RX use the request line numbered 2 */
+    DMA_REQUEST_I2C1_TX  = 0x00000003U,  /* I2C1_RX use the request line numbered 3 */
+    DMA_REQUEST_UART0_RX = 0x00000004U,  /* UART0_TX use the request line numbered 4 */
+    DMA_REQUEST_UART0_TX = 0x00000005U,  /* UART0_TX use the request line numbered 5 */
+    DMA_REQUEST_UART1_RX = 0x00000006U,  /* UART1_RX use the request line numbered 6 */
+    DMA_REQUEST_UART1_TX = 0x00000007U,  /* UART1_TX use the request line numbered 7 */
+    DMA_REQUEST_UART2_RX = 0x00000008U,  /* UART2_RX use the request line numbered 8 */
+    DMA_REQUEST_UART2_TX = 0x00000009U,  /* UART2_TX use the request line numbered 9 */
+    DMA_REQUEST_UART3_RX = 0x0000001EU,  /* UART3_RX use the request line numbered 30 */
+    DMA_REQUEST_UART3_TX = 0x0000001FU,  /* UART3_TX use the request line numbered 31 */
+    DMA_REQUEST_CAPM0    = 0x0000000AU,  /* CAPM0 use the request line numbered 10 */
+    DMA_REQUEST_CAPM1    = 0x0000000BU,  /* CAPM1 use the request line numbered 11 */
+    DMA_REQUEST_CAPM2    = 0x0000000CU,  /* CAPM2 use the request line numbered 12 */
+    DMA_REQUEST_ADC0     = 0x0000000DU,  /* ADC0 use the request line numbered 13 */
+    DMA_REQUEST_TIMER0   = 0x0000000EU,  /* TIMER0 use the request line numbered 14 */
+    DMA_REQUEST_TIMER1   = 0x0000000FU,  /* TIMER1 use the request line numbered 15 */
+    DMA_REQUEST_TIMER2   = 0x00000010U,  /* TIMER2 use the request line numbered 16 */
+    DMA_REQUEST_TIMER3   = 0x00000011U,  /* TIMER3 use the request line numbered 17 */
+    DMA_REQUEST_SPI0_RX  = 0x00000012U,  /* SPI0_RX ause the request line numbered 18 */
+    DMA_REQUEST_SPI0_TX  = 0x00000013U,  /* SPI0_TX use the request line numbered 19 */
+    DMA_REQUEST_SPI1_RX  = 0x00000014U,  /* SPI1_RX use the request line numbered 20 */
+    DMA_REQUEST_SPI1_TX  = 0x00000015U,  /* SPI1_TX use the request line numbered 21 */
+    DMA_REQUEST_APT0     = 0x00000016U,  /* APT0 use the request line numbered 22 */
+    DMA_REQUEST_APT1     = 0x00000017U,  /* APT1 use the request line numbered 23 */
+    DMA_REQUEST_APT2     = 0x00000018U,  /* APT2 use the request line numbered 24 */
+    DMA_REQUEST_APT3     = 0x00000019U,  /* APT3 use the request line numbered 25 */
+    DMA_REQUEST_GPT0     = 0x0000001AU,  /* GPT0 use the request line numbered 26 */
+    DMA_REQUEST_GPT1     = 0x0000001BU,  /* GPT1 use the request line numbered 27 */
+    DMA_REQUEST_GPT2     = 0x0000001CU,  /* GPT2 use the request line numbered 28 */
+    DMA_REQUEST_GPT3     = 0x0000001DU,  /* GPT3 use the request line numbered 29 */
+    DMA_REQUEST_MEM      = 0x00000020U,  /* The source and destination devices are memory */
+#endif
 } DMA_RequestLineNum;
 
 /**

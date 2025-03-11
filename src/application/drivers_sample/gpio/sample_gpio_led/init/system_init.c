@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -34,6 +35,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -44,13 +46,14 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 static void GPIO_Init(void)
 {
     HAL_CRG_IpEnableSet(GPIO5_BASE, IP_CLK_ENABLE);
-    g_ledHandle.baseAddress = GPIO5; /* can be config by ide */
+    g_gpio5.baseAddress = GPIO5;
+    g_gpio5.pins = GPIO_PIN_6;
+    HAL_GPIO_Init(&g_gpio5);
+    HAL_GPIO_SetDirection(&g_gpio5, g_gpio5.pins, GPIO_OUTPUT_MODE); /* Set gpio direction. */
+    HAL_GPIO_SetValue(&g_gpio5, g_gpio5.pins, GPIO_LOW_LEVEL);       /* Set gpio pin value. */
+    HAL_GPIO_SetIrqType(&g_gpio5, g_gpio5.pins, GPIO_INT_TYPE_NONE); /* Set gpio pin irp type. */
 
-    g_ledHandle.dir = GPIO_OUTPUT_MODE;
-    g_ledHandle.value = GPIO_HIGH_LEVEL;
-    g_ledHandle.interruptMode = GPIO_INT_TYPE_NONE;
-    g_ledHandle.pins = GPIO_PIN_6;  /* can be config by ide */
-    HAL_GPIO_Init(&g_ledHandle);
+    return;
 }
 
 static void UART0_Init(void)
@@ -59,7 +62,7 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
+
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
     g_uart0.stopBits = UART_STOPBITS_ONE;
@@ -75,28 +78,24 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    HAL_IOCMG_SetPinAltFuncMode(IO32_AS_GPIO5_6);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO32_AS_GPIO5_6, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO32_AS_GPIO5_6, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO32_AS_GPIO5_6, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO32_AS_GPIO5_6, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_49.BIT.func = 0x0; /* 0x0 is GPIO5_6 */
-    iconfig->iocmg_49.BIT.ds = IO_DRV_LEVEL1;
-    iconfig->iocmg_49.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_49.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_49.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_49.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)
@@ -104,6 +103,7 @@ void SystemInit(void)
     IOConfig();
     UART0_Init();
     GPIO_Init();
+
     /* USER CODE BEGIN system_init */
     /* USER CODE END system_init */
 }

@@ -27,7 +27,7 @@ UART_Handle g_uart;
 
 int main(void)
 {
-    UART_BlcokingTX();
+    UART_BlockingTX();
     while (1) {
     }
     return BASE_STATUS_OK;

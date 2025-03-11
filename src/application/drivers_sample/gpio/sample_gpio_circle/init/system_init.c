@@ -22,6 +22,7 @@
 
 #include "main.h"
 #include "ioconfig.h"
+#include "iocmg.h"
 
 #define UART0_BAND_RATE 115200
 
@@ -34,6 +35,7 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
     crg.pllFbDiv        = 32; /* PLL Multiplier 32 */
     crg.pllPostDiv      = CRG_PLL_POSTDIV_1;
     crg.coreClkSelect   = CRG_CORE_CLK_SELECT_PLL;
+
     if (HAL_CRG_Init(&crg) != BASE_STATUS_OK) {
         return BASE_STATUS_ERROR;
     }
@@ -43,21 +45,23 @@ BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect)
 
 static void GPIO_Init(void)
 {
-    HAL_CRG_IpEnableSet(GPIO0_BASE, IP_CLK_ENABLE);
-    g_targetHandle.baseAddress = GPIO2; /* GPIO group */
-    g_targetHandle.dir = GPIO_INPUT_MODE;
-    g_targetHandle.value = GPIO_LOW_LEVEL;
-    g_targetHandle.interruptMode = GPIO_INT_TYPE_NONE;
-    g_targetHandle.pins = GPIO_PIN_0; /* PIN in group */
-    HAL_GPIO_Init(&g_targetHandle);
-
     HAL_CRG_IpEnableSet(GPIO1_BASE, IP_CLK_ENABLE);
-    g_refHandle.baseAddress = GPIO1; /* GPIO group */
-    g_refHandle.dir = GPIO_OUTPUT_MODE;
-    g_refHandle.value = GPIO_LOW_LEVEL;
-    g_refHandle.interruptMode = GPIO_INT_TYPE_NONE;
-    g_refHandle.pins = GPIO_PIN_0; /* PIN in group */
-    HAL_GPIO_Init(&g_refHandle);
+    g_gpio1.baseAddress = GPIO1;
+    g_gpio1.pins = GPIO_PIN_0;
+    HAL_GPIO_Init(&g_gpio1);
+    HAL_GPIO_SetDirection(&g_gpio1, g_gpio1.pins, GPIO_INPUT_MODE);  /* Set gpio direction. */
+    HAL_GPIO_SetValue(&g_gpio1, g_gpio1.pins, GPIO_LOW_LEVEL);       /* Set gpio pin value. */
+    HAL_GPIO_SetIrqType(&g_gpio1, g_gpio1.pins, GPIO_INT_TYPE_NONE); /* Set gpio pin irp type. */
+
+    HAL_CRG_IpEnableSet(GPIO2_BASE, IP_CLK_ENABLE);
+    g_gpio2.baseAddress = GPIO2;
+    g_gpio2.pins = GPIO_PIN_0;
+    HAL_GPIO_Init(&g_gpio2);
+    HAL_GPIO_SetDirection(&g_gpio2, g_gpio2.pins, GPIO_INPUT_MODE);  /* Set gpio direction. */
+    HAL_GPIO_SetValue(&g_gpio2, g_gpio2.pins, GPIO_LOW_LEVEL);       /* Set gpio pin value. */
+    HAL_GPIO_SetIrqType(&g_gpio2, g_gpio2.pins, GPIO_INT_TYPE_NONE); /* Set gpio pin irp type. */
+
+    return;
 }
 
 static void UART0_Init(void)
@@ -66,7 +70,7 @@ static void UART0_Init(void)
     HAL_CRG_IpClkSelectSet(UART0_BASE, CRG_PLL_NO_PREDV);
 
     g_uart0.baseAddress = UART0;
-    g_uart0.irqNum = IRQ_UART0;
+
     g_uart0.baudRate = UART0_BAND_RATE;
     g_uart0.dataLength = UART_DATALENGTH_8BIT;
     g_uart0.stopBits = UART_STOPBITS_ONE;
@@ -82,35 +86,30 @@ static void UART0_Init(void)
 
 static void IOConfig(void)
 {
-    IOConfig_RegStruct *iconfig = IOCONFIG;
+    HAL_IOCMG_SetPinAltFuncMode(IO57_AS_GPIO1_0);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO57_AS_GPIO1_0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO57_AS_GPIO1_0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO57_AS_GPIO1_0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO57_AS_GPIO1_0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_0.BIT.func = 0x0; /* 0x0 is GPIO0_0 */
-    iconfig->iocmg_0.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_0.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_0.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_0.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_0.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO3_AS_GPIO2_0);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO3_AS_GPIO2_0, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO3_AS_GPIO2_0, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO3_AS_GPIO2_0, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO3_AS_GPIO2_0, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_11.BIT.func = 0x0; /* 0x0 is GPIO1_0 */
-    iconfig->iocmg_11.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_11.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_11.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_11.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_11.BIT.se = BASE_CFG_DISABLE;
+    HAL_IOCMG_SetPinAltFuncMode(IO52_AS_UART0_TXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO52_AS_UART0_TXD, PULL_NONE);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO52_AS_UART0_TXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO52_AS_UART0_TXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO52_AS_UART0_TXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 
-    iconfig->iocmg_7.BIT.func = 0x4; /* 0x4 is UART0_RXD */
-    iconfig->iocmg_7.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_7.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_7.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_7.BIT.se = BASE_CFG_DISABLE;
-
-    iconfig->iocmg_6.BIT.func = 0x4; /* 0x4 is UART0_TXD */
-    iconfig->iocmg_6.BIT.ds = IO_DRV_LEVEL2;
-    iconfig->iocmg_6.BIT.pd = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.pu = BASE_CFG_DISABLE;
-    iconfig->iocmg_6.BIT.sr = IO_SPEED_SLOW;
-    iconfig->iocmg_6.BIT.se = BASE_CFG_DISABLE;
+ /* UART RX recommend PULL_UP */
+    HAL_IOCMG_SetPinAltFuncMode(IO53_AS_UART0_RXD);  /* Check function selection */
+    HAL_IOCMG_SetPinPullMode(IO53_AS_UART0_RXD, PULL_UP);  /* Pull-up and pull-down */
+    HAL_IOCMG_SetPinSchmidtMode(IO53_AS_UART0_RXD, SCHMIDT_DISABLE);  /* Schmitt input on/off */
+    HAL_IOCMG_SetPinLevelShiftRate(IO53_AS_UART0_RXD, LEVEL_SHIFT_RATE_SLOW);  /* Output drive capability */
+    HAL_IOCMG_SetPinDriveRate(IO53_AS_UART0_RXD, DRIVER_RATE_2);  /* Output signal edge fast/slow */
 }
 
 void SystemInit(void)
@@ -118,6 +117,7 @@ void SystemInit(void)
     IOConfig();
     UART0_Init();
     GPIO_Init();
+
     /* USER CODE BEGIN system_init */
     /* USER CODE END system_init */
 }

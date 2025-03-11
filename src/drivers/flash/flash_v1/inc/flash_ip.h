@@ -81,8 +81,9 @@
 #define FLASH_SRAM_END_ADDRESS            0x04007FFF
 #define FLASH_MAIN_RNG_START_ADDRESS      0x03000000
 
-/* Only CHIP_3061MNPICA, CHIP_3061MNPIKA is supported 128K. */
-#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA)
+/* Only this chips are supported 128K. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || \
+    defined (CHIP_3061MNNIKA)
 #define FLASH_MAIN_RNG_END_ADDRESS        0x0301FFFF
 #define FLASH_MAX_SIZE                    0x20000U        /* Flash space size 128k bytes. */
 #define FLASH_MAX_PAGE_NUM                128
@@ -182,8 +183,8 @@ typedef enum {
     FLASH_PAGE_61 = FLASH_BASE + 61 * FLASH_ONE_PAGE_SIZE,
     FLASH_PAGE_62 = FLASH_BASE + 62 * FLASH_ONE_PAGE_SIZE,
     FLASH_PAGE_63 = FLASH_BASE + 63 * FLASH_ONE_PAGE_SIZE,
-    /* Only CHIP_3061MNPICA, CHIP_3061MNPIKA is supported 128K. */
-#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA)
+    /* Only this chips are supported 128K. */
+#if defined (CHIP_3061MNPICA) || defined (CHIP_3061MNPIKA) || defined (CHIP_3061MNNICA) || defined (CHIP_3061MNNIKA)
     FLASH_PAGE_64 = FLASH_BASE + 64 * FLASH_ONE_PAGE_SIZE,
     FLASH_PAGE_65 = FLASH_BASE + 65 * FLASH_ONE_PAGE_SIZE,
     FLASH_PAGE_66 = FLASH_BASE + 66 * FLASH_ONE_PAGE_SIZE,

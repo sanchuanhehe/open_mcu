@@ -30,6 +30,28 @@
 #include "main.h"
 #include "sample_iocfg_list.h"
 
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || \
+    defined (CHIP_3065PNPIRH) || defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+/* 3066m */
+
+/* for sample normalize in different chip, \
+   when user use it, needn't define this macro, just need find the io pin in the iomap.h */
+#define UART0_TXD_PIN   IOCMG_PIN_MUX(IOCFG_GPIO0_3, FUNC_MODE_4, 0x0a00)
+#define UART0_RXD_PIN   IOCMG_PIN_MUX(IOCFG_GPIO0_4, FUNC_MODE_4, 0x0a00)
+#define I2C0_SCL_PIN    IOCMG_PIN_MUX(IOCFG_GPIO4_1, FUNC_MODE_2, 0x0a00)
+#define I2C0_SDA_PIN    IOCMG_PIN_MUX(IOCFG_GPIO4_2, FUNC_MODE_2, 0x0a00)
+
+#define XTAL_IN_PIN     IOCMG_PIN_MUX(IOCFG_GPIO0_4, FUNC_MODE_12, 0x0a00)
+#define XTAL_OUT_PIN    IOCMG_PIN_MUX(IOCFG_GPIO0_3, FUNC_MODE_12, 0x0a00)
+
+static IOCMG_Handle g_ioListTable[] = {
+    {UART0_TXD_PIN, PULL_NONE, SCHMIDT_DISABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2, {}},
+    {UART0_RXD_PIN, PULL_NONE, SCHMIDT_DISABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2, {}},
+    {I2C0_SCL_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1, {}},
+    {I2C0_SDA_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1, {}},
+};
+#else
+/* 3061m */
 /* for sample normalize in different chip, \
    when user use it, needn't define this macro, just need find the io pin in the iomap.h */
 #define UART0_TXD_PIN   IOCMG_PIN_MUX(IOCFG_GPIO0_3, FUNC_MODE_3, 0x0230)
@@ -38,13 +60,48 @@
 #define I2C0_SDA_PIN    IOCMG_PIN_MUX(IOCFG_GPIO2_1, FUNC_MODE_1, 0x0220)
 
 static IOCMG_Handle g_ioListTable[] = {
-    {UART0_TXD_PIN, PULL_NONE, SCHMIDT_DISABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2},
-    {UART0_RXD_PIN, PULL_NONE, SCHMIDT_DISABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2},
-    {I2C0_SCL_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1},
-    {I2C0_SDA_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1},
+    {UART0_TXD_PIN, PULL_NONE, SCHMIDT_DISABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2, {}},
+    {UART0_RXD_PIN, PULL_NONE, SCHMIDT_DISABLE, LEVEL_SHIFT_RATE_SLOW, DRIVER_RATE_2, {}},
+    {I2C0_SCL_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1, {}},
+    {I2C0_SDA_PIN,  PULL_UP,   SCHMIDT_ENABLE, LEVEL_SHIFT_RATE_FAST, DRIVER_RATE_1, {}},
 };
-
+#endif
 const unsigned int IOLIST_SIZE = sizeof(g_ioListTable) / sizeof(g_ioListTable[0]);
+
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || \
+    defined (CHIP_3065PNPIRH) || defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+/**
+  * @brief Config and update crystal oscillator functions, it needs external crystal oscillator.
+  * @param None
+  * @retval None.
+  */
+static void IOCMG_OscFunc(void)
+{
+    /* The external crystal oscillator conflicts with UART0. */
+    /* After OSC enabled, the DBG_PRINT function cannot be used.  */
+    HAL_IOCMG_SetPinAltFuncMode(XTAL_IN_PIN);  // func
+    HAL_IOCMG_SetPinPullMode(XTAL_IN_PIN, PULL_NONE);  // pd, pu
+    HAL_IOCMG_SetPinSchmidtMode(XTAL_IN_PIN, SCHMIDT_DISABLE);  // se
+    HAL_IOCMG_SetPinLevelShiftRate(XTAL_IN_PIN, LEVEL_SHIFT_RATE_SLOW);  // sr
+    HAL_IOCMG_SetPinDriveRate(XTAL_IN_PIN, DRIVER_RATE_2);  // ds
+
+    HAL_IOCMG_SetPinAltFuncMode(XTAL_OUT_PIN);  // func
+    HAL_IOCMG_SetPinPullMode(XTAL_OUT_PIN, PULL_NONE);  // pd, pu
+    HAL_IOCMG_SetPinSchmidtMode(XTAL_OUT_PIN, SCHMIDT_DISABLE);  // se
+    HAL_IOCMG_SetPinLevelShiftRate(XTAL_OUT_PIN, LEVEL_SHIFT_RATE_SLOW);  // sr
+    HAL_IOCMG_SetPinDriveRate(XTAL_OUT_PIN, DRIVER_RATE_2);  // ds
+
+    /* test osc pin function */
+    HAL_IOCMG_SetOscClkFuncMode(BASE_CFG_ENABLE);
+    HAL_IOCMG_SetOscClkOutputMode(BASE_CFG_ENABLE);
+    HAL_IOCMG_SetOscClkDriveRate(OSC_CLK_DRIVER_RATE_2);
+    /* test API */
+    DBG_PRINTF("\r\nOsc func mode = %d \r\n", HAL_IOCMG_GetOscClkFuncMode());
+    DBG_PRINTF("Osc clk output mode = %d \r\n", HAL_IOCMG_GetOscClkOutputMode());
+    DBG_PRINTF("Osc drive rate = %d \r\n", HAL_IOCMG_GetOscClkDriveRate());
+    BASE_FUNC_DELAY_MS(1000U); /* delay 1s */
+}
+#endif
 
 /**
   * @brief Init IOLIST by HAL_IOCMG_Init API.
@@ -53,6 +110,7 @@ const unsigned int IOLIST_SIZE = sizeof(g_ioListTable) / sizeof(g_ioListTable[0]
   */
 void IOCMG_IOListInitSample(void)
 {
+    SystemInit();
     /* init method 1 */
     HAL_CRG_IpEnableSet(UART0_BASE, IP_CLK_ENABLE);
     
@@ -71,6 +129,7 @@ void IOCMG_IOListInitSample(void)
             DBG_PRINTF("Level Shift Rate = %d \r\n", HAL_IOCMG_GetPinLevelShiftRate(g_ioListTable[index].pinTypedef));
             DBG_PRINTF("Schmidt Mode = %d \r\n", HAL_IOCMG_GetPinSchmidtMode(g_ioListTable[index].pinTypedef));
             DBG_PRINTF("Drive Rate = %d \r\n", HAL_IOCMG_GetPinDriveRate(g_ioListTable[index].pinTypedef));
+
             BASE_FUNC_DELAY_MS(10); /* 10: Prevents the printing rate of the serial port from being too high. */
         }
 
@@ -90,17 +149,13 @@ void IOCMG_IOListInitSample(void)
             DBG_PRINTF("Level Shift Rate = %d \r\n", HAL_IOCMG_GetPinLevelShiftRate(g_ioListTable[index].pinTypedef));
             DBG_PRINTF("Schmidt Mode = %d \r\n", HAL_IOCMG_GetPinSchmidtMode(g_ioListTable[index].pinTypedef));
             DBG_PRINTF("Drive Rate = %d \r\n", HAL_IOCMG_GetPinDriveRate(g_ioListTable[index].pinTypedef));
-            BASE_FUNC_DELAY_MS(10); /* 10 : Prevents the printing rate of the serial port from being too high. */
+            BASE_FUNC_DELAY_MS(100); /* 100 : Prevents the printing rate of the serial port from being too high. */
         }
-
-        /* test osc pin function */
-        HAL_IOCMG_SetOscClkFuncMode(BASE_CFG_ENABLE);
-        HAL_IOCMG_SetOscClkOutputMode(BASE_CFG_ENABLE);
-        HAL_IOCMG_SetOscClkDriveRate(DRIVER_RATE_2);
-        /* test API */
-        DBG_PRINTF("\r\nOsc func mode = %d \r\n", HAL_IOCMG_GetOscClkFuncMode());
-        DBG_PRINTF("Osc clk output mode = %d \r\n", HAL_IOCMG_GetOscClkOutputMode());
-        DBG_PRINTF("Osc drive rate = %d \r\n", HAL_IOCMG_GetOscClkDriveRate());
-        BASE_FUNC_DELAY_MS(1000U); /* delay 1s */
+#if defined (CHIP_3065PNPIMH) || defined (CHIP_3066MNPIRH) || \
+    defined (CHIP_3065PNPIRH) || defined (CHIP_3065PNPIRE) || defined (CHIP_3065PNPIRA)
+        /* The external crystal oscillator conflicts with UART0. */
+        /* After OSC enabled, the DBG_PRINT function cannot be used.  */
+        IOCMG_OscFunc();
+#endif
     }
 }

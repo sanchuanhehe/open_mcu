@@ -1,5 +1,5 @@
 /**
-  * @ Copyright (c) HiSilicon (Shanghai) Technologies Co., Ltd. 2022-2023. All rights reserved.
+  * @copyright Copyright (c) 2022, HiSilicon (Shanghai) Technologies Co., Ltd. All rights reserved.
   * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
   * following conditions are met:
   * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
@@ -16,24 +16,22 @@
   * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
   * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   * @file      mcs_sensor_hall.h
-  * @author    MCU Algorithm Team
-  * @brief     This file provides functions declaration of hall sensor data process related structures and functions.
+  * @author
+  * @brief
   */
 
- /* Define to prevent recursive inclusion ------------------------------------- */
-#ifndef McuMagicTag_MCS_HALL_Q15_H
-#define McuMagicTag_MCS_HALL_Q15_H
+/* Define to prevent recursive inclusion ------------------------------------------------------- */
+#ifndef McuMagicTag_MCS_SENSOR_HALL_H
+#define McuMagicTag_MCS_SENSOR_HALL_H
+/* Includes ------------------------------------------------------------------------------------ */
+#include "capm.h"
+#include "apt.h"
+#include "mcs_pll.h"
+#include "mcs_filter.h"
 
-#define HALL_INSTALL_60_DEGREE          (1)
-#define HALL_INSTALL_120_DEGREE         (2)
-#define HALL_INSTALL_MODE               (HALL_INSTALL_120_DEGREE)
+/* Typedef definitions ------------------------------------------------------------------------- */
 
-#define HALL_INSTALL_CALIBRATION_ENABLE (1)
-
-#define S16_120_PHASE_SHIFT (short)(65536.0f/3.0f)
-#define S16_60_PHASE_SHIFT  (short)(65536.0f/6.0f)
-
-typedef unsigned int (*MCS_GetHallValue)(void);
+#define SPEED_CALC_SECTOR_NUMS   3u
 
 /**
   * @brief Rotation direction state define.
@@ -46,34 +44,54 @@ typedef enum {
     HALL_DIR_CCW = -1
 } HALL_DIR_STATE;
 
+typedef enum {
+    SECTOR1 = 0,
+    SECTOR2,
+    SECTOR3,
+    SECTOR4,
+    SECTOR5,
+    SECTOR6,
+    SECTOR_MAX_NUM
+} HALL_SECTOR;
+
 /**
   * @brief Hall sensor control data structure
   */
 typedef struct {
-    float ts;                       /**< Control period (s). */
-    float timer;                    /**< Timer count value. */
-    unsigned int sec;                        /**< Current sector. */
-    unsigned int secLast;                    /**< Last sector. */
-    float durationLast1;            /**< Last sector jump interval. */
-    float durationLast2;            /**< The sector jump interval before durationLast1. */
-    float durationLast3;            /**< The sector jump interval before durationLast2. */
-    float durationAvg;              /**< Average transition interval. */
-    HALL_DIR_STATE dir;             /**< Rotation direction. */
+    float ts;                      /**< Control period (s). */
+    float timer;                   /**< Timer count value. */
+    unsigned int sector;           /**< Current sector. */
+    unsigned int sectorLast;       /**< Last sector. */
+    unsigned int spdCalcCnt;
+    float t1;                      /**< Last sector jump interval. */
+    float t2;                      /**< The sector jump interval before t1. */
+    float t3;                      /**< The sector jump interval before t2. */
+    float tAvg;                    /**< Average transition interval. */
+    int dir;                       /**< Rotation direction. */
 
-    float angleComp;
-    float angleStartPoint;
-    float phaseShift;
-    float angle;
-    float spd;                      /**< Electrical speed. */
-    short firstEdgeFilterFlag;      /**< First jump filter flag. */
+    float angleComp;               /**< Angle correction parameters. */
+    float angStart;                /**< The start electrical angle of the current sector.. */
 
-    MCS_GetHallValue getHallValue;  /**< Pointer to the function for obtaining the value of the hall sensor. */
+    float spdEst;                  /**< Electrical angle. */
+    float elecAngle;               /**< Electrical speed. */
+    float sixStepAngle;
+
+    short firstEdgeFilterFlag;     /**< First jump filter flag. */
+    
+    PLL_Handle pll;
+    FOFLT_Handle spdLpf;
 } HALL_Handle;
 
-void HALL_Init(HALL_Handle *hall, float phaseShift, float ts);
-unsigned int HALL_SectorCalc(unsigned int hallValue);
-void HALL_InformationUpdate(HALL_Handle *hall);
-void HALL_AngSpdCalcExec(HALL_Handle *hall);
+/*** Hall six step control ***/
+void SIXSTEP_AptConfig(APT_RegStruct **aptUvw, HALL_SECTOR sector);
+
+/*** Hall foc control ***/
+void HALL_Init(HALL_Handle *hall, int dir, float pllBdw, float spdCutOffFre, float ts);
+
+void HALL_Exec(HALL_Handle *hall, HALL_SECTOR sector);
+
+void HALL_CapmEvtCallBack(HALL_Handle *hall, HALL_SECTOR sector);
+
 void HALL_Clear(HALL_Handle *hall);
 
 #endif

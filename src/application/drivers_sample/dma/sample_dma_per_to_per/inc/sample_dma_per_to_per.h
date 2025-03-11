@@ -26,7 +26,7 @@
 
 #include "dma.h"
 #include "debug.h"
-#include "interrupt.h"
+#include "main.h"
 
 int DMA_PeriphToPeriphIT(void);
 #endif

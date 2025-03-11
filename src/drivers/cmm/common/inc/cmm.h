@@ -97,6 +97,7 @@ typedef void (*CMM_CallBackFuncType)(void *handle);
   */
 
 /* Hardware abstraction layer functions -------------------------------------------------------- */
+
 BASE_StatusType HAL_CMM_Init(CMM_Handle *handle);
 BASE_StatusType HAL_CMM_DeInit(CMM_Handle *handle);
 BASE_StatusType HAL_CMM_Config(CMM_Handle *handle, CMM_CFG_TYPE cfgType);

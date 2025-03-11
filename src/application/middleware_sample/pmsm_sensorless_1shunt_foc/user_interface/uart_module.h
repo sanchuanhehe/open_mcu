@@ -36,6 +36,7 @@ typedef struct {
     unsigned int upDataCnt;
     unsigned int upDataDelayCnt;
     unsigned char uartItTxFlag;
+    unsigned char rxAckFlag;
 } FRAME_Handle;
 
 

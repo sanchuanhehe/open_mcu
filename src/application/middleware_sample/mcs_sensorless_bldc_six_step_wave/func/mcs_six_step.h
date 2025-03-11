@@ -49,7 +49,7 @@ typedef enum {
 } PhaseEnum;
 
 typedef enum {
-    APT_CHA_PWM_CHB_HIGH,
+    APT_CHA_PWM_CHB_LOW,
     APT_CHA_LOW_CHB_HIGH,
     APT_CHA_LOW_CHB_LOW
 } APT_Act;

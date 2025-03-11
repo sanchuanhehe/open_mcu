@@ -21,7 +21,7 @@
   * @details   Perform the CRC16_XMODEM algorithm operation on the 16-bit data of 0x5678 to obtain a CRC value. \
   *            Compare the CRC value with the standard value to determine whether the value is correct. Then load \
   *            the initial value 0x0000 to the CRC module. Therefore, the CRC16_XMODEM algorithm is configured as \
-  *            the CRC16_CCIT-FALSE algorithm, and then the value 0x5678 is calculated. The CRC value generated \
+  *            the CRC16_CCITT_FALSE algorithm, and then the value 0x5678 is calculated. The CRC value generated \
   *            after the calculation is compared with the standard value to determine whether the value of the \
   *            initial load value is correct.
   */
@@ -53,15 +53,15 @@ BASE_StatusType CRC_LoadSample(void)
     } else {
         DBG_PRINTF("CRC Algrithem is not right for this sample! \r\n");
     }
-    /* load init data 0xffff, crc algrithem from CRC16_XMODEM to CRC16_CCIT-FALSE */
+    /* load init data 0xffff, crc algrithem from CRC16_XMODEM to CRC16_CCITT_FALSE */
     HAL_CRC_SetCheckInData(&g_loadCrcHandle, 0xFFFF);
     unsigned int initData = HAL_CRC_LoadCheckInData(&g_loadCrcHandle);
-    /* CRC16_CCIT-FALSE Algrithem, init data = 0xffff */
+    /* CRC16_CCITT_FALSE Algrithem, init data = 0xffff */
     unsigned int afterLoadCrcValue = HAL_CRC_SetInputDataGetCheck(&g_loadCrcHandle, 0x00005678);
     DBG_PRINTF("initData: 0x%x \r\n", initData);
     DBG_PRINTF("afterLoadCrcValue: 0x%x \r\n", afterLoadCrcValue);
     if (afterLoadCrcValue == CRC_CCITFALSE_REF_VALUE) {
-        DBG_PRINTF("CRC Algrithem is CRC16_CCIT-FALSE, load init data success! \r\n");
+        DBG_PRINTF("CRC Algrithem is CRC16_CCITT_FALSE, load init data success! \r\n");
     } else {
         DBG_PRINTF("load init data fail ! \r\n");
     }

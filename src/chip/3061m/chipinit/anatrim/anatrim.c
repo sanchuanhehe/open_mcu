@@ -22,7 +22,7 @@
   */
 #include "anatrim.h"
 
-float g_tsensorGain = 0.00041f;
+float g_tsensorGain = 0.0041f;
 
 /**
  * @brief Calculate the conversion gain of the tsensor.
@@ -87,25 +87,25 @@ static void CHIP_AnalogTrim(void)
 
     FOTP_INFO_RGN0_NUMBER_22 trimData22;
     FOTP_InfoGet(FOTP_INFO_RNG0, 22U, (void *)&trimData22.comData); /* 22 is the number of trim data in otp */
-    ADC0->ADC_PGA0_OEGE_TRIM0.BIT.cfg_pga0_gain_trim2 = trimData22.REG.data0.pga0_gain2;
-    ADC0->ADC_PGA0_OEGE_TRIM0.BIT.cfg_pga0_ofst_trim2 = trimData22.REG.data0.pga0_offset2;
-    ADC0->ADC_PGA0_OEGE_TRIM1.BIT.cfg_pga0_gain_trim4 = trimData22.REG.data1.pga0_gain4;
-    ADC0->ADC_PGA0_OEGE_TRIM1.BIT.cfg_pga0_ofst_trim4 = trimData22.REG.data1.pga0_offset4;
-    ADC0->ADC_PGA0_OEGE_TRIM2.BIT.cfg_pga0_gain_trim8 = trimData22.REG.data2.pga0_gain8;
-    ADC0->ADC_PGA0_OEGE_TRIM2.BIT.cfg_pga0_ofst_trim8 = trimData22.REG.data2.pga0_offset8;
-    ADC0->ADC_PGA0_OEGE_TRIM3.BIT.cfg_pga0_gain_trim16 = trimData22.REG.data3.pga0_gain16;
-    ADC0->ADC_PGA0_OEGE_TRIM3.BIT.cfg_pga0_ofst_trim16 = trimData22.REG.data3.pga0_offset16;
+    ADC0->ADC_AIN0_OEGE_TRIM0.BIT.cfg_ain0_gain_trim2 = trimData22.REG.data0.pga0_gain2;
+    ADC0->ADC_AIN0_OEGE_TRIM0.BIT.cfg_ain0_ofst_trim2 = trimData22.REG.data0.pga0_offset2;
+    ADC0->ADC_AIN0_OEGE_TRIM1.BIT.cfg_ain0_gain_trim4 = trimData22.REG.data1.pga0_gain4;
+    ADC0->ADC_AIN0_OEGE_TRIM1.BIT.cfg_ain0_ofst_trim4 = trimData22.REG.data1.pga0_offset4;
+    ADC0->ADC_AIN0_OEGE_TRIM2.BIT.cfg_ain0_gain_trim8 = trimData22.REG.data2.pga0_gain8;
+    ADC0->ADC_AIN0_OEGE_TRIM2.BIT.cfg_ain0_ofst_trim8 = trimData22.REG.data2.pga0_offset8;
+    ADC0->ADC_AIN0_OEGE_TRIM3.BIT.cfg_ain0_gain_trim16 = trimData22.REG.data3.pga0_gain16;
+    ADC0->ADC_AIN0_OEGE_TRIM3.BIT.cfg_ain0_ofst_trim16 = trimData22.REG.data3.pga0_offset16;
 
     FOTP_INFO_RGN0_NUMBER_23 trimData23;
     FOTP_InfoGet(FOTP_INFO_RNG0, 23U, (void *)&trimData23.comData); /* 23 is the number of trim data in otp */
-    ADC0->ADC_PGA1_OEGE_TRIM0.BIT.cfg_pga1_gain_trim2 = trimData23.REG.data0.pga1_gain2;
-    ADC0->ADC_PGA1_OEGE_TRIM0.BIT.cfg_pga1_ofst_trim2 = trimData23.REG.data0.pga1_offset2;
-    ADC0->ADC_PGA1_OEGE_TRIM1.BIT.cfg_pga1_gain_trim4 = trimData23.REG.data1.pga1_gain4;
-    ADC0->ADC_PGA1_OEGE_TRIM1.BIT.cfg_pga1_ofst_trim4 = trimData23.REG.data1.pga1_offset4;
-    ADC0->ADC_PGA1_OEGE_TRIM2.BIT.cfg_pga1_gain_trim8 = trimData23.REG.data2.pga1_gain8;
-    ADC0->ADC_PGA1_OEGE_TRIM2.BIT.cfg_pga1_ofst_trim8 = trimData23.REG.data2.pga1_offset8;
-    ADC0->ADC_PGA1_OEGE_TRIM3.BIT.cfg_pga1_gain_trim16 = trimData23.REG.data3.pga1_gain16;
-    ADC0->ADC_PGA1_OEGE_TRIM3.BIT.cfg_pga1_ofst_trim16 = trimData23.REG.data3.pga1_offset16;
+    ADC0->ADC_AIN1_OEGE_TRIM0.BIT.cfg_ain1_gain_trim2 = trimData23.REG.data0.pga1_gain2;
+    ADC0->ADC_AIN1_OEGE_TRIM0.BIT.cfg_ain1_ofst_trim2 = trimData23.REG.data0.pga1_offset2;
+    ADC0->ADC_AIN1_OEGE_TRIM1.BIT.cfg_ain1_gain_trim4 = trimData23.REG.data1.pga1_gain4;
+    ADC0->ADC_AIN1_OEGE_TRIM1.BIT.cfg_ain1_ofst_trim4 = trimData23.REG.data1.pga1_offset4;
+    ADC0->ADC_AIN1_OEGE_TRIM2.BIT.cfg_ain1_gain_trim8 = trimData23.REG.data2.pga1_gain8;
+    ADC0->ADC_AIN1_OEGE_TRIM2.BIT.cfg_ain1_ofst_trim8 = trimData23.REG.data2.pga1_offset8;
+    ADC0->ADC_AIN1_OEGE_TRIM3.BIT.cfg_ain1_gain_trim16 = trimData23.REG.data3.pga1_gain16;
+    ADC0->ADC_AIN1_OEGE_TRIM3.BIT.cfg_ain1_ofst_trim16 = trimData23.REG.data3.pga1_offset16;
 }
 
 /**

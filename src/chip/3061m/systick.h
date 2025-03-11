@@ -31,6 +31,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "baseaddr.h"
 #include "systickinit.h"
+#include "feature.h"
 /**
   * @addtogroup SYSTICK
   * @{
@@ -47,6 +48,12 @@
   * @brief Definition of SYSTICK configuration parameters.
   * @{
   */
+#ifdef NOS_TASK_SUPPORT
+#ifndef CFG_SYSTICK_TICKINTERVAL_US
+#define CFG_SYSTICK_TICKINTERVAL_US 100
+#endif
+unsigned int SYSTICK_GetTickInterval(void);
+#endif
 
 #define SYSTICK_MAX_VALUE 0xFFFFFFFFUL
 
@@ -103,6 +110,8 @@ static inline unsigned int DCL_SYSTICK_GetTick(void)
 {
     return SYSTICK->MTIME;   /* Systick value(Lower 32bit register) */
 }
+
+unsigned int SYSTICK_GetTimeStampUs(void);
 
 /**
  * @}
