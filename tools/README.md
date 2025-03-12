@@ -28,6 +28,12 @@ Hispark Studio 独立工具下载链接：<a href="https://hispark-obs.obs.cn-ea
 
 Hispark Studio IDE 版本下载链接（历史归档版本）：<a href="https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio_beta.zip" title="超链接title">HiSparkStudio_beta</a>
 
+| IDE版本号              | 支持SDK版本号                                     |
+| ---------------------- | ------------------------------------------------- |
+| HisparkStudio 1.0.0.2  | Solarec 1.0.0.6、SolarA2 1.0.1.2                  |
+| HisparkStudio 1.0.0.8  | Solarec 1.0.0.6、SolarA2 1.0.1.2                  |
+| HisparkStudio 1.0.0.10 | Solarec 1.0.0.6、SolarA2 1.0.1.2、SolarA2 1.1.0.1 |
+
 ## 工具安装及新建工程
 
 1.下载 HisparkStudio IDE及独立工具，并安装。
