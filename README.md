@@ -2,7 +2,7 @@
 
 ## 介绍
 
-  open_mcu代码仓为支持3061M、3065H、3066M解决方案SDK。
+  open_mcu代码仓为支持3061M、3065H、3066M解决方案SDK，该SDK支持HiSparkStudio1.0.0.10及以上版本
 
 ## 购买渠道
 
@@ -30,13 +30,25 @@
 |  ECBMCU105H![](docs/pic/readme/3061M.png)  | [开发板硬件原理图](https://gitee.com/HiSpark/open_mcu/tree/master/docs/hardware/3065H) | 参考示例教程 | [开发板购买链接](https://m.tb.cn/h.gMEbHlepTLs5DNB?tk=aKIe356U3bY) | 3065H是RISC-V内核的高性能实时控制专用MCU， 具有高性能、高集成度、高可靠性、易开发的特点，同时配合强大的算法团队和嵌入式AI能力，使得3065H上市后快速获得家电、能源、工业等行业内多个客户的认可和好评。 |
 ## 支持的调试器
 
-|                          调试器名称                          | 使用说明                                                     | 购买链接                                                     | 调试器介绍                               |
-| :----------------------------------------------------------: | ------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------- |
-| ![image-20250121114616068](./docs/pic/tools/image-20250121114616068.png) | [HiSpark调试器系列 使用指南](https://gitee.com/HiSpark/open_mcu/tree/master/tools) | [调试器购买链接](https://e.tb.cn/h.T8tE2Ot1oR359nj?tk=Fy3He1qiATn) | ARM 仿真调试器 Hispark 烧录器 4合1调试器 |
+|                          调试器名称                          | 使用说明                                                     | 购买链接                                                     | 调试器介绍                                                   |
+| :----------------------------------------------------------: | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Hispark-Trace<br />![image-20250121114616068](./docs/pic/readme/image-20250121114616068.png) | [HiSpark调试器系列 使用指南](https://gitee.com/HiSpark/open_mcu/tree/master/tools) | [调试器购买链接](https://e.tb.cn/h.T8tE2Ot1oR359nj?tk=Fy3He1qiATn) | 高级变量实时跟踪调试器，配合Variable Trace 实时变量监控工具使用 |
 
+## 配套电机
 
+|                           电机名称                           | 购买链接                                                     | 电机介绍                                                |
+| :----------------------------------------------------------: | ------------------------------------------------------------ | ------------------------------------------------------- |
+| GBM2804H-100T<br />![image-20250312142123490](./docs/pic/readme/image-20250312142123490.png) | [电机购买链接]( https://e.tb.cn/h.Ty09arIVIwTIzB9?tk=Syv4eMwMVb5 ) | 翼飞 iPower GBM2804H-100T 狗三无刷云台电机 手持云台电机 |
+
+## 配套电源
+
+|                           电源名称                           | 购买链接                                                     | 电源介绍                                                     |
+| :----------------------------------------------------------: | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| HUAWEI HW-120200C1W<br />![image-20250312142152231](./docs/pic/readme/image-20250312142152231.png) | [电源购买链接](https://e.tb.cn/h.Tyd5ScSTaHsRNDO?tk=bTFoeMwOr5N  ) | output/输出：12V -2A   input/输入：180-240V 深圳航嘉池源电源适配器 |
 
 ## 快速上手
+
+SDK包目录：[参考src/README.md](https://gitee.com/HiSpark/open_mcu/tree/master/src)
 
 环境搭建：[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
 
@@ -269,7 +281,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC或 PMSM电机控制。该�
 
 ![image-20240715162244103](docs/pic/tools/image-20240715162244103.png)
 
-3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/document/hardware/3061M" title="超链接title">3061M系列 通用生态板用户手册 00B01</a>
+3061M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/3061M" title="超链接title">3061M系列 通用生态板用户手册 00B01</a>
 
 ### 3065H介绍
 
@@ -289,7 +301,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ![image-20240527103127826](docs/pic/tools/image-20240527103127826.png)  
 
-3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/document/hardware/306xH" title="超链接title">3065H通用生态板用户手册 V03</a>
+3065H通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/306xH" title="超链接title">3065H通用生态板用户手册 V03</a>
 
 ### 3066M介绍
 
@@ -309,7 +321,7 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ![image-20240527103127826](docs/pic/tools/image-20240527103127826.png)  
 
-3066M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/document/hardware/3066M／3065P" title="超链接title">3066M通用生态板用户手册 V00B01</a>
+3066M通用生态板用户手册详细内容请查阅：<a href="https://gitee.com/HiSpark/open_mcu/tree/master/src/document/hardware/3066M%EF%BC%8F3065P" title="超链接title">3066M通用生态板用户手册 V00B01</a>
 
 
 
