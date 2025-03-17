@@ -14,9 +14,9 @@
 
 Hispark Studio IDE 版本下载链接（推荐使用）：<a href="https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/HiSparkStudio.exe" title="超链接title">HisparkStudio</a>
 
-[进入开发者中心](https://developer.hisilicon.com/devCenter/index?id=0c537de0-2aa6-477a-a)，获取Hispark Studio 的步骤如下（建议下载最新版本，以下仅供参考）：
+[进入开发者中心](https://developers.hisilicon.com/devCenter/index?id=0c537de0-2aa6-477a-a)，获取Hispark Studio 的步骤如下（建议下载最新版本，以下仅供参考）：
 
-![a1-1735628387134-1](../docs/pic/tools/a1-1735628387134-1.png)
+<img src="../docs/pic/tools/a1-1735628387134-1.png" alt="a1-1735628387134-1" style="zoom: 80%;" />
 
 Hispark Studio 独立工具下载链接：<a href="https://hispark-obs.obs.cn-east-3.myhuaweicloud.com/SolarA2IDE.zip" title="超链接title">SolarA2IDE</a>，具体包括如下独立工具：
 
