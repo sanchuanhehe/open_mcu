@@ -118,11 +118,11 @@ Hispark Studio IDE 版本下载链接（历史归档版本）：<a href="https:/
 
   ![image-20240829165616356](../docs/pic/tools/image-20240829165616356.png)
 
-- 步骤2：下载FTDI官方驱动并安装。 下载地址：FTDI官网。 https://ftdichip.com/drivers/d2xx-drivers/ ，电机官方驱动 “setup executable”即可下载； 解压下载的文件并默认安装即可，安装完成后需要重启计算机。
+- 步骤2：下载FTDI官方驱动并安装。 下载地址：FTDI官网。 https://ftdichip.com/drivers/d2xx-drivers/  ，电机官方驱动 “setup executable”即可下载； 解压下载的文件并默认安装即可，安装完成后需要重启计算机。
 
   ![image-20240829113635598](../docs/pic/tools/image-20240829113635598.png)
 
--  步骤3：下载USB驱动程序zadig.exe，无需安装。 下载地址：https://zadig.akeo.ie/。 
+-  步骤3：下载USB驱动程序zadig.exe，无需安装。 下载地址：https://zadig.akeo.ie/ 
 
 - 步骤4： 驱动替换， 操作流程： 1. HiSpark-Link调试器通过USB连接上电。 2. 打开 zadig.exe 应用程序（无需安装）。 3. 单击菜单“Options”->选中“list All Devices”->选中“Dual RS232- HS(Interface 0)”。
 
