@@ -1,0 +1,108 @@
+/**
+  * @copyright Copyright (c) 2022, HiSilicon (Shanghai) Technologies Co., Ltd. All rights reserved.
+  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+  * following conditions are met:
+  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+  * disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+  * following disclaimer in the documentation and/or other materials provided with the distribution.
+  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+  * products derived from this software without specific prior written permission.
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * @file      mcs_user_config.h
+  * @author    MCU Algorithm Team
+  * @brief     This file provides functions declaration of user config parameters.
+  */
+#ifndef McuMagicTag_MCS_CONFIG_H
+#define McuMagicTag_MCS_CONFIG_H
+
+#include "debug.h"
+#include "typedefs.h"
+
+#define SMO4TH
+
+#define SYSTICK_PERIOD_US                 500u /* systick period. */
+
+#define INV_CAP_CHARGE_MS                 3u  /* Capacitor charging time. */
+
+#define INV_VOLTAGE_BUS                   24.0f   /* Bus voltage, V. */
+
+#define CTRL_CURR_PERIOD                  0.0001f /* carrier ISR period, 100us. */
+#define CTRL_SYSTICK_PERIOD               0.0005f /* systick control period, 500us. */
+
+/* Duty of sample window, the real time is 0.06*50us = 3us. */
+#define SAMPLE_WINDOW_DUTY                0.06f
+
+/* Duty of sample point shift as flip point, the real time is 0.008*50us = 0.4us. */
+#define SAMPLE_POINT_SHIFT                0.008f
+
+/* Sampling resistance 200mOhm 0.0013295 */
+#define ADC_CURR_COFFI                    0.0013295f   /* 3.3/4096/3.03/0.2     pga: 3.03, 200mohm. */
+
+#define APT_U                             APT0_BASE /* Base address of U phase APT module. */
+#define APT_V                             APT1_BASE /* Base address of V phase APT module. */
+#define APT_W                             APT2_BASE /* Base address of W phase APT module. */
+
+/* FOSMO */
+#define FOSMO_GAIN                        4.0f    /* SMO gain */
+#define FOSMO_LAMBDA                      2.0f    /* SMO coefficient of cut-off frequency, its value = lambda * we. */
+#define FOSMO_EMF_CUTOFF_FREQ             2.0f    /* SMO back emf cutoff frequency. */
+#define SPEED_FILTER_CUTOFF_FREQUENCY     40.0f   /* SMO speed cutoff frequency of speed filter. */
+#define FOSMO_PLL_BDW                     30.0f   /* SMO PLL bandwidth. */
+
+/* SMO4TH */
+#define SMO4TH_PLL_BDW                    30.0f   /* SMO4TH PLL Bandwidth. */
+#define SMO4TH_KD                         300.0f  /* SMO4TH parameters KD. */
+#define SMO4TH_KQ                         600.0f  /* SMO4TH parameters KQ. */
+#define SMO4TH_SPD_FILTER_CUTOFF_FREQ     40.0f   /* SMO4TH speed cutoff frequency of speed filter. */
+
+/* User_Commond */
+#define CTRL_IF_CURR_AMP_A                0.7f   /* IF control current amplitude. */
+#define USER_TARGET_SPD_HZ                100.0f  /* User-defined target speed value. */
+#define USER_SWITCH_SPDBEGIN_HZ           30.0f   /* Start of handover interval. */
+#define USER_SWITCH_SPDEND_HZ             (USER_SWITCH_SPDBEGIN_HZ + 3.0f)   /* End of handover period. */
+#define USER_MAX_SPD_HZ                   29.0f /* User-defined maximum speed value. */
+#define USER_MIN_SPD_HZ                   5.0f   /* User-defined minimum speed value. */
+#define USER_SPD_SLOPE                    50.0f                         /* slope of velocity change. */
+#define USER_CURR_SLOPE                   (CTRL_IF_CURR_AMP_A * 10.0f)  /* Current change slope.  */
+
+/* PID PARAMS */
+#define CURRQAXIS_KP                      5.023202f  /* Current loop Q axis Kp. */
+#define CURRQAXIS_KI                      20612.84f  /* Current loop Q axis Ki. */
+#define CURRDAXIS_KP                      3.477114f  /* Current loop D axis Kp. */
+#define CURRDAXIS_KI                      20612.84f  /* Current loop D axis Ki. */
+/* Current loop PID output lower limit. */
+#define CURR_LOWERLIM                     (-INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.98f)
+/* Current loop PID output upper limit. */
+#define CURR_UPPERLIM                     (INV_VOLTAGE_BUS * ONE_DIV_SQRT3 * 0.98f)
+
+#define SPD_KP                            0.00505f  /* Speed loop Kp. */
+#define SPD_KI                            0.012f    /* Speed loop Ki. */
+#define SPD_LOWERLIM                      (-0.105f) /* Speed loop PID output lower limit. */
+#define SPD_UPPERLIM                      0.105f    /* Speed loop PID output upper limit. */
+
+/* MOTOR PARAMS */
+/* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift. */
+/* mtrPsif & mtrJ parameter is not used in this project, temporarily set to 0. */
+#define MOTORPARAM_DEFAULTS  { \
+    .mtrNp = 14, \
+    .mtrRs = 10.1f, \
+    .mtrLd = 0.010f, \
+    .mtrLq = 0.010f, \
+    .mtrPsif = 0.0f, \
+    .mtrJ = 0.0f, \
+    .maxElecSpd = 29.0f, \
+    .maxCurr = 1.0f, \
+    .busVolt = INV_VOLTAGE_BUS, \
+}
+
+/* Bus voltage sampling conversion factor. */
+#define ADC_UDC_COFFI                     0.01289f      /* 0.01289 = 3.3/4096*192/12. */
+
+#endif
