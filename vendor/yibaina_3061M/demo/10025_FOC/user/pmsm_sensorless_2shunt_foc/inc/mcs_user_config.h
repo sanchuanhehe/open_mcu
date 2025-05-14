@@ -87,20 +87,6 @@
 #define SPD_LOWERLIM                      (-0.105f) /* Speed loop PID output lower limit. */
 #define SPD_UPPERLIM                      0.105f    /* Speed loop PID output upper limit. */
 
-/* MOTOR PARAMS */
-/* Np, Rs, Ld, Lq, Psif, J, Nmax, Currmax, PPMR, zShift. */
-/* mtrPsif & mtrJ parameter is not used in this project, temporarily set to 0. */
-// #define MOTORPARAM_DEFAULTS  { \
-//     .mtrNp = 7, \
-//     .mtrRs = 5.1f, \
-//     .mtrLd = 0.00133f, \
-//     .mtrLq = 0.00133f, \
-//     .mtrPsif = 0.0f, \
-//     .mtrJ = 0.0f, \
-//     .maxElecSpd = 180.25f, \
-//     .maxCurr = 0.105f, \
-//     .busVolt = INV_VOLTAGE_BUS, \
-// }
 
 #define MOTORPARAM_DEFAULTS  { \
     .mtrNp = 21, \
