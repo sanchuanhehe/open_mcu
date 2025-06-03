@@ -15,57 +15,51 @@
   * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
   * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
   * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * @file      main.c
+  * @file      gpio_key_sample.c
   * @author    MCU Driver Team
-  * @brief     Main program body.
-  * @date      2025-04-17 14:22:06
+  * @brief     GPIO module realize a key function sample
+  * @details   GPIO Capturing Key Triggered Interrupt Service Function. If the hardware environment does \
+  *            not support this function, you need to set up an environment for verification.
   */
 
-#include "typedefs.h"
-#include "feature.h"
-#include "mcs_motor_process.h"
+/* Includes ------------------------------------------------------------------*/
+#include "debug.h"
+#include "gpio.h"
 #include "main.h"
-/* USER CODE BEGIN 0 */
-/* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
-/* 建议用户放置头文件 */
-/* USER CODE END 0 */
-ACMP_Handle g_acmp0;
-PGA_Handle g_pga0;
-PGA_Handle g_pga1;
-TIMER_Handle g_timer0;
-TIMER_Handle g_timer1;
-UART_Handle g_uart0;
-APT_Handle g_apt0;
-APT_Handle g_apt1;
-APT_Handle g_apt2;
-ADC_Handle g_adc0;
-DMA_Handle g_dmac;
-GPIO_Handle g_gpio2;
-GPIO_Handle g_gpio1;
-/* USER CODE BEGIN 1 */
-/* 建议用户定义全局变量、结构体、宏定义或函数声明等 */
-/* USER CODE END 1 */
+#include "gpio_key_sample.h"
 
-int main(void)
+#define PREVENT_SWIPE_SCREEN_TIME    50
+#define CYCLE_INTERVAL_TIME   500
+
+/* prototype functions -------------------------------------------------------*/
+void GPIO_CallBackFunc(void *param);
+
+/* ---------------------------------- Sample Parameters ---------------------- */
+/**
+  * @brief GPIO key test sample.
+  * @param None
+  * @retval Value of @ref BASE_StatusType.
+  */
+BASE_StatusType GPIO_KeySample(void)
 {
-    /* USER CODE BEGIN 2 */
-    /* 建议用户放置初始化代码或启动代码等 */
-    /* USER CODE END 2 */
-    MotorMainProcess();
-    /* USER CODE BEGIN 3 */
-    /* 建议用户放置初始配置代码 */
-    /* USER CODE END 3 */
+    SystemInit();
+    /* Waiting for the key to come. */
     while (1) {
-        /* USER CODE BEGIN 4 */
-        /* 建议用户放置周期性执行代码 */
-        /* USER CODE END 4 */
+        DBG_PRINTF("Wait key \r\n");
+        BASE_FUNC_DELAY_MS(CYCLE_INTERVAL_TIME);
     }
-    /* USER CODE BEGIN 5 */
-    /* 建议用户放置代码流程 */
-    /* USER CODE END 5 */
+
     return BASE_STATUS_OK;
 }
 
-/* USER CODE BEGIN 6 */
-/* 建议用户放置自定义函数 */
-/* USER CODE END 6 */
+/**
+  * @brief GPIO register interrupt callback function.
+  * @param param Value of @ref GPIO_Handle.
+  * @retval None
+  */
+void GPIO_CallBackFunc(void *param)
+{
+    BASE_FUNC_UNUSED(param);
+    DBG_PRINTF("in GPIO Key Handler \r\n");
+    BASE_FUNC_DELAY_MS(PREVENT_SWIPE_SCREEN_TIME);
+}

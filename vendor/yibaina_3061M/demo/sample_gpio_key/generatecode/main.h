@@ -18,27 +18,16 @@
   * @file      main.h
   * @author    MCU Driver Team
   * @brief     This file contains driver init functions.
-  * @date      2025-04-17 14:22:06
   */
 
 /* Define to prevent recursive inclusion ------------------------------------- */
 #ifndef McuMagicTag_SYSTEM_INIT_H
 #define McuMagicTag_SYSTEM_INIT_H
 
-#include "adc.h"
-#include "adc_ex.h"
-#include "acmp.h"
-#include "acmp_ex.h"
-#include "apt.h"
 #include "uart.h"
 #include "uart_ex.h"
 #include "gpio.h"
-#include "timer.h"
-#include "timer_ex.h"
-#include "pga.h"
 #include "crg.h"
-#include "dma.h"
-#include "dma_ex.h"
 #include "iocmg.h"
 
 #define    IO_SPEED_FAST     0x00U
@@ -54,42 +43,14 @@
 #define    XTAL_DRV_LEVEL2   0x01U
 #define    XTAL_DRV_LEVEL1   0x00U
 
-#define GpioStartStop_PIN GPIO_PIN_4
-#define GpioStartStop_HANDLE g_gpio2
-
-extern ACMP_Handle g_acmp0;
-extern PGA_Handle g_pga0;
-extern PGA_Handle g_pga1;
-extern TIMER_Handle g_timer0;
-extern TIMER_Handle g_timer1;
 extern UART_Handle g_uart0;
-extern APT_Handle g_apt0;
-extern APT_Handle g_apt1;
-extern APT_Handle g_apt2;
-extern ADC_Handle g_adc0;
-
-extern DMA_Handle g_dmac;
 
 extern GPIO_Handle g_gpio2;
-extern GPIO_Handle g_gpio1;
 
 BASE_StatusType CRG_Config(CRG_CoreClkSelect *coreClkSelect);
 void SystemInit(void);
 
-void UART0WriteInterruptCallback(void *handle);
-void UART0ReadInterruptCallback(void *handle);
-
-void UART0InterruptErrorCallback(void *handle);
-void MotorStatemachineCallBack(void *handle);
-void TIMER1_DMAOverFlow_InterruptProcess(void *handle);
-void CheckPotentiometerValueCallback(void *handle);
-void TIMER0_DMAOverFlow_InterruptProcess(void *handle);
-void MotorCarrierProcessCallback(void *aptHandle);
-void MotorSysErrCallback(void *aptHandle);
-
-void UART0_TXDMACallback(void *handle);
-
-void MotorStartStopKeyCallback(void *param);
+void GPIO_CallBackFunc(void *param);
 
 /* USER CODE BEGIN 0 */
 /* USER CODE 区域内代码不会被覆盖，区域外会被生成的默认代码覆盖（其余USER CODE 区域同理） */
