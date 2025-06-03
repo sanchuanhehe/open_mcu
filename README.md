@@ -8,7 +8,7 @@
 
 |      名称      | 购买链接                                                     | 介绍                            |
 | :------------: | ------------------------------------------------------------ | ------------------------------- |
-| V5A20002NOQJDB | [批量购买]([V5A20002NOQJDB价格_V5A20002NOQJDB库存_V5A20002NOQJDB采购信息-云汉芯城 ICkey.cn](https://search.ickey.cn/?keyword=V5A20002NOQJDB&bom_ab=null)) | 3061M系列解决方案  128KB QFP48  |
+| V5A20002NOQJDB | [批量购买](https://search.ickey.cn/?keyword=V5A20002NOQJDB&bom_ab=null) | 3061M系列解决方案  128KB QFP48  |
 | V5A20002NOOJLB | [批量购买](https://www.ickey.cn/detail/1003001016603886/V5A20002NOOJLB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f)   [少量购买](https://www.ickey.cn/detail/1003001021937018/V5A20002NOOJLB.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案  128KB QFN32  |
 | V5A20002NOQJLB | [批量购买](https://www.ickey.cn/detail/1003001016603885/V5A20002NOQJLB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f)   [少量购买](https://www.ickey.cn/detail/1003001017510002/V5A20002NOQJLB.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案  128KB QFP32  |
 | V5A20002NOOJDB | [批量购买](https://www.ickey.cn/detail/1003001016603884/V5A20002NOOJDB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案  128KB QFN48  |
