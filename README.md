@@ -20,7 +20,7 @@
 
 
 
-  ![3061M_buy](./docs/pic/readme/微信图片_20241223090825.jpg)
+![2](./docs/pic/readme/2.jpg)  ![3061M_buy](./docs/pic/readme/微信图片_20241223090825.jpg)
 
 ## 支持的开发板
 
