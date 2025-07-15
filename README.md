@@ -327,7 +327,11 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ## 开发环境搭建
 
-[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+软件工具的获取：[海思社区网站->开发中心](https://developers.hisilicon.com/devCenter/index?id=0c537de0-2aa6-477a-a)
+
+工具安装及使用说明：[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+
+![3](./docs/pic/readme/3.png)
 
 ## Demo
 
