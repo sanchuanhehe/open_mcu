@@ -6,21 +6,21 @@
 
 ## 购买渠道
 
-|      名称      | 硬件资料                                                     | 介绍                            |
-| :------------: | ------------------------------------------------------------ | ------------------------------- |
-| V5A20002NOOJDB | [购买链接](https://www.ickey.cn/detail/1003001016603884/V5A20002NOOJDB.html#3a190c21-a8e5-40b7-8e88-b7a4b6a9d0b1) | 3061M系列解决方案  128KB QFN48  |
-| V5A20002NOOJLB | [购买链接](https://www.ickey.cn/detail/1003001016603886/V5A20002NOOJLB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案  128KB QFN32  |
-| V5A20002NOQJLB | [购买链接](https://www.ickey.cn/detail/1003001016603885/V5A20002NOQJLB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案  128KB QFP32  |
-| V5A20002NOOJDB | [购买链接](https://www.ickey.cn/detail/1003001016603884/V5A20002NOOJDB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案  128KB QFN48  |
-| V5A20002NOOJD9 | [购买链接](https://www.ickey.cn/detail/1003001016603888/V5A20002NOOJD9.html#d9fd2c53-3b07-4b62-ba26-cb59ae94234f) | 3061M系列解决方案   64KB QFN48  |
-| V5A20002NOQJD9 | [购买链接](https://www.ickey.cn/detail/1003001016603887/V5A20002NOQJD9.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案   64KB QFP48  |
-| V5A20002NOQJL9 | [购买链接](https://www.ickey.cn/detail/1003001016603889/V5A20002NOQJL9.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案   64KB QFP32  |
-| V5A20002NOOJL9 | [购买链接](https://www.ickey.cn/detail/1003001016603890/V5A20002NOOJL9.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 3061M系列解决方案   64KB QFN32  |
-| V5A20001ISQJSA | [购买链接](https://www.ickey.cn/detail/1003001016603882/V5A20001ISQJSA.html#) | 3065H系列解决方案  160KB LQFP64 |
+|      名称      | 批量购买                                                     | 少量购买                                                     | 介绍                            |
+| :------------: | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------- |
+| V5A20002NOQJDB | [购买链接](https://search.ickey.cn/?keyword=V5A20002NOQJDB&bom_ab=null) | 暂无                                                         | 3061M系列解决方案  128KB QFP48  |
+| V5A20002NOOJLB | [购买链接](https://www.ickey.cn/detail/1003001016603886/V5A20002NOOJLB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | [购买链接](https://www.ickey.cn/detail/1003001021937018/V5A20002NOOJLB.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案  128KB QFN32  |
+| V5A20002NOQJLB | [购买链接](https://www.ickey.cn/detail/1003001016603885/V5A20002NOQJLB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | [购买链接](https://www.ickey.cn/detail/1003001017510002/V5A20002NOQJLB.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案  128KB QFP32  |
+| V5A20002NOOJDB | [购买链接](https://www.ickey.cn/detail/1003001016603884/V5A20002NOOJDB.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 暂无                                                         | 3061M系列解决方案  128KB QFN48  |
+| V5A20002NOOJD9 | [购买链接](https://www.ickey.cn/detail/1003001016603888/V5A20002NOOJD9.html#d9fd2c53-3b07-4b62-ba26-cb59ae94234f) | [购买链接](https://www.ickey.cn/detail/1003001021937055/V5A20002NOOJD9.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案   64KB QFN48  |
+| V5A20002NOQJD9 | [购买链接](https://www.ickey.cn/detail/1003001016603887/V5A20002NOQJD9.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | 暂无                                                         | 3061M系列解决方案   64KB QFP48  |
+| V5A20002NOQJL9 | [购买链接](https://www.ickey.cn/detail/1003001016603889/V5A20002NOQJL9.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | [购买链接](https://www.ickey.cn/detail/1003001021936978/V5A20002NOQJL9.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案   64KB QFP32  |
+| V5A20002NOOJL9 | [购买链接](https://www.ickey.cn/detail/1003001016603890/V5A20002NOOJL9.html#208f8e9e-5cdf-4353-988d-d1df20bbb33f) | [购买链接](https://www.ickey.cn/detail/1003001021936989/V5A20002NOOJL9.html#a48f53a5-b3cf-4d3e-8254-e91505f16fae) | 3061M系列解决方案   64KB QFN32  |
+| V5A20001ISQJSA | [购买链接](https://www.ickey.cn/detail/1003001016603882/V5A20001ISQJSA.html#) | 暂无                                                         | 3065H系列解决方案  160KB LQFP64 |
 
 
 
-  ![3061M_buy](./docs/pic/readme/微信图片_20241223090825.jpg)
+![2](./docs/pic/readme/2.jpg)  ![3061M_buy](./docs/pic/readme/微信图片_20241223090825.jpg)
 
 ## 支持的开发板
 
@@ -327,7 +327,11 @@ ECBMOTORA是电机驱动扩展板，支持一个 BLDC 或 PMSM 电机控制。�
 
 ## 开发环境搭建
 
-[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+软件工具的获取：[海思社区网站->开发中心](https://developers.hisilicon.com/devCenter/index?id=0c537de0-2aa6-477a-a)
+
+工具安装及使用说明：[参考tools目录README搭建环境](https://gitee.com/HiSpark/open_mcu/tree/master/tools)
+
+![3](./docs/pic/readme/3.png)
 
 ## Demo
 
